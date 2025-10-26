@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ hotel.name }} - Hotel Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .overlay {
+            background: rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+        .container {
+            position: relative;
+            z-index: 2;
+            margin-top: 2%;
+        }
+        .hotel-detail-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        .hotel-hero {
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: end;
+        }
+        .hotel-hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+        .hotel-hero-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+            padding: 30px;
+            width: 100%;
+        }
+        .hotel-name {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .hotel-location {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .rating-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .stars {
+            color: #ffc107;
+            margin-right: 10px;
+        }
+        .content-section {
+            padding: 40px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .price-display {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .price-amount {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .amenities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .amenity-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .amenity-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .amenity-icon {
+            font-size: 1.5rem;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .review-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+        .review-rating {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .info-icon {
+            font-size: 1.5rem;
+            color: #007bff;
+            margin-right: 10px;
+        }
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover {
+            background: #5a6268;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .contact-info {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="container">
+        <a href="javascript:history.back()" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Results
+        </a>
+        
+        <div class="hotel-detail-card">
+            <div class="hotel-hero" style="background-image: url('{{ hotel.thumbnail if hotel.thumbnail else 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200' }}')">
+                <div class="hotel-hero-content">
+                    <h1 class="hotel-name">{{ hotel.name }}</h1>
+                    <p class="hotel-location">
+                        <i class="fas fa-map-marker-alt"></i> {{ hotel.address if hotel.address else 'Address not available' }}
+                    </p>
+                    <div class="rating-badge">
+                        <div class="stars">
+                            {% for i in range(5) %}
+                                {% if i < (hotel.rating|int if hotel.rating else 0) %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span>{{ hotel.rating if hotel.rating else 'N/A' }}/5</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <h3 class="section-title">About This Hotel</h3>
+                            <p class="lead">{{ hotel.description if hotel.description else 'No description available' }}</p>
+                        </div>
+                        
+                        <!-- Amenities -->
+                        {% if hotel.amenities and hotel.amenities|length > 0 %}
+                        <div class="mb-4">
+                            <h3 class="section-title">Amenities</h3>
+                            <div class="amenities-grid">
+                                {% for amenity in hotel.amenities %}
+                                <div class="amenity-item">
+                                    <div class="amenity-icon">
+                                        {% set amenity_name = amenity.name if amenity.name else amenity %}
+                                        {% if 'wifi' in amenity_name.lower() or 'internet' in amenity_name.lower() %}
+                                            <i class="fas fa-wifi"></i>
+                                        {% elif 'pool' in amenity_name.lower() %}
+                                            <i class="fas fa-swimming-pool"></i>
+                                        {% elif 'gym' in amenity_name.lower() or 'fitness' in amenity_name.lower() %}
+                                            <i class="fas fa-dumbbell"></i>
+                                        {% elif 'restaurant' in amenity_name.lower() or 'dining' in amenity_name.lower() %}
+                                            <i class="fas fa-utensils"></i>
+                                        {% elif 'parking' in amenity_name.lower() %}
+                                            <i class="fas fa-parking"></i>
+                                        {% elif 'spa' in amenity_name.lower() %}
+                                            <i class="fas fa-spa"></i>
+                                        {% else %}
+                                            <i class="fas fa-check-circle"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>{{ amenity_name }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Reviews -->
+                        {% if hotel.reviews and hotel.reviews|length > 0 %}
+                        <div class="mb-4">
+                            <h3 class="section-title">Guest Reviews</h3>
+                            {% for review in hotel.reviews[:3] %}
+                            <div class="review-card">
+                                <div class="review-rating">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <p class="mb-0">{{ review.comment }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <!-- Price Information -->
+                        <div class="price-display">
+                            <h4>Price per Night</h4>
+                            <div class="price-amount">
+                                {% if hotel.rate_per_night and hotel.rate_per_night.lowest %}
+                                    {{ hotel.rate_per_night.lowest }}
+                                {% else %}
+                                    Contact for Price
+                                {% endif %}
+                            </div>
+                            {% if hotel.total_rate and hotel.total_rate.lowest %}
+                            <p class="mb-0">Total Rate: {{ hotel.total_rate.lowest }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Check-in/Check-out -->
+                        {% if hotel.check_in_time or hotel.check_out_time %}
+                        <div class="info-card mb-3">
+                            <h5><i class="fas fa-clock info-icon"></i>Check-in/Check-out</h5>
+                            {% if hotel.check_in_time %}
+                            <p><strong>Check-in:</strong> {{ hotel.check_in_time }}</p>
+                            {% endif %}
+                            {% if hotel.check_out_time %}
+                            <p><strong>Check-out:</strong> {{ hotel.check_out_time }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Location Info -->
+                        {% if hotel.gps_coordinates %}
+                        <div class="info-card mb-3">
+                            <h5><i class="fas fa-map-marked-alt info-icon"></i>Location</h5>
+                            <p><strong>Coordinates:</strong> {{ hotel.gps_coordinates.latitude }}, {{ hotel.gps_coordinates.longitude }}</p>
+                            <a href="https://maps.google.com/?q={{ hotel.gps_coordinates.latitude }},{{ hotel.gps_coordinates.longitude }}" 
+                               target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-external-link-alt"></i> View on Map
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Nearby Places -->
+                        {% if hotel.nearby_places and hotel.nearby_places|length > 0 %}
+                        <div class="info-card mb-3">
+                            <h5><i class="fas fa-map-signs info-icon"></i>Nearby Places</h5>
+                            <ul class="list-unstyled">
+                                {% for place in hotel.nearby_places[:5] %}
+                                <li><i class="fas fa-map-marker-alt text-primary"></i> {{ place.name if place.name else place }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="contact-info">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-phone"></i> Contact Information</h5>
+                            {% if hotel.phone %}
+                            <p><strong>Phone:</strong> {{ hotel.phone }}</p>
+                            {% endif %}
+                            {% if hotel.link %}
+                            <p><strong>Website:</strong> 
+                                <a href="{{ hotel.link }}" target="_blank" class="text-white">
+                                    {{ hotel.link }} <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-info-circle"></i> Hotel Type</h5>
+                            <p><strong>Type:</strong> {{ hotel.type if hotel.type != 'N/A' else 'Standard Hotel' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

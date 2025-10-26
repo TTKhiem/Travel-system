@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Search Results</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .overlay {
+            background: rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+        .container {
+            position: relative;
+            z-index: 2;
+            margin-top: 2%;
+        }
+        .header-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .hotel-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 30px;
+            height: 100%;
+        }
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        .hotel-image {
+            height: 250px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .hotel-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(0,0,0,0.1), transparent);
+        }
+        .hotel-info {
+            padding: 20px;
+        }
+        .hotel-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .hotel-location {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        .rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .stars {
+            color: #ffc107;
+            margin-right: 10px;
+        }
+        .rating-text {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        .amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .amenity-tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+        .btn-view {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .btn-view:hover {
+            background: #0056b3;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .search-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-3"><i class="fas fa-hotel text-primary"></i> Hotel Search Results</h1>
+                    {% if search_params %}
+                    <div class="search-info">
+                        <h5>Search Criteria:</h5>
+                        <p class="mb-0">
+                            <strong>Location:</strong> {{ search_params.city }} | 
+                            <strong>Price Range:</strong> {{ search_params.price_range }} | 
+                            <strong>Rating:</strong> {{ search_params.rating_range }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="/recommendation" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> New Search
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="no-results">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <h3>No Results Found</h3>
+            <p class="text-muted">{{ error }}</p>
+            <a href="/recommendation" class="btn btn-primary">Try Different Search</a>
+        </div>
+        {% elif hotels %}
+        <div class="row">
+            {% for hotel in hotels %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="hotel-card">
+                    <div class="hotel-image" style="background-image: url('{{ hotel.images[0].original_image if hotel.images else 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800' }}')">
+                    </div>
+                    <div class="hotel-info">
+                        <h3 class="hotel-name">{{ hotel.name }}</h3>
+                        <p class="hotel-location">
+                            <i class="fas fa-map-marker-alt text-primary"></i>
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ hotel.address | urlencode }}" target="_blank">
+                                {{ hotel.address if hotel.address else 'Address not available' }}
+                             </a>
+                        </p>
+                        
+                        <div class="rating">
+                            <div class="stars">
+                                {% for i in range(5) %}
+                                    {% if i < (hotel.overall_rating|float if hotel.overall_rating else 0) %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <span class="rating-text">{{ hotel.overall_rating if hotel.overall_rating else 'N/A' }}/5</span>
+                        </div>
+                        
+                        <div class="price">
+                            <i class="fas fa-money-bill-wave text-success"></i>
+                            {% if hotel.rate_per_night and hotel.rate_per_night.lowest %}
+                                {{ hotel.rate_per_night.lowest }}/night
+                            {% else %}
+                                Price on request
+                            {% endif %}
+                        </div>
+                        
+                        {% if hotel.amenities and hotel.amenities|length > 0 %}
+                        <div class="amenities">
+                            {% for amenity in hotel.amenities[:3] %}
+                            <span class="amenity-tag">{{ amenity.name if amenity.name else amenity }}</span>
+                            {% endfor %}
+                            {% if hotel.amenities|length > 3 %}
+                            <span class="amenity-tag">+{{ hotel.amenities|length - 3 }} more</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="text-center">
+                            <a href="/hotel/{{ loop.index }}" class="btn btn-view">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h3>No Hotels Found</h3>
+            <p class="text-muted">Try adjusting your search criteria</p>
+            <a href="/recommendation" class="btn btn-primary">Search Again</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
