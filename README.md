@@ -31,5 +31,5 @@
 - Tự tạo file ".env" và nhập theo format (Copy paste 2 dòng dưới là đc - tự thay {key}): 
 (Sẵn track giùm số API call nha)
 
-SERPAPI_KEY = "{key}"  
-GEOAPIFY_KEY = "{key}"
+SERPAPI_KEY = {key}  
+GEOAPIFY_KEY = {key}
