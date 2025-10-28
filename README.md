@@ -11,11 +11,8 @@
 - pandas: pip install pandas hoặc uv pip install pandas
 - requests: pip install requests hoặc uv pip requests 
 - python-dotenv: pip install python-dotenv hoặc uv pip install python-dotenv
-<<<<<<< HEAD
 - google: pip install google
 - google-genai: pip install google-genai
-=======
->>>>>>> a88e4f2dd942cefaee3603afc612048143ec008b
 
 
 # Source tham khảo:
@@ -38,7 +35,4 @@
 
 SERPAPI_KEY = {key}  
 GEOAPIFY_KEY = {key}
-<<<<<<< HEAD
 GEMINI_API_KEY = {key}
-=======
->>>>>>> a88e4f2dd942cefaee3603afc612048143ec008b
