@@ -76,8 +76,9 @@ class HotelSearchAPI: # Tao class ti import vao file main.py
                 gps = hotel.get("gps_coordinates")
                 res = requests.get(f"https://api.geoapify.com/v1/geocode/reverse?lat={gps['latitude']}&lon={gps['longitude']}&apiKey={geo_api}")
                 hotel["address"] = res.json()["features"][0]["properties"]["formatted"]
+                hotel["id"] = f"{count + 1:02}"
 
-                with open(os.path.join(output_directory, f"{count + 1}.json"), 'w', encoding= 'utf-8') as p:
+                with open(os.path.join(output_directory, f"{count + 1:02}.json"), 'w', encoding= 'utf-8') as p:
                     json.dump(hotel, p, ensure_ascii= False, indent = 4)
                 count += 1 # Counter de track
             
@@ -90,7 +91,7 @@ class HotelSearchAPI: # Tao class ti import vao file main.py
 # Chạy lẻ file hotel_search.py để test tính năng xuất
 # Mọi algorithms đều nằm ở class phía trên
 def main():
-    api_key = "" #fill API_key của ae vào để test
+    api_key = os.getenv("SERPAPI_KEY")
     search_api = HotelSearchAPI(api_key)
     location = "Hà Nội"
     price_range = "500000-1000000"

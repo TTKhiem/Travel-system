@@ -182,7 +182,7 @@
         </a>
         
         <div class="hotel-detail-card">
-            <div class="hotel-hero" style="background-image: url('{{ hotel.thumbnail if hotel.thumbnail else 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200' }}')">
+            <div class="hotel-hero" style="background-image: url('{{ hotel.images[0].original_image if hotel.images else 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200' }}')">
                 <div class="hotel-hero-content">
                     <h1 class="hotel-name">{{ hotel.name }}</h1>
                     <p class="hotel-location">
@@ -191,14 +191,14 @@
                     <div class="rating-badge">
                         <div class="stars">
                             {% for i in range(5) %}
-                                {% if i < (hotel.rating|int if hotel.rating else 0) %}
+                                {% if i < (hotel.overall_rating|int if hotel.overall_rating else 0) %}
                                     <i class="fas fa-star"></i>
                                 {% else %}
                                     <i class="far fa-star"></i>
                                 {% endif %}
                             {% endfor %}
                         </div>
-                        <span>{{ hotel.rating if hotel.rating else 'N/A' }}/5</span>
+                        <span>{{ hotel.overall_rating if hotel.overall_rating else 'N/A' }}/5</span>
                     </div>
                 </div>
             </div>
@@ -208,8 +208,28 @@
                     <div class="col-lg-8">
                         <!-- Description -->
                         <div class="mb-4">
-                            <h3 class="section-title">About This Hotel</h3>
-                            <p class="lead">{{ hotel.description if hotel.description else 'No description available' }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="section-title mb-0">About This Hotel</h3>
+                                <button id="openChatBtn" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-robot"></i> Ask about this hotel
+                                </button>
+                            </div>
+                            <p class="lead mt-3">{{ hotel.description if hotel.description else 'No description available' }}</p>
+                            <div id="chatWidget" class="card shadow-sm" style="display:none; border-radius: 12px; overflow: hidden;">
+                                <div class="card-header d-flex justify-content-between align-items-center" style="background:#f8f9fa;">
+                                    <strong><i class="fas fa-comments"></i> Hotel Chatbot</strong>
+                                    <button id="closeChatBtn" class="btn btn-sm btn-light"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div id="chatMessages" class="card-body" style="height: 260px; overflow-y: auto; background: #fff;">
+                                    <div class="text-muted small">Ask about amenities, check-in, nearby places, transport, etc.</div>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <div class="input-group">
+                                        <input id="chatInput" type="text" class="form-control" placeholder="Type your question..."/>
+                                        <button id="sendChatBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Amenities -->
@@ -245,23 +265,60 @@
                         {% endif %}
                         
                         <!-- Reviews -->
-                        {% if hotel.reviews and hotel.reviews|length > 0 %}
+                        {% if (hotel.ratings and hotel.ratings|length > 0) or (hotel.reviews_breakdown and hotel.reviews_breakdown|length > 0) %}
                         <div class="mb-4">
                             <h3 class="section-title">Guest Reviews</h3>
-                            {% for review in hotel.reviews[:3] %}
-                            <div class="review-card">
-                                <div class="review-rating">
-                                    {% for i in range(5) %}
-                                        {% if i < review.rating %}
-                                            <i class="fas fa-star"></i>
-                                        {% else %}
-                                            <i class="far fa-star"></i>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                                <p class="mb-0">{{ review.comment }}</p>
+
+                            {% if hotel.overall_rating and hotel.reviews is number %}
+                            <div class="text-center mb-4 p-3" style="background: #f8f9fa; border-radius: 10px;">
+                                <h4 class="mb-0">Overall Rating: {{ hotel.overall_rating }}/5</h4>
+                                <p class="text-muted mb-0">Based on {{ hotel.reviews }} reviews</p>
                             </div>
-                            {% endfor %}
+                            {% endif %}
+
+                            {% if hotel.ratings and hotel.ratings|length > 0 and hotel.reviews is number and hotel.reviews > 0 %}
+                            <h5 class="mb-3">Rating Breakdown</h5>
+                            <div class="mb-4">
+                                {% for rating in hotel.ratings %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <span style="min-width: 60px;">{{ rating.stars }} Stars</span>
+                                    {% set total_reviews = hotel.reviews if hotel.reviews > 0 else 1 %}
+                                    {% set percentage = (rating.count / total_reviews) * 100 %}
+                                    <div class="progress flex-grow-1" style="height: 20px;">
+                                        <div class="progress-bar bg-warning text-dark" role="progressbar" 
+                                            style="width: {{ percentage }}%;" 
+                                            aria-valuenow="{{ rating.count }}" aria-valuemin="0" aria-valuemax="{{ total_reviews }}">
+                                            <strong class="ms-2">{{ rating.count }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if hotel.reviews_breakdown and hotel.reviews_breakdown|length > 0 %}
+                            <h5 class="mb-3">Guest Mentions</h5>
+                            <div class="amenities-grid">
+                                {% for topic in hotel.reviews_breakdown %}
+                                <div class="amenity-item text-start p-3">
+                                    <strong>{{ topic.name }}</strong>
+                                    <div class="d-flex justify-content-between text-muted small mt-2">
+                                        <span>Total:</span>
+                                        <span>{{ topic.total_mentioned }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between text-success small">
+                                        <span>Positive:</span>
+                                        <span>{{ topic.positive }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between text-danger small">
+                                        <span>Negative:</span>
+                                        <span>{{ topic.negative }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
                         </div>
                         {% endif %}
                     </div>
@@ -348,5 +405,74 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function(){
+            const chatWidget = document.getElementById('chatWidget');
+            const openBtn = document.getElementById('openChatBtn');
+            const closeBtn = document.getElementById('closeChatBtn');
+            const sendBtn = document.getElementById('sendChatBtn');
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+
+            function appendMessage(text, role){
+                const wrapper = document.createElement('div');
+                wrapper.className = role === 'user' ? 'text-end mb-2' : 'text-start mb-2';
+                const bubble = document.createElement('div');
+                bubble.className = role === 'user' ? 'd-inline-block p-2 px-3 bg-primary text-white rounded-3' : 'd-inline-block p-2 px-3 bg-light rounded-3';
+                bubble.style.maxWidth = '85%';
+                bubble.textContent = text;
+                wrapper.appendChild(bubble);
+                messages.appendChild(wrapper);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            async function sendMessage(){
+                const text = (input.value || '').trim();
+                if(!text) return;
+                appendMessage(text, 'user');
+                input.value = '';
+                sendBtn.disabled = true;
+
+                try{
+                    const resp = await fetch('/api/hotel_chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: text, hotel: {{ hotel|tojson|safe }} })
+                    });
+                    const data = await resp.json();
+                    if(data.reply){
+                        appendMessage(data.reply, 'bot');
+                    } else {
+                        appendMessage(data.error || 'No response', 'bot');
+                    }
+                } catch(err){
+                    appendMessage('Network error. Please try again.', 'bot');
+                } finally {
+                    sendBtn.disabled = false;
+                    input.focus();
+                }
+            }
+
+            if(openBtn){
+                openBtn.addEventListener('click', function(){
+                    chatWidget.style.display = 'block';
+                    input.focus();
+                });
+            }
+            if(closeBtn){
+                closeBtn.addEventListener('click', function(){
+                    chatWidget.style.display = 'none';
+                });
+            }
+            if(sendBtn){
+                sendBtn.addEventListener('click', sendMessage);
+            }
+            if(input){
+                input.addEventListener('keydown', function(e){
+                    if(e.key === 'Enter') sendMessage();
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

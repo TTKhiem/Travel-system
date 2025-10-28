@@ -4,6 +4,8 @@ import glob
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 import pandas as pd
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 # Load API key lưu trong .env
 load_dotenv()
@@ -28,9 +30,9 @@ def filter_hotels():
         # Su dung SerpAPI trong hotel_search.py de xuat ra cac file JSON
         from hotel_search import HotelSearchAPI
         
-        api_key = os.getenv("SERPAPI_KEY")
+        serp_api_key = os.getenv("SERPAPI_KEY")
         print(f"Tìm dữ liệu của {city}...")
-        search_api = HotelSearchAPI(api_key)
+        search_api = HotelSearchAPI(serp_api_key)
         search_results = search_api.search_hotels(city, price_range, rating_range)
         
         # Tạo file khi có khách sạn
@@ -59,92 +61,70 @@ def filter_hotels():
                             hotels=[], 
                             error=f"Error loading data: {str(e)}")
 
-# Phần này là cho trang cụ thể của từng khách sạn ( chưa dev - need fix)
-#Uncomment hoặc thay cái khác
-
-# @app.route('/hotel/<int:hotel_id>')
-# def hotel_detail(hotel_id):
-#     # Load hotel data from the full hotel list
-#     try:
-#         if not os.path.exists("full_hotel_lists.json"):
-#             return render_template('hotel_detail.html', 
-#                                  hotel=None, 
-#                                  error="No hotel data found")
-        
-#         # with open("full_hotel_lists.json", 'r', encoding='utf-8') as f:
-#             hotels_data = json.load(f)
-        
-#         if 0 < hotel_id <= 50:
-#             with open("full_hotel_lists.json", 'r', encoding='utf-8') as f:
-#                 hotels_data = json.load(f)
-#             hotel = hotels_data
-#             return render_template('hotel_detail.html', hotel=hotel)
-#         else:
-#             return render_template('hotel_detail.html', 
-#                                  hotel=None, 
-#                                  error="Hotel not found")
-            
-#     except Exception as e:
-#         print(f"Error loading hotel data: {e}")
-#         return render_template('hotel_detail.html', 
-#                              hotel=None, 
-#                              error="Error loading hotel data")
-    
-
-
-# for debugging - check if data can be fetched from API
-# hope dont have to use this bruh
-# can be abandoned if wanted
-# ------------------------------------ DEBUG ----------------------------------------------------
-@app.route('/api/hotels')
-def api_hotels():
-    """API endpoint to get all hotels from the full hotel list"""
+@app.route('/hotel/<hotel_id>')
+def hotel_detail(hotel_id):
+    # Load hotel data from the full hotel list
     try:
-        if not os.path.exists("full_hotel_lists.json"):
-            return jsonify({"error": "No hotel data found"}), 404
-        
-        with open("full_hotel_lists.json", 'r', encoding='utf-8') as f:
-            hotels_data = json.load(f)
-        
-        return jsonify(hotels_data)
+        output_directory = "fetched_data"
+        if not os.path.exists("full_hotel_lists.json") or not os.path.exists(output_directory):
+            return render_template('hotel_detail.html', 
+                                 hotel=None, 
+                                 error="No hotel data found")
+        with open(os.path.join(output_directory, f"{hotel_id}.json"), 'r', encoding= 'utf-8') as p:
+            hotel = json.load(p)
+        return render_template("hotel_detail.html", hotel=hotel)
+            
+    except Exception as e:
+        print(f"Error loading hotel data: {e}")
+        return render_template('hotel_detail.html', 
+                             hotel=None, 
+                             error="Error loading hotel data")
+
+@app.post('/api/hotel_chat')
+def hotel_chat():
+    try:
+        payload = request.get_json(force=True) or {}
+        user_message = (payload.get('message') or '').strip()
+        hotel = payload.get('hotel') or {}
+
+        if not user_message:
+            return jsonify({"error": "message is required"}), 400
+
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        if not gemini_api_key:
+            return jsonify({"error": "GEMINI_API_KEY is not set in environment"}), 500
+
+        output_directory = "fetched_data"
+        with open(os.path.join(output_directory, f"{hotel["id"]}.json"), 'r', encoding='utf-8') as p:
+            data = json.load(p)
+        json_string = json.dumps(data, indent=2, ensure_ascii=False)
+        system_context = {
+            f"You are a helpful hotel assistant chatbot. Answer concisely, with practical and visitor-friendly information."
+            f"You may search for some information that is not included in the data to answer"
+            f"Respond transparently and suggest alternatives. The data is packed in {json_string}"
+        }
+
+        prompt = (
+            f"Context:\n{system_context}\n\nUser question: {user_message}\n"
+        )
+
+        client = genai.Client(api_key= gemini_api_key)
+        response = client.models.generate_content (
+            model = 'gemini-2.5-flash', contents = prompt
+        )
+        text = (getattr(response, 'text', None) or '').strip()
+        if not text and hasattr(response, 'candidates') and response.candidates:
+            try:
+                text = response.candidates[0].content.parts[0].text
+            except Exception:
+                text = ''
+
+        if not text:
+            text = "Sorry, I couldn't generate a response right now. Please try again."
+
+        return jsonify({"reply": text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route('/search')
-def search_hotels():
-    """Route to trigger hotel search and data extraction"""
-    try:
-        from hotel_search import HotelSearchAPI
-        
-        # Use the hardcoded API key
-        api_key = "14277ad46ce3a2bd8a75de26cbfc71c4a17e66743a76430f715143cfc6801d0d"
-        search_api = HotelSearchAPI(api_key)
-        
-        # Example search parameters
-        location = "Hà Nội"
-        price_range = "500000-1000000"
-        rating_range = "4-5"
-        
-        search_results = search_api.search_hotels(location, price_range, rating_range)
-        
-        if search_results:
-            search_api.export_data(search_results)
-            return jsonify({
-                "success": True,
-                "message": "Hotel search completed and data exported"
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "message": "Failed to fetch hotel data"
-            })
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": f"Error: {str(e)}"
-        })
-# ============================================= HET DEBUG ========================================================
-
 
 if __name__ == '__main__':
     app.run(debug=True)
