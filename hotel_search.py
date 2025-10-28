@@ -5,7 +5,6 @@ import json
 import os
 from datetime import date, timedelta
 import time
-from serpapi import GoogleSearch
 from dotenv import load_dotenv
 
 # Load API key lưu trong .env
