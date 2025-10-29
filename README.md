@@ -1,9 +1,10 @@
-# Hotel (Beta 1.1)
+# Hotel (Beta 1.2)
 - API được lưu trong .env (Source tìm hiểu: https://chatgpt.com/share/68fdb9c9-2620-800d-a488-5fe4db254087)
 - Xuất khách sạn
 - Display khách sạn
 - Tất cả chạy theo nhu cầu trong filter (có bug với option dưới 3 sao nhé :skull:)
 - hotel_results.html vs hotel_detail.html là trang kết quả và trang cá nhân của khách sạn (Nên đọc nghiên cứu HTML chạy với Flask: https://chatgpt.com/share/68fdb57c-6310-800d-a189-b73775d45a5f)
+- Đã merged tính năng Account (PHẢI CHẠY **create_db** trước khi chạy **main.py** - Để có database else Jinja2error)
 
 - Chạy file **main.py** là được rồi
 - Thư viện cần cài:
@@ -13,7 +14,7 @@
 - python-dotenv: pip install python-dotenv hoặc uv pip install python-dotenv
 - google: pip install google
 - google-genai: pip install google-genai
-
+- mysql-connector-python: pip install mysql-connector-python werkzeug
 
 # Source tham khảo:
 - SerpAPI: https://serpapi.com/google-hotels-api
@@ -34,5 +35,5 @@
 (Sẵn track giùm số API call nha)
 
 SERPAPI_KEY = {key}  
-GEOAPIFY_KEY = {key}
+GEOAPIFY_KEY = {key}  
 GEMINI_API_KEY = {key}

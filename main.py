@@ -1,7 +1,10 @@
 import os
 import json
 import glob
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+import mysql.connector
+import sqlite3
 import pandas as pd
 from dotenv import load_dotenv
 from google import genai
@@ -11,17 +14,84 @@ from google.genai import types
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = "secret"
+
+def get_db_connection():
+    conn = sqlite3.connect("userdb.db")  # database file stored locally
+    conn.row_factory = sqlite3.Row       # allows dict-style row access
+    return conn
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if not username or not password:
+            flash("Please fill in all fields.")
+            return render_template("register.html")
+
+        hashed_password = generate_password_hash(password)
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE username=?", (username,))
+        if cur.fetchone():
+            flash("❌ Username already exists.")
+            cur.close(); conn.close()
+            return render_template("register.html")
+
+        cur.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
+        conn.commit()
+        cur.close(); conn.close()
+        flash("✅ Account created successfully! Please log in.")
+        return redirect(url_for('login'))
+    return render_template("register.html")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE username=?", (username,))
+        user = cur.fetchone()
+        cur.close(); conn.close()
+
+        if user and check_password_hash(user['password'], password):
+            session['user'] = username
+            return redirect(url_for('recommendation'))
+        else:
+            flash("❌ Invalid username or password.")
+            return render_template("login.html")
+    return render_template("login.html")
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    
+    flash("You have been logged out.")
+    response = redirect(url_for('home'))
+
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.set_cookie('session', '', expires=0)
+    return response
+
 @app.route('/recommendation')
 def recommendation():
+    if "user" not in session:
+        return redirect(url_for("login"))
     return render_template('recommendation.html')
 
 @app.route('/filter', methods=['POST'])
 def filter_hotels():
+    if "user" not in session:
+        return redirect(url_for("login"))
     city = request.form['city']
     price_range = request.form['price_range']
     rating_range = str(request.form['rating'])
@@ -101,7 +171,7 @@ def hotel_chat():
         system_context = {
             f"You are a helpful hotel assistant chatbot. Answer concisely, with practical and visitor-friendly information."
             f"You may search for some information that is not included in the data to answer"
-            f"Respond transparently and suggest alternatives. The data is packed in {json_string}"
+            f"Respond transparently and suggest alternatives. The data is packed in {json_string}. MUST RESPOND IN ENGLISH ONLY"
         }
 
         prompt = (

@@ -59,7 +59,6 @@ class HotelSearchAPI: # Tao class ti import vao file main.py
             return None
         
     def export_data(self, search_results):
-        api = "aa54f565c7f84e9b87ba9c1f48a3b08f"
         hotel_list = search_results.get("properties") # lay du lieu khach san
         if hotel_list:
             # Tao folder luu du lieu tung khach san
