@@ -65,6 +65,50 @@ def login():
             return render_template("login.html")
     return render_template("login.html")
 
+@app.route('/favorites', methods=['POST'])
+def save_favorites():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    favorites = request.get_json()
+    username = session['user']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM users WHERE username=?", (username,))
+    user = cur.fetchone()
+    if not user:
+        cur.close(); conn.close()
+        return jsonify({"error": "User not found"}), 404
+
+    user_id = user['id']
+    data_json = json.dumps(favorites)
+
+    cur.execute("INSERT INTO favorite_places (user_id, data) VALUES (?, ?)", (user_id, data_json))
+    conn.commit()
+    cur.close(); conn.close()
+
+    return jsonify({"message": "Favorites saved successfully!"}), 200
+
+def load_favorites(username):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM users WHERE username=?", (username,))
+    user = cur.fetchone()
+    if not user:
+        cur.close(); conn.close()
+        return []
+
+    user_id = user['id']
+    cur.execute("SELECT data FROM favorite_places WHERE user_id=?", (user_id,))
+    rows = cur.fetchall()
+    cur.close(); conn.close()
+
+    favorites = []
+    for row in rows:
+        data = json.loads(row['data'])
+        favorites.append(data)
+    return favorites
+
 @app.route('/')
 def home():
     return render_template('index.html')
