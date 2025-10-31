@@ -12,9 +12,9 @@
 - pandas: pip install pandas hoặc uv pip install pandas
 - requests: pip install requests hoặc uv pip requests 
 - python-dotenv: pip install python-dotenv hoặc uv pip install python-dotenv
-- google: pip install google
-- google-genai: pip install google-genai
-- mysql-connector-python: pip install mysql-connector-python werkzeug
+- google:  pip install google or uv pip install google
+- google-genai:  pip install google-genai or uv pip install google-genai
+- mysql-connector-python: pip install mysql-connector-python werkzeug or uv pip install mysql-connector-python werkzeug
 
 # Source tham khảo:
 - SerpAPI: https://serpapi.com/google-hotels-api

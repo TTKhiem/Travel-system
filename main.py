@@ -145,7 +145,6 @@ def filter_hotels():
         from hotel_search import HotelSearchAPI
         
         serp_api_key = os.getenv("SERPAPI_KEY")
-        print(f"Tìm dữ liệu của {city}...")
         search_api = HotelSearchAPI(serp_api_key)
         search_results = search_api.search_hotels(city, price_range, rating_range)
         
