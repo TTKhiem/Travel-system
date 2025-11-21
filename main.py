@@ -10,55 +10,48 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+import database
+
 # Load API key lưu trong .env
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "secret"
-
-def get_db_connection():
-    conn = sqlite3.connect("userdb.db")  # database file stored locally
-    conn.row_factory = sqlite3.Row       # allows dict-style row access
-    return conn
+app.config['DATABASE'] = database.DATABASE
+app.secret_key = os.getenv('APP_SECRET')
+database.init_app(app)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username')
+        password = request.form.get('password')
         if not username or not password:
             flash("Please fill in all fields.")
             return render_template("register.html")
-
-        hashed_password = generate_password_hash(password)
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username=?", (username,))
-        if cur.fetchone():
+        db = database.get_db()
+        try:
+            hashed_pw = generate_password_hash(password)
+            cursor = db.execute("INSERT INTO users (username, password) VALUES (?, ?)",
+                    (username, hashed_pw))
+            user_id = cursor.lastrowid
+            db.commit()
+            flash("✅ Account created successfully! Please log in.")
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
             flash("❌ Username already exists.")
-            cur.close(); conn.close()
             return render_template("register.html")
-
-        cur.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
-        conn.commit()
-        cur.close(); conn.close()
-        flash("✅ Account created successfully! Please log in.")
-        return redirect(url_for('login'))
-    return render_template("register.html")
+    return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username=?", (username,))
-        user = cur.fetchone()
-        cur.close(); conn.close()
+        username = request.form.get('username')
+        password = request.form.get('password')
+        db = database.get_db()
+        user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
 
         if user and check_password_hash(user['password'], password):
-            session['user'] = username
+            session['user'] = user['username']
             return redirect(url_for('recommendation'))
         else:
             flash("❌ Invalid username or password.")
@@ -71,38 +64,23 @@ def save_favorites():
         return redirect(url_for("login"))
     favorites = request.get_json()
     username = session['user']
-
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM users WHERE username=?", (username,))
-    user = cur.fetchone()
+    db = database.get_db()
+    user = db.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
     if not user:
-        cur.close(); conn.close()
         return jsonify({"error": "User not found"}), 404
-
     user_id = user['id']
     data_json = json.dumps(favorites)
-
-    cur.execute("INSERT INTO favorite_places (user_id, data) VALUES (?, ?)", (user_id, data_json))
-    conn.commit()
-    cur.close(); conn.close()
-
+    db.execute("INSERT INTO favorite_places (user_id, data) VALUES (?, ?)", (user_id, data_json))
+    db.commit()
     return jsonify({"message": "Favorites saved successfully!"}), 200
 
 def load_favorites(username):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM users WHERE username=?", (username,))
-    user = cur.fetchone()
+    db = database.get_db()
+    user = db.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
     if not user:
-        cur.close(); conn.close()
         return []
-
     user_id = user['id']
-    cur.execute("SELECT data FROM favorite_places WHERE user_id=?", (user_id,))
-    rows = cur.fetchall()
-    cur.close(); conn.close()
-
+    rows = db.execute("SELECT data FROM favorite_places WHERE user_id=?", (user_id,)).fetchall()
     favorites = []
     for row in rows:
         data = json.loads(row['data'])
@@ -116,7 +94,6 @@ def home():
 @app.route('/logout')
 def logout():
     session.clear()
-    
     flash("You have been logged out.")
     response = redirect(url_for('home'))
 
@@ -240,4 +217,7 @@ def hotel_chat():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
+    if not os.path.exists(app.config['DATABASE']):
+        with app.app_context():
+            database.init_db()
     app.run(debug=True)
