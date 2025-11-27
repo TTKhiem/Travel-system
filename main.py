@@ -9,7 +9,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from datetime import datetime, timedelta
 
+from hotel_search import HotelSearchAPI
 import database
 
 # Load API key lưu trong .env
@@ -118,29 +120,12 @@ def filter_hotels():
     rating_range = str(request.form['rating'])
 
     try:
-        # Su dung SerpAPI trong hotel_search.py de xuat ra cac file JSON
-        from hotel_search import HotelSearchAPI
-        
         serp_api_key = os.getenv("SERPAPI_KEY")
         search_api = HotelSearchAPI(serp_api_key)
         search_results = search_api.search_hotels(city, price_range, rating_range)
         
-        # Tạo file khi có khách sạn
-        # Khỏi tạo nếu không tìm: 
-        # Case: Có data thì load còn ko luôn thì nah :skull:
-        if search_results:
-            search_api.export_data(search_results)
-            with open("full_hotel_lists.json", 'r', encoding='utf-8') as f:
-                hotels_data = json.load(f)
-        else:
-            if os.path.exists("full_hotel_lists.json"):
-                with open("full_hotel_lists.json", 'r', encoding='utf-8') as f:
-                    hotels_data = json.load(f)
-            else:
-                hotels_data = []
-        
         return render_template('hotel_results.html', 
-                            hotels=hotels_data, 
+                            hotels=search_results, 
                             search_params={
                                 'city': city,
                                 'price_range': price_range,
@@ -151,31 +136,159 @@ def filter_hotels():
                             hotels=[], 
                             error=f"Error loading data: {str(e)}")
 
-@app.route('/hotel/<hotel_id>')
-def hotel_detail(hotel_id):
-    # Load hotel data from the full hotel list
-    try:
-        output_directory = "fetched_data"
-        if not os.path.exists("full_hotel_lists.json") or not os.path.exists(output_directory):
-            return render_template('hotel_detail.html', 
-                                 hotel=None, 
-                                 error="No hotel data found")
-        with open(os.path.join(output_directory, f"{hotel_id}.json"), 'r', encoding= 'utf-8') as p:
-            hotel = json.load(p)
-        return render_template("hotel_detail.html", hotel=hotel)
+@app.route('/hotel/<property_token>')
+def hotel_detail(property_token):
+    if "user" not in session:
+        return redirect(url_for("login"))
+    db = database.get_db()
+    cached_row = db.execute("SELECT data, created_at FROM hotel_cache WHERE token = ?", (property_token,)).fetchone()
+    hotel_data = None
+    use_cache = False
+    # Case 1: Đã cache database khách sạn
+    if cached_row:
+        # Cache chỉ valid trong 5 ngày
+        stored_time = datetime.strptime(cached_row['created_at'], '%Y-%m-%d %H:%M:%S')
+        if datetime.now() - stored_time < timedelta(days=5):
+            print(f"Cached DB: {property_token}")
+            hotel_data = json.loads(cached_row['data'])
+            use_cache = True
+        else:
+            print(f"Cache EXPIRED (> 5 days): {property_token}")
+
+    # Case 2: Chưa có -> Gọi API fetch về và lưu lại
+    if not use_cache:
+        print(f"Fetching fresh data from API: {property_token}")
+        try:
+            serp_api_key = os.getenv("SERPAPI_KEY")
+            search_api = HotelSearchAPI(serp_api_key)
+            hotel_data = search_api.get_hotel_details(property_token)
             
+            if hotel_data:
+                # Bổ sung property_token vào file json để tiện dùng sau này
+                hotel_data['property_token'] = property_token 
+                # Lưu file Cache
+                json_string = json.dumps(hotel_data, ensure_ascii = False)
+                db.execute("INSERT OR REPLACE INTO hotel_cache (token, data) VALUES (?, ?)", (property_token, json_string))
+                db.commit()
+        except Exception as e:
+            print(f"Error fetching details: {e}")
+            if cached_row:
+                 print("Khong fetch duoc data, quay lai cache cu.")
+                 hotel_data = json.loads(cached_row['data'])
+            else:
+                return render_template('hotel_detail.html', error="Không thể tải dữ liệu khách sạn.")
+
+    if not hotel_data:
+        return render_template('hotel_detail.html', error="Không tìm thấy khách sạn.")
+    
+    dynamic_price = request.args.get('price')
+    if dynamic_price:
+        # Đảm bảo cấu trúc dict tồn tại để không bị lỗi KeyError
+        if 'rate_per_night' not in hotel_data:
+            hotel_data['rate_per_night'] = {}
+            
+        hotel_data['rate_per_night']['lowest'] = dynamic_price
+        hotel_data['is_dynamic_price'] = True 
+
+    #  Lưu check-in/out để hiển thị hoặc dùng cho chatbot context
+    check_in = request.args.get('check_in')
+    check_out = request.args.get('check_out')
+    if check_in and check_out:
+        hotel_data['search_context'] = {'check_in': check_in, 'check_out': check_out}
+    local_reviews = db.execute(
+        "SELECT * FROM user_reviews WHERE property_token = ? ORDER BY created_at DESC", 
+        (property_token,)
+    ).fetchall()
+    return render_template("hotel_detail.html", hotel=hotel_data, local_reviews=local_reviews)
+
+@app.route('/hotel/review', methods=['POST'])
+def add_review():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    
+    property_token = request.form.get('property_token')
+    rating = request.form.get('rating')
+    comment = request.form.get('comment')
+    username = session['user']
+    
+    # Lấy lại các tham số URL cũ để redirect về đúng trang thái cũ (giá, ngày)
+    price = request.form.get('current_price')
+    check_in = request.form.get('check_in')
+    check_out = request.form.get('check_out')
+
+    if property_token and rating:
+        db = database.get_db()
+        db.execute(
+            "INSERT INTO user_reviews (property_token, username, rating, comment) VALUES (?, ?, ?, ?)",
+            (property_token, username, int(rating), comment)
+        )
+        db.commit()
+        flash("✅ Cảm ơn bạn đã đánh giá!")
+    else:
+        flash("❌ Vui lòng chọn số sao.")
+
+    # Redirect lại trang chi tiết
+    return redirect(url_for('hotel_detail', 
+                            property_token=property_token,
+                            price=price,
+                            check_in=check_in,
+                            check_out=check_out))
+
+@app.post('/api/summarize_reviews')
+def summarize_reviews():
+    try:
+        data = request.get_json(force=True)
+        property_token = data.get('property_token')
+        
+        if not property_token:
+            return jsonify({'error': 'Missing token'}), 400
+
+        db = database.get_db()
+        # Lấy 20 review gần nhất để tóm tắt (tránh quá dài)
+        reviews = db.execute(
+            "SELECT rating, comment FROM user_reviews WHERE property_token = ? AND comment IS NOT NULL ORDER BY created_at DESC LIMIT 20", 
+            (property_token,)
+        ).fetchall()
+
+        if not reviews:
+            return jsonify({'summary': None}) # Chưa có đánh giá
+
+        # Ghép các review thành một đoạn văn bản
+        reviews_text = "\n".join([f"- {r['rating']} sao: {r['comment']}" for r in reviews if r['comment'].strip()])
+        
+        if not reviews_text:
+             return jsonify({'summary': None})
+
+        # Prompt cho Gemini
+        prompt = (
+            f"Dưới đây là các đánh giá của khách hàng về một khách sạn:\n"
+            f"{reviews_text}\n\n"
+            f"Yêu cầu: Hãy viết một đoạn tóm tắt ngắn gọn (khoảng 3-4 câu) bằng tiếng Việt về ưu điểm và nhược điểm chính của khách sạn này dựa trên các đánh giá trên. "
+            f"Văn phong khách quan, hữu ích cho người định đặt phòng."
+        )
+
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        client = genai.Client(api_key=gemini_api_key)
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+        
+        return jsonify({'summary': response.text})
+
     except Exception as e:
-        print(f"Error loading hotel data: {e}")
-        return render_template('hotel_detail.html', 
-                             hotel=None, 
-                             error="Error loading hotel data")
+        print(f"Summarize Error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.post('/api/hotel_chat')
 def hotel_chat():
     try:
         payload = request.get_json(force=True) or {}
         user_message = (payload.get('message') or '').strip()
-        hotel = payload.get('hotel') or {}
+        property_token = payload.get('property_token')
+        dynamic_context = payload.get('dynamic_context') or {}
+        hotel_fallback = payload.get('hotel_fallback') or {}
 
         if not user_message:
             return jsonify({"error": "message is required"}), 400
@@ -184,36 +297,61 @@ def hotel_chat():
         if not gemini_api_key:
             return jsonify({"error": "GEMINI_API_KEY is not set in environment"}), 500
 
-        output_directory = "fetched_data"
-        with open(os.path.join(output_directory, f"{hotel["id"]}.json"), 'r', encoding='utf-8') as p:
-            data = json.load(p)
-        json_string = json.dumps(data, indent=2, ensure_ascii=False)
-        system_context = {
-            f"You are a helpful hotel assistant chatbot. Answer concisely, with practical and visitor-friendly information."
-            f"You may search for some information that is not included in the data to answer"
-            f"Respond transparently and suggest alternatives. The data is packed in {json_string}. MUST RESPOND IN ENGLISH ONLY"
-        }
+        hotel_data = {}
+        if property_token:
+            db = database.get_db()
+            row = db.execute("SELECT data FROM hotel_cache WHERE token = ?", (property_token,)).fetchone()
+            
+            if row:
+                hotel_data = json.loads(row['data'])
+            else:
+                hotel_data = hotel_fallback
+        else:
+            hotel_data = hotel_fallback
 
-        prompt = (
-            f"Context:\n{system_context}\n\nUser question: {user_message}\n"
+        # 3. Chuẩn bị Context cho Gemini
+        # Trích xuất thông tin động để AI biết
+        current_price = dynamic_context.get('price', 'N/A')
+        check_in = dynamic_context.get('check_in', 'N/A')
+        check_out = dynamic_context.get('check_out', 'N/A')
+
+        # Convert data khách sạn sang string
+        hotel_data_str = json.dumps(hotel_data, indent=2, ensure_ascii=False)
+
+        # Prompt kỹ thuật (System Instruction)
+        system_instruction = (
+            f"You are a helpful and professional AI assistant for a hotel booking platform. "
+            f"Your task is to answer visitor questions based STRICTLY on the provided data below.\n\n"
+            
+            f"--- DYNAMIC CONTEXT (Current User Session) ---\n"
+            f"- Current Price being viewed: {current_price} (for dates: {check_in} to {check_out}).\n"
+            f"- If the user asks about the price, confirm this value for their selected dates.\n\n"
+            
+            f"--- HOTEL STATIC INFORMATION ---\n"
+            f"{hotel_data_str}\n"
+            f"-----------------------------------\n\n"
+            
+            f"Guidelines:\n"
+            f"1. Answer concisely and politely.\n"
+            f"2. Use the language that the user is using (e.g., if they ask in Vietnamese, answer in Vietnamese).\n"
+            f"3. If the information is not provided in the data, honestly state that you don't have that information. Do not fabricate facts."
         )
+        prompt = f"{system_instruction}\n\nUser Question: {user_message}"
 
-        client = genai.Client(api_key= gemini_api_key)
-        response = client.models.generate_content (
-            model = 'gemini-2.5-flash', contents = prompt
-        )
-        text = (getattr(response, 'text', None) or '').strip()
-        if not text and hasattr(response, 'candidates') and response.candidates:
-            try:
-                text = response.candidates[0].content.parts[0].text
-            except Exception:
-                text = ''
+        # 4. Gọi Gemini API
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        if not gemini_api_key:
+            return jsonify({"error": "Missing GEMINI_API_KEY"}), 500
 
-        if not text:
-            text = "Sorry, I couldn't generate a response right now. Please try again."
+        client = genai.Client(api_key=gemini_api_key)
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
 
-        return jsonify({"reply": text})
+        reply_text = response.text if response.text else "Xin lỗi, AI đang bận."
+
+        return jsonify({"reply": reply_text})
+
     except Exception as e:
+        print(f"Chat Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

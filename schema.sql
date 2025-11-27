@@ -13,11 +13,26 @@ CREATE TABLE IF NOT EXISTS favorite_places (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE IF NOT EXISTS reviews (
+-- CREATE TABLE IF NOT EXISTS reviews (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     user_id INTEGER NOT NULL,
+--     rating INTEGER CHECK(rating >= 1 AND rating <= 5),
+--     comment TEXT,
+--     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (user_id) REFERENCES users(id)
+-- );
+
+CREATE TABLE IF NOT EXISTS hotel_cache (
+    token TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    rating INTEGER CHECK(rating >= 1 AND rating <= 5),
-    comment TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    property_token TEXT NOT NULL,       
+    username TEXT NOT NULL,            
+    rating INTEGER NOT NULL,            
+    comment TEXT,                      
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

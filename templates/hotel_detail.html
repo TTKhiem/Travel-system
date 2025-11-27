@@ -5,404 +5,412 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ hotel.name }} - Hotel Details</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f0f2f5;
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .overlay {
-            background: rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -1;
-        }
-        .container {
-            position: relative;
-            z-index: 2;
-            margin-top: 2%;
-        }
-        .hotel-detail-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
+        .container { margin-top: 20px; }
+        
+        /* Carousel Styles */
+        .hotel-carousel {
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
         }
-        .hotel-hero {
-            height: 400px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            display: flex;
-            align-items: end;
-        }
-        .hotel-hero::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.7));
-        }
-        .hotel-hero-content {
-            position: relative;
-            z-index: 2;
-            color: white;
-            padding: 30px;
+        .carousel-item img {
+            height: 450px;
+            object-fit: cover;
             width: 100%;
         }
-        .hotel-name {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .hotel-location {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        .rating-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px 20px;
-            border-radius: 25px;
-            display: inline-flex;
-            align-items: center;
-            margin-top: 15px;
-        }
-        .stars {
-            color: #ffc107;
-            margin-right: 10px;
-        }
-        .content-section {
-            padding: 40px;
+
+        /* Section Styling */
+        .content-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
         .section-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .price-display {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .price-amount {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        .amenities-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .amenity-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-        .amenity-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .amenity-icon {
-            font-size: 1.5rem;
-            color: #007bff;
-            margin-bottom: 10px;
-        }
-        .review-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
             margin-bottom: 15px;
             border-left: 4px solid #007bff;
+            padding-left: 10px;
         }
-        .review-rating {
-            color: #ffc107;
-            margin-bottom: 10px;
+
+        /* Sidebar Sticky */
+        .sidebar-sticky {
+            position: sticky;
+            top: 20px;
+            z-index: 100;
         }
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        .info-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .info-icon {
-            font-size: 1.5rem;
-            color: #007bff;
-            margin-right: 10px;
-        }
-        .btn-back {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            text-decoration: none;
-            display: inline-flex;
+
+        /* Nearby Places List */
+        .nearby-item {
+            display: flex;
             align-items: center;
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
         }
-        .btn-back:hover {
-            background: #5a6268;
-            color: white;
-            transform: translateY(-2px);
+        .nearby-item:last-child { border-bottom: none; }
+        .nearby-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 15px;
         }
-        .contact-info {
-            background: linear-gradient(135deg, #007bff, #0056b3);
+        
+        /* Amenities Accordion */
+        .accordion-button:not(.collapsed) {
+            color: #007bff;
+            background-color: #e7f1ff;
+        }
+        .amenity-badge {
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+
+        /* Rating & Price */
+        .price-box {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
             padding: 20px;
-            border-radius: 15px;
-            margin-top: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        /* Excluded Amenities */
+        .excluded-item {
+            color: #dc3545;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div class="overlay"></div>
-    <div class="container">
-        <a href="javascript:history.back()" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Results
-        </a>
-        
-        <div class="hotel-detail-card">
-            <div class="hotel-hero" style="background-image: url('{{ hotel.images[0].original_image if hotel.images else 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200' }}')">
-                <div class="hotel-hero-content">
-                    <h1 class="hotel-name">{{ hotel.name }}</h1>
-                    <p class="hotel-location">
-                        <i class="fas fa-map-marker-alt"></i> {{ hotel.address if hotel.address else 'Address not available' }}
-                    </p>
-                    <div class="rating-badge">
-                        <div class="stars">
-                            {% for i in range(5) %}
-                                {% if i < (hotel.overall_rating|int if hotel.overall_rating else 0) %}
-                                    <i class="fas fa-star"></i>
-                                {% else %}
-                                    <i class="far fa-star"></i>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                        <span>{{ hotel.overall_rating if hotel.overall_rating else 'N/A' }}/5</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="content-section">
-                <div class="row">
-                    <div class="col-lg-8">
-                        <!-- Description -->
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h3 class="section-title mb-0">About This Hotel</h3>
-                                <button id="openChatBtn" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-robot"></i> Ask about this hotel
-                                </button>
-                            </div>
-                            <p class="lead mt-3">{{ hotel.description if hotel.description else 'No description available' }}</p>
-                            <div id="chatWidget" class="card shadow-sm" style="display:none; border-radius: 12px; overflow: hidden;">
-                                <div class="card-header d-flex justify-content-between align-items-center" style="background:#f8f9fa;">
-                                    <strong><i class="fas fa-comments"></i> Hotel Chatbot</strong>
-                                    <button id="closeChatBtn" class="btn btn-sm btn-light"><i class="fas fa-times"></i></button>
-                                </div>
-                                <div id="chatMessages" class="card-body" style="height: 260px; overflow-y: auto; background: #fff;">
-                                    <div class="text-muted small">Ask about amenities, check-in, nearby places, transport, etc.</div>
-                                </div>
-                                <div class="card-footer bg-white">
-                                    <div class="input-group">
-                                        <input id="chatInput" type="text" class="form-control" placeholder="Type your question..."/>
-                                        <button id="sendChatBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Amenities -->
-                        {% if hotel.amenities and hotel.amenities|length > 0 %}
-                        <div class="mb-4">
-                            <h3 class="section-title">Amenities</h3>
-                            <div class="amenities-grid">
-                                {% for amenity in hotel.amenities %}
-                                <div class="amenity-item">
-                                    <div class="amenity-icon">
-                                        {% set amenity_name = amenity.name if amenity.name else amenity %}
-                                        {% if 'wifi' in amenity_name.lower() or 'internet' in amenity_name.lower() %}
-                                            <i class="fas fa-wifi"></i>
-                                        {% elif 'pool' in amenity_name.lower() %}
-                                            <i class="fas fa-swimming-pool"></i>
-                                        {% elif 'gym' in amenity_name.lower() or 'fitness' in amenity_name.lower() %}
-                                            <i class="fas fa-dumbbell"></i>
-                                        {% elif 'restaurant' in amenity_name.lower() or 'dining' in amenity_name.lower() %}
-                                            <i class="fas fa-utensils"></i>
-                                        {% elif 'parking' in amenity_name.lower() %}
-                                            <i class="fas fa-parking"></i>
-                                        {% elif 'spa' in amenity_name.lower() %}
-                                            <i class="fas fa-spa"></i>
-                                        {% else %}
-                                            <i class="fas fa-check-circle"></i>
-                                        {% endif %}
-                                    </div>
-                                    <div>{{ amenity_name }}</div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Reviews -->
-                        {% if (hotel.ratings and hotel.ratings|length > 0) or (hotel.reviews_breakdown and hotel.reviews_breakdown|length > 0) %}
-                        <div class="mb-4">
-                            <h3 class="section-title">Guest Reviews</h3>
+    <div class="container pb-5">
+        <div class="mb-3">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
 
-                            {% if hotel.overall_rating and hotel.reviews is number %}
-                            <div class="text-center mb-4 p-3" style="background: #f8f9fa; border-radius: 10px;">
-                                <h4 class="mb-0">Overall Rating: {{ hotel.overall_rating }}/5</h4>
-                                <p class="text-muted mb-0">Based on {{ hotel.reviews }} reviews</p>
-                            </div>
-                            {% endif %}
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% else %}
 
-                            {% if hotel.ratings and hotel.ratings|length > 0 and hotel.reviews is number and hotel.reviews > 0 %}
-                            <h5 class="mb-3">Rating Breakdown</h5>
-                            <div class="mb-4">
-                                {% for rating in hotel.ratings %}
-                                <div class="d-flex align-items-center mb-2">
-                                    <span style="min-width: 60px;">{{ rating.stars }} Stars</span>
-                                    {% set total_reviews = hotel.reviews if hotel.reviews > 0 else 1 %}
-                                    {% set percentage = (rating.count / total_reviews) * 100 %}
-                                    <div class="progress flex-grow-1" style="height: 20px;">
-                                        <div class="progress-bar bg-warning text-dark" role="progressbar" 
-                                            style="width: {{ percentage }}%;" 
-                                            aria-valuenow="{{ rating.count }}" aria-valuemin="0" aria-valuemax="{{ total_reviews }}">
-                                            <strong class="ms-2">{{ rating.count }}</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if hotel.reviews_breakdown and hotel.reviews_breakdown|length > 0 %}
-                            <h5 class="mb-3">Guest Mentions</h5>
-                            <div class="amenities-grid">
-                                {% for topic in hotel.reviews_breakdown %}
-                                <div class="amenity-item text-start p-3">
-                                    <strong>{{ topic.name }}</strong>
-                                    <div class="d-flex justify-content-between text-muted small mt-2">
-                                        <span>Total:</span>
-                                        <span>{{ topic.total_mentioned }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between text-success small">
-                                        <span>Positive:</span>
-                                        <span>{{ topic.positive }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between text-danger small">
-                                        <span>Negative:</span>
-                                        <span>{{ topic.negative }}</span>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
-                        </div>
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <div>
+                <h1 class="fw-bold mb-1">{{ hotel.name }}</h1>
+                <p class="text-muted mb-0"><i class="fas fa-map-marker-alt text-danger"></i> {{ hotel.address }}</p>
+                <div class="text-warning mt-1">
+                    {% for i in range(5) %}
+                        {% if i < (hotel.overall_rating|int if hotel.overall_rating else 0) %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
                         {% endif %}
-                    </div>
-                    
-                    <div class="col-lg-4">
-                        <!-- Price Information -->
-                        <div class="price-display">
-                            <h4>Price per Night</h4>
-                            <div class="price-amount">
-                                {% if hotel.rate_per_night and hotel.rate_per_night.lowest %}
-                                    {{ hotel.rate_per_night.lowest }}
-                                {% else %}
-                                    Contact for Price
-                                {% endif %}
-                            </div>
-                            {% if hotel.total_rate and hotel.total_rate.lowest %}
-                            <p class="mb-0">Total Rate: {{ hotel.total_rate.lowest }}</p>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Check-in/Check-out -->
-                        {% if hotel.check_in_time or hotel.check_out_time %}
-                        <div class="info-card mb-3">
-                            <h5><i class="fas fa-clock info-icon"></i>Check-in/Check-out</h5>
-                            {% if hotel.check_in_time %}
-                            <p><strong>Check-in:</strong> {{ hotel.check_in_time }}</p>
-                            {% endif %}
-                            {% if hotel.check_out_time %}
-                            <p><strong>Check-out:</strong> {{ hotel.check_out_time }}</p>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Location Info -->
-                        {% if hotel.gps_coordinates %}
-                        <div class="info-card mb-3">
-                            <h5><i class="fas fa-map-marked-alt info-icon"></i>Location</h5>
-                            <p><strong>Coordinates:</strong> {{ hotel.gps_coordinates.latitude }}, {{ hotel.gps_coordinates.longitude }}</p>
-                            <a href="https://maps.google.com/?q={{ hotel.gps_coordinates.latitude }},{{ hotel.gps_coordinates.longitude }}" 
-                               target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-external-link-alt"></i> View on Map
-                            </a>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Nearby Places -->
-                        {% if hotel.nearby_places and hotel.nearby_places|length > 0 %}
-                        <div class="info-card mb-3">
-                            <h5><i class="fas fa-map-signs info-icon"></i>Nearby Places</h5>
-                            <ul class="list-unstyled">
-                                {% for place in hotel.nearby_places[:5] %}
-                                <li><i class="fas fa-map-marker-alt text-primary"></i> {{ place.name if place.name else place }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <!-- Contact Information -->
-                <div class="contact-info">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5><i class="fas fa-phone"></i> Contact Information</h5>
-                            {% if hotel.phone %}
-                            <p><strong>Phone:</strong> {{ hotel.phone }}</p>
-                            {% endif %}
-                            {% if hotel.link %}
-                            <p><strong>Website:</strong> 
-                                <a href="{{ hotel.link }}" target="_blank" class="text-white">
-                                    {{ hotel.link }} <i class="fas fa-external-link-alt"></i>
-                                </a>
-                            </p>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            <h5><i class="fas fa-info-circle"></i> Hotel Type</h5>
-                            <p><strong>Type:</strong> {{ hotel.type if hotel.type != 'N/A' else 'Standard Hotel' }}</p>
-                        </div>
-                    </div>
+                    {% endfor %}
+                    <span class="text-dark fw-bold ms-2">{{ hotel.overall_rating }}/5</span>
+                    <span class="text-muted small">({{ hotel.reviews }} reviews)</span>
                 </div>
             </div>
         </div>
+
+        {% if hotel.images %}
+        <div id="hotelCarousel" class="carousel slide hotel-carousel" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for img in hotel.images %}
+                <div class="carousel-item {{ 'active' if loop.first }}">
+                    <img src="{{ img.original_image }}" class="d-block w-100" alt="Hotel Image">
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#hotelCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-8">
+                
+        <div class="content-card position-relative">
+        <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2">
+            <h3 class="section-title mb-0 border-0 p-0">Giới thiệu</h3>
+            
+            <button id="openChatBtn" class="btn btn-primary rounded-pill shadow-sm px-4">
+                <i class="fas fa-sparkles text-warning me-2"></i> Hỏi AI về nơi này
+            </button>
+        </div>
+
+        <div class="description-content">
+            <p class="lead" style="font-size: 1.05rem; line-height: 1.6;">
+                {{ hotel.description if hotel.description else 'Hiện chưa có mô tả chi tiết cho khách sạn này.' }}
+                <div id="aiSummaryBox" class="mt-4 p-3 rounded-3 border-0 bg-light" style="display: none;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-magic text-primary me-2"></i>
+                    <h6 class="fw-bold mb-0 text-primary">Tóm tắt đánh giá từ cộng đồng (AI)</h6>
+                </div>
+                <div id="aiSummaryContent" class="text-dark small" style="line-height: 1.6;">
+                    <i class="fas fa-spinner fa-spin text-muted"></i> Đang phân tích ý kiến khách hàng...
+                </div>
+            </div>
+            </p>
+        </div>
+        
+        {% if hotel.sustainability %}
+        <div class="alert alert-success d-flex align-items-center mt-4 rounded-3 border-0 bg-opacity-10 bg-success text-success">
+            <i class="fas fa-leaf fa-2x me-3"></i>
+            <div>
+                <strong class="text-dark">Du lịch bền vững</strong><br>
+                <small>Khách sạn này có các biện pháp tiết kiệm năng lượng và giảm rác thải.</small>
+            </div>
+        </div>
+        {% endif %}
     </div>
+
+                {% if hotel.amenities_detailed and hotel.amenities_detailed.groups %}
+                <div class="content-card">
+                    <h3 class="section-title">Tiện nghi chi tiết</h3>
+                    <div class="accordion" id="amenitiesAccordion">
+                        {% for group in hotel.amenities_detailed.groups %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button {{ 'collapsed' if not loop.first }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                    <strong>{{ group.title }}</strong>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {{ 'show' if loop.first }}" data-bs-parent="#amenitiesAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        {% for item in group.list %}
+                                        <div class="col-md-6 mb-2">
+                                            {% if item.available %}
+                                                <i class="fas fa-check text-success me-2"></i> {{ item.title }}
+                                                {% if item.label %}
+                                                    <span class="badge bg-secondary amenity-badge">{{ item.label }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <i class="fas fa-times text-danger me-2"></i> <span class="text-decoration-line-through text-muted">{{ item.title }}</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if hotel.health_and_safety %}
+                <div class="content-card">
+                    <h3 class="section-title"><i class="fas fa-shield-virus text-primary"></i> Sức khỏe & An toàn</h3>
+                    <div class="row">
+                        {% for group in hotel.health_and_safety.groups %}
+                        <div class="col-12 mb-3">
+                            <h6 class="fw-bold">{{ group.title }}</h6>
+                            <ul class="list-unstyled">
+                                {% for item in group.list %}
+                                    <li class="mb-1"><i class="fas fa-check-circle text-info me-2"></i>{{ item.title }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if hotel.reviews_breakdown %}
+                <div class="content-card">
+                    <h3 class="section-title">Đánh giá từ khách hàng</h3>
+                    <div class="row">
+                        {% for topic in hotel.reviews_breakdown %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ topic.name }}</strong>
+                                <span class="badge bg-light text-dark border">{{ topic.total_mentioned }} mentions</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 8px;">
+                                {% set total = topic.positive + topic.negative + topic.neutral %}
+                                {% set pos_pct = (topic.positive / total * 100) if total > 0 else 0 %}
+                                {% set neg_pct = (topic.negative / total * 100) if total > 0 else 0 %}
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ pos_pct }}%"></div>
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ neg_pct }}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mt-1">
+                                <span><i class="fas fa-smile text-success"></i> {{ topic.positive }}</span>
+                                <span><i class="fas fa-frown text-danger"></i> {{ topic.negative }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="content-card mt-4">
+    <h3 class="section-title"><i class="fas fa-comments text-primary"></i> Đánh giá từ cộng đồng</h3>
+    <div class="card bg-light border-0 mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Viết đánh giá của bạn</h5>
+            <form action="{{ url_for('add_review') }}" method="POST">
+                <input type="hidden" name="property_token" value="{{ hotel.property_token }}">
+                
+                <input type="hidden" name="current_price" value="{{ hotel.rate_per_night.lowest if hotel.rate_per_night else '' }}">
+                <input type="hidden" name="check_in" value="{{ hotel.search_context.check_in if hotel.search_context else '' }}">
+                <input type="hidden" name="check_out" value="{{ hotel.search_context.check_out if hotel.search_context else '' }}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Bạn chấm mấy sao?</label>
+                    <div class="rating-input">
+                        <div class="btn-group" role="group">
+                            {% for i in range(1, 6) %}
+                            <input type="radio" class="btn-check" name="rating" id="star{{i}}" value="{{i}}" required>
+                            <label class="btn btn-outline-warning" for="star{{i}}">{{i}} <i class="fas fa-star"></i></label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <textarea name="comment" class="form-control" rows="3" placeholder="Chia sẻ trải nghiệm của bạn về khách sạn này..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Gửi đánh giá</button>
+            </form>
+        </div>
+    </div>
+    <div class="review-list">
+        {% if local_reviews %}
+            {% for review in local_reviews %}
+            <div class="d-flex mb-3 border-bottom pb-3">
+                <div class="flex-shrink-0">
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; font-weight: bold;">
+                        {{ review.username[0] | upper }}
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0 fw-bold">{{ review.username }}</h6>
+                        <small class="text-muted">{{ review.created_at }}</small>
+                    </div>
+                    <div class="text-warning small mb-1">
+                        {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                    </div>
+                    <p class="mb-0 text-dark">{{ review.comment }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted text-center py-3">Chưa có đánh giá nào từ cộng đồng. Hãy là người đầu tiên!</p>
+        {% endif %}
+    </div>
+</div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="sidebar-sticky">
+                    <div class="price-box mb-4 shadow">
+                        <h4 class="mb-2">Giá mỗi đêm</h4>
+                        <div class="display-5 fw-bold mb-2">
+                            {{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}
+                        </div>
+                        <p class="small opacity-75">Đã bao gồm thuế & phí (nếu có)</p>
+                        <a href="{{ hotel.link }}" target="_blank" class="btn btn-light text-primary w-100 fw-bold">
+                            <i class="fas fa-external-link-alt"></i> Đặt phòng ngay
+                        </a>
+                    </div>
+
+                    {% if hotel.excluded_amenities %}
+                    <div class="content-card border-danger border-start border-4">
+                        <h5 class="text-danger"><i class="fas fa-exclamation-circle"></i> Lưu ý không có:</h5>
+                        <ul class="list-unstyled mb-0">
+                            {% for item in hotel.excluded_amenities %}
+                            <li class="excluded-item mb-1"><i class="fas fa-times-circle"></i> {{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if hotel.gps_coordinates %}
+                    <div class="content-card p-0 overflow-hidden">
+                        <iframe 
+                            width="100%" 
+                            height="250" 
+                            style="border:0;" 
+                            loading="lazy" 
+                            allowfullscreen
+                            src="https://maps.google.com/maps?q={{ hotel.gps_coordinates.latitude }},{{ hotel.gps_coordinates.longitude }}&hl=vi&z=16&output=embed">
+                        </iframe>
+                        <div class="p-3">
+                            <small class="text-muted"><i class="fas fa-map-pin"></i> {{ hotel.address }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if hotel.nearby_places %}
+                    <div class="content-card">
+                        <h5 class="mb-3">Địa điểm xung quanh</h5>
+                        <div class="nearby-list">
+                            {% for place in hotel.nearby_places[:6] %}
+                            <div class="nearby-item">
+                                <img src="{{ place.thumbnail if place.thumbnail else 'https://via.placeholder.com/50' }}" class="nearby-thumb" alt="Place">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 small fw-bold">{{ place.name }}</h6>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">
+                                        {% if place.transportations %}
+                                            {% for trans in place.transportations %}
+                                                <span class="me-2">
+                                                    {% if trans.type == 'Walking' %}<i class="fas fa-walking"></i>
+                                                    {% elif trans.type == 'Taxi' %}<i class="fas fa-taxi"></i>
+                                                    {% else %}<i class="fas fa-bus"></i>{% endif %}
+                                                    {{ trans.duration }}
+                                                </span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+        
+        <div id="chatWidget" class="card shadow" style="display:none; position: fixed; bottom: 80px; right: 20px; width: 350px; z-index: 1000; border-radius: 15px;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 15px 15px 0 0;">
+                <strong><i class="fas fa-robot"></i> Trợ lý ảo</strong>
+                <button id="closeChatBtn" class="btn btn-sm text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="chatMessages" class="card-body bg-light" style="height: 300px; overflow-y: auto;">
+                <div class="text-center text-muted small mt-4">
+                    Bạn có thể hỏi về:<br>
+                    "Khách sạn có bể bơi không?"<br>
+                    "Giờ check-in là mấy giờ?"<br>
+                    "Cách Hồ Gươm bao xa?"
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="input-group">
+                    <input id="chatInput" type="text" class="form-control" placeholder="Nhập câu hỏi...">
+                    <button id="sendChatBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        {% endif %} </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -414,65 +422,149 @@
             const input = document.getElementById('chatInput');
             const messages = document.getElementById('chatMessages');
 
+            // Hàm hiển thị tin nhắn lên màn hình
             function appendMessage(text, role){
                 const wrapper = document.createElement('div');
-                wrapper.className = role === 'user' ? 'text-end mb-2' : 'text-start mb-2';
+                wrapper.className = role === 'user' ? 'text-end mb-3' : 'text-start mb-3';
+                
                 const bubble = document.createElement('div');
-                bubble.className = role === 'user' ? 'd-inline-block p-2 px-3 bg-primary text-white rounded-3' : 'd-inline-block p-2 px-3 bg-light rounded-3';
+                // Style khác nhau cho user (xanh) và bot (trắng xám)
+                bubble.className = role === 'user' 
+                    ? 'd-inline-block p-2 px-3 bg-primary text-white rounded-3' 
+                    : 'd-inline-block p-2 px-3 bg-light border text-dark rounded-3 shadow-sm';
+                
                 bubble.style.maxWidth = '85%';
+                bubble.style.textAlign = 'left';
+                
+                // Xử lý xuống dòng cho đẹp nếu AI trả về văn bản dài
+                bubble.style.whiteSpace = 'pre-wrap'; 
                 bubble.textContent = text;
+                
                 wrapper.appendChild(bubble);
                 messages.appendChild(wrapper);
+                
+                // Tự động cuộn xuống tin nhắn mới nhất
                 messages.scrollTop = messages.scrollHeight;
             }
 
+            // Hàm gửi tin nhắn (Xử lý chính)
             async function sendMessage(){
                 const text = (input.value || '').trim();
                 if(!text) return;
+
+                // 1. Hiện tin nhắn của User ngay lập tức
                 appendMessage(text, 'user');
                 input.value = '';
-                sendBtn.disabled = true;
+                sendBtn.disabled = true; // Khóa nút gửi để tránh spam
+                
+                // Hiển thị trạng thái "Đang gõ..." (Optional - cho mượt)
+                const loadingId = 'loading-' + Date.now();
+                const loadingWrapper = document.createElement('div');
+                loadingWrapper.className = 'text-start mb-2 small text-muted fst-italic';
+                loadingWrapper.id = loadingId;
+                loadingWrapper.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> AI đang trả lời...';
+                messages.appendChild(loadingWrapper);
+                messages.scrollTop = messages.scrollHeight;
 
-                try{
+                try {
+                    // Lấy dữ liệu từ Template Jinja2 để gửi kèm request
+                    const hotelToken = "{{ hotel.property_token }}";
+                    const currentPrice = "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}";
+
+                    // 2. Gọi API Backend (Real-time)
                     const resp = await fetch('/api/hotel_chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message: text, hotel: {{ hotel|tojson|safe }} })
+                        body: JSON.stringify({ 
+                            message: text, 
+                            property_token: hotelToken,
+                            // Gửi kèm ngữ cảnh động (Dynamic Context)
+                            dynamic_context: { 
+                                price: currentPrice,
+                                check_in: "{{ hotel.search_context.check_in if hotel.search_context else '' }}",
+                                check_out: "{{ hotel.search_context.check_out if hotel.search_context else '' }}"
+                            },
+                            // Fallback phòng khi Database chưa kịp cache
+                            hotel_fallback: { 
+                                name: "{{ hotel.name }}", 
+                                address: "{{ hotel.address }}" 
+                            }
+                        })
                     });
+
                     const data = await resp.json();
+                    
+                    // Xóa trạng thái "Đang gõ..."
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+
+                    // 3. Hiện phản hồi từ Gemini
                     if(data.reply){
                         appendMessage(data.reply, 'bot');
                     } else {
-                        appendMessage(data.error || 'No response', 'bot');
+                        appendMessage("Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.", 'bot');
                     }
+
                 } catch(err){
-                    appendMessage('Network error. Please try again.', 'bot');
+                    console.error("Chat Error:", err);
+                    // Xóa loader nếu lỗi
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+                    
+                    appendMessage('Lỗi kết nối mạng. Vui lòng kiểm tra lại.', 'bot');
                 } finally {
                     sendBtn.disabled = false;
                     input.focus();
                 }
             }
 
-            if(openBtn){
-                openBtn.addEventListener('click', function(){
-                    chatWidget.style.display = 'block';
-                    input.focus();
-                });
-            }
-            if(closeBtn){
-                closeBtn.addEventListener('click', function(){
-                    chatWidget.style.display = 'none';
-                });
-            }
-            if(sendBtn){
-                sendBtn.addEventListener('click', sendMessage);
-            }
-            if(input){
-                input.addEventListener('keydown', function(e){
-                    if(e.key === 'Enter') sendMessage();
-                });
-            }
+            // Các sự kiện click/enter
+            if(openBtn) openBtn.onclick = () => { 
+                chatWidget.style.display = 'block'; 
+                // Scroll xuống cuối khi mở box
+                messages.scrollTop = messages.scrollHeight;
+                input.focus(); 
+            };
+            
+            if(closeBtn) closeBtn.onclick = () => chatWidget.style.display = 'none';
+            
+            if(sendBtn) sendBtn.onclick = sendMessage;
+            
+            if(input) input.onkeydown = (e) => { 
+                if(e.key === 'Enter') sendMessage(); 
+            };
         })();
+        document.addEventListener("DOMContentLoaded", async function() {
+            const summaryBox = document.getElementById('aiSummaryBox');
+            const summaryContent = document.getElementById('aiSummaryContent');
+            const propertyToken = "{{ hotel.property_token }}";
+
+            if (!summaryBox) return;
+
+            // Hiển thị box và trạng thái loading
+            summaryBox.style.display = 'block';
+
+            try {
+                const resp = await fetch('/api/summarize_reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ property_token: propertyToken })
+                });
+
+                const data = await resp.json();
+
+                if (data.summary) {
+                    // Hiệu ứng gõ chữ hoặc hiện thẳng
+                    summaryContent.innerHTML = data.summary;
+                } else {
+                    // Nếu không có review nào
+                    summaryContent.innerHTML = '<span class="text-muted fst-italic">Chưa có đánh giá nào từ cộng đồng để tóm tắt.</span>';
+                }
+            } catch (err) {
+                console.error("Summary error:", err);
+                summaryBox.style.display = 'none'; // Ẩn luôn nếu lỗi
+            }
+        });
     </script>
 </body>
 </html>

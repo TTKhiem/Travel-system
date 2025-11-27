@@ -1,20 +1,24 @@
-# Hotel (Beta 1.2)
+# Hotel (Beta 1.3)
 - API được lưu trong .env (Source tìm hiểu: https://chatgpt.com/share/68fdb9c9-2620-800d-a488-5fe4db254087)
 - Xuất khách sạn
 - Display khách sạn
 - Tất cả chạy theo nhu cầu trong filter (có bug với option dưới 3 sao nhé :skull:)
-- hotel_results.html vs hotel_detail.html là trang kết quả và trang cá nhân của khách sạn (Nên đọc nghiên cứu HTML chạy với Flask: https://chatgpt.com/share/68fdb57c-6310-800d-a189-b73775d45a5f)
-- Đã merged tính năng Account (PHẢI CHẠY **create_db** trước khi chạy **main.py** - Để có database else Jinja2error)
 
-- Chạy file **main.py** là được rồi
-- Thư viện cần cài:
-- flask: pip install flask hoặc uv pip install flask
-- pandas: pip install pandas hoặc uv pip install pandas
-- requests: pip install requests hoặc uv pip requests 
-- python-dotenv: pip install python-dotenv hoặc uv pip install python-dotenv
-- google:  pip install google or uv pip install google
-- google-genai:  pip install google-genai or uv pip install google-genai
-- mysql-connector-python: pip install mysql-connector-python werkzeug or uv pip install mysql-connector-python werkzeug
+## Refactored Notes:
+1. Tối ưu lại hệ thống search: 
+- Chỉ sử dụng SerpAPI hoàn toàn, không còn **GeoApify**
+- Không còn xuất file thô local, nạp trực tiếp vào **hotel_results** đối với list khách sạn
+- Vào chi tiết khách sạn sẽ tón thêm request fetch **property_token** để lấy thông tin đầy đủ và nạp vào **database** với field **hotel_cache**
+- Cache khách sạn sẽ được reload nếu được vào lại sau **5 ngày**
+2. Thêm tính năng reviews cho Users và tính năng AI tóm tắt các reviews của Users (Tóm tắt tối đa 20 reviews gần nhất)
+3. Trang details của từng khách sạn đã được sửa lại trực quan hơn
+
+# To be updated:
+1. Thêm trường filter để tìm khách sạn *(có thể sẽ tích hợp AI tìm kiếm)* - lọc theo **amenities**
+2. Thêm tính năng so sánh giữa 2 khách sạn **(Để ở ngoài *hotel_results*)**
+3. Áp dụng multithreading khi fetch dữ liệu **property_token**
+4. Favorite places
+5. Cải tiến lại trang **hotel_results**: Thêm tính năng display theo filter theo giá hoặc theo reviews, remake UI
 
 # Source tham khảo:
 - SerpAPI: https://serpapi.com/google-hotels-api
@@ -35,5 +39,4 @@
 (Sẵn track giùm số API call nha)
 
 SERPAPI_KEY = {key}  
-GEOAPIFY_KEY = {key}  
 GEMINI_API_KEY = {key}

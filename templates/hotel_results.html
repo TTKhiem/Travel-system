@@ -178,12 +178,6 @@
                     </div>
                     <div class="hotel-info">
                         <h3 class="hotel-name">{{ hotel.name }}</h3>
-                        <p class="hotel-location">
-                            <i class="fas fa-map-marker-alt text-primary"></i>
-                            <a href="https://www.google.com/maps/search/?api=1&query={{ hotel.address | urlencode }}" target="_blank">
-                                {{ hotel.address if hotel.address else 'Address not available' }}
-                             </a>
-                        </p>
                         
                         <div class="rating">
                             <div class="stars">
@@ -219,7 +213,7 @@
                         {% endif %}
                         
                         <div class="text-center">
-                            <a href="/hotel/{{hotel.id}}" class="btn btn-view">
+                            <a href="{{ url_for('hotel_detail', property_token=hotel.property_token) }}" class="btn btn-view">
                                 <i class="fas fa-eye"></i> View Details
                             </a>
                         </div>
