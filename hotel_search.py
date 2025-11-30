@@ -16,7 +16,7 @@ class HotelSearchAPI:
         self.base_url = "https://serpapi.com/search"
         self.geo_api_key = os.getenv("GEOAPIFY_KEY")
 
-    def search_hotels(self, location, price_range, rating_range):
+    def search_hotels(self, location, price_range=None, rating_range=None, amenity=None):
         price_mapping = {
             "0-500000": {"min": 0, "max": 500000},
             "500000-1000000": {"min": 500000, "max": 1000000},
@@ -28,6 +28,15 @@ class HotelSearchAPI:
             "4-5": "4, 5", 
             "3-5": "3, 4, 5",
             "2-3": "2, 3"
+        }
+
+        amenities_mapping = {
+            "Pet-friendly": "24",
+            "Pool": "32",
+            "Fitness centre": "16",
+            "Child-friendly": "21",
+            "Free Wi-Fi": "29",
+            "Air-conditioned": "4"
         }
         
         params = {
@@ -49,6 +58,8 @@ class HotelSearchAPI:
         if rating_range in rating_mapping:
             params["hotel_class"] = rating_mapping[rating_range]
         
+        if amenity in amenities_mapping:
+            params["amenities"] = amenities_mapping[amenity]
         try:
             print(f"Fetching hotel list for: {location}...")
             response = requests.get(self.base_url, params=params)

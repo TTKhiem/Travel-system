@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS favorite_places (
     preview_data TEXT,            
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    UNIQUE(user_id, property_token) -- 1 user luu 1 khach san 1 lan
+    UNIQUE(user_id, property_token) -- 1 user 1 favorite khach san
 );
 
 CREATE TABLE IF NOT EXISTS hotel_cache (
