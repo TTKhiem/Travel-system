@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách yêu thích</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <h2 class="mb-4"><i class="fas fa-heart text-danger"></i> Khách sạn đã lưu</h2>
+        <a href="/recommendation" class="btn btn-outline-primary mb-4">← Quay lại tìm kiếm</a>
+
+        {% if favorites %}
+        <div class="row">
+            {% for fav in favorites %}
+            <div class="col-md-4 mb-4" id="fav-card-{{ fav.property_token }}">
+            <div class="card h-100 shadow-sm">
+                <img src="{{ fav.image }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ fav.name }}</h5>
+                    <p class="text-danger fw-bold">{{ fav.price }}</p>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="/hotel/{{ fav.property_token }}" class="btn btn-primary flex-grow-1">Xem lại</a>
+                        
+                        <button onclick="removeFavItem('{{ fav.property_token }}')" class="btn btn-outline-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            Bạn chưa lưu khách sạn nào. <a href="/recommendation">Đi tìm khách sạn ngay!</a>
+        </div>
+        {% endif %}
+    </div>
+<script>
+async function removeFavItem(token) {
+    if(!confirm("Bạn có chắc muốn xóa khách sạn này khỏi danh sách?")) return;
+
+    try {
+        const resp = await fetch('/favorites/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ property_token: token })
+        });
+
+        if (resp.ok) {
+            // Tìm và xóa cái thẻ Card HTML tương ứng
+            const card = document.getElementById('fav-card-' + token);
+            if(card) {
+                // Hiệu ứng mờ dần cho đẹp
+                card.style.transition = "all 0.5s";
+                card.style.opacity = "0";
+                card.style.transform = "scale(0.8)";
+                setTimeout(() => card.remove(), 500);
+            }
+        } else {
+            alert("Lỗi khi xóa.");
+        }
+    } catch (e) {
+        alert("Lỗi kết nối.");
+    }
+}
+</script>
+</body>
+</html>

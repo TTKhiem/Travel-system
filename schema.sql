@@ -8,19 +8,12 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS favorite_places (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    data TEXT NOT NULL,  -- store JSON string here
+    property_token TEXT NOT NULL, 
+    preview_data TEXT,            
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, property_token) -- 1 user luu 1 khach san 1 lan
 );
-
--- CREATE TABLE IF NOT EXISTS reviews (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     user_id INTEGER NOT NULL,
---     rating INTEGER CHECK(rating >= 1 AND rating <= 5),
---     comment TEXT,
---     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---     FOREIGN KEY (user_id) REFERENCES users(id)
--- );
 
 CREATE TABLE IF NOT EXISTS hotel_cache (
     token TEXT PRIMARY KEY,

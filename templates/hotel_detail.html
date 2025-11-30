@@ -328,6 +328,11 @@
                         <a href="{{ hotel.link }}" target="_blank" class="btn btn-light text-primary w-100 fw-bold">
                             <i class="fas fa-external-link-alt"></i> Đặt phòng ngay
                         </a>
+                        <button id="btnFavorite" onclick="toggleFavorite()" 
+                                class="btn w-100 mt-2 {{ 'btn-danger' if is_favorite else 'btn-outline-danger' }}">
+                            <i class="{{ 'fas' if is_favorite else 'far' }} fa-heart"></i> 
+                            <span id="favText">{{ 'Đã yêu thích' if is_favorite else 'Lưu yêu thích' }}</span>
+                        </button>
                     </div>
 
                     {% if hotel.excluded_amenities %}
@@ -565,6 +570,62 @@
                 summaryBox.style.display = 'none'; // Ẩn luôn nếu lỗi
             }
         });
+    let isFav = {{ 'true' if is_favorite else 'false' }};
+    const propertyToken = "{{ hotel.property_token }}";
+
+    async function toggleFavorite() {
+        const btn = document.getElementById('btnFavorite');
+        const icon = btn.querySelector('i');
+        const text = document.getElementById('favText');
+        
+        // 1. Xác định hành động dựa trên trạng thái hiện tại
+        const url = isFav ? '/favorites/remove' : '/favorites';
+        
+        // Dữ liệu gửi đi (Nếu là Remove thì chỉ cần token, nếu Add thì cần full info)
+        // Để đơn giản code, ta cứ gửi full info, Backend tự lọc
+        const payload = {
+            property_token: propertyToken,
+            name: "{{ hotel.name }}",
+            image: "{{ hotel.images[0].original_image if hotel.images else '' }}",
+            price: "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}",
+            address: "{{ hotel.address }}"
+        };
+
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (resp.ok) {
+                // 2. Đảo ngược trạng thái
+                isFav = !isFav; 
+
+                // 3. Cập nhật giao diện ngay lập tức
+                if (isFav) {
+                    // Đã thích: Nền đỏ, Tim đặc
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    text.innerText = "Đã yêu thích";
+                } else {
+                    // Bỏ thích: Nền trắng, Tim rỗng
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    text.innerText = "Lưu yêu thích";
+                }
+            } else {
+                alert("Có lỗi xảy ra, vui lòng thử lại.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Lỗi kết nối.");
+        }
+    }
     </script>
 </body>
 </html>

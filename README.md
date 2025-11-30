@@ -12,13 +12,15 @@
 - Cache khách sạn sẽ được reload nếu được vào lại sau **5 ngày**
 2. Thêm tính năng reviews cho Users và tính năng AI tóm tắt các reviews của Users (Tóm tắt tối đa 20 reviews gần nhất)
 3. Trang details của từng khách sạn đã được sửa lại trực quan hơn
+4. Fixed My Favorites
 
 # To be updated:
 1. Thêm trường filter để tìm khách sạn *(có thể sẽ tích hợp AI tìm kiếm)* - lọc theo **amenities**
 2. Thêm tính năng so sánh giữa 2 khách sạn **(Để ở ngoài *hotel_results*)**
 3. Áp dụng multithreading khi fetch dữ liệu **property_token**
-4. Favorite places
+~~4. Favorite places~~
 5. Cải tiến lại trang **hotel_results**: Thêm tính năng display theo filter theo giá hoặc theo reviews, remake UI
+6. Filter reviews
 
 # Source tham khảo:
 - SerpAPI: https://serpapi.com/google-hotels-api

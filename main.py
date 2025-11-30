@@ -64,17 +64,28 @@ def login():
 def save_favorites():
     if "user" not in session:
         return redirect(url_for("login"))
-    favorites = request.get_json()
+    
+    data = request.get_json()
+    token = data.get('property_token')
+    preview_info = {
+        "name": data.get('name'),
+        "image": data.get('image'),
+        "price": data.get('price'),
+        "address": data.get('address'),
+    }
+    preview_json = json.dumps(preview_info, ensure_ascii=False)
     username = session['user']
     db = database.get_db()
     user = db.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
     if not user:
         return jsonify({"error": "User not found"}), 404
-    user_id = user['id']
-    data_json = json.dumps(favorites)
-    db.execute("INSERT INTO favorite_places (user_id, data) VALUES (?, ?)", (user_id, data_json))
-    db.commit()
-    return jsonify({"message": "Favorites saved successfully!"}), 200
+    try:
+        user_id = user['id']
+        db.execute("INSERT OR IGNORE INTO favorite_places (user_id, property_token, preview_data) VALUES (?, ?, ?)", (user_id, token, preview_json))
+        db.commit()
+        return jsonify({"message": "Saved into Favorites:"}), 200
+    except Exception as e:
+        return jsonify({"message": "Failed!"}), 500
 
 def load_favorites(username):
     db = database.get_db()
@@ -82,12 +93,37 @@ def load_favorites(username):
     if not user:
         return []
     user_id = user['id']
-    rows = db.execute("SELECT data FROM favorite_places WHERE user_id=?", (user_id,)).fetchall()
+    rows = db.execute("SELECT property_token, preview_data FROM favorite_places WHERE user_id=?", (user_id,)).fetchall()
     favorites = []
     for row in rows:
-        data = json.loads(row['data'])
+        data = json.loads(row['preview_data'])
+        data['property_token'] = row['property_token']
         favorites.append(data)
     return favorites
+
+@app.route('/my-favorites')
+def my_favorites():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    favorites = load_favorites(session['user']) 
+    return render_template('favorites.html', favorites=favorites)
+
+@app.route('/favorites/remove', methods=['POST'])
+def remove_favorite():
+    if "user" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.get_json()
+    token = data.get('property_token')
+    db = database.get_db()
+    user = db.execute("SELECT id FROM users WHERE username=?", (session['user'],)).fetchone()
+    
+    db.execute(
+        "DELETE FROM favorite_places WHERE user_id = ? AND property_token = ?",
+        (user['id'], token)
+    )
+    db.commit()
+    return jsonify({"message": "Removed"}), 200
 
 @app.route('/')
 def home():
