@@ -43,7 +43,7 @@ def home():
         user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     return render_template('index.html', user = user_data, form_type='login')
 
-app.route('/register_page')
+@app.route('/register_page')
 def register_page():
     return render_template('index.html', form_type='register')
 
@@ -250,10 +250,31 @@ def hotel_detail(property_token):
     check_out = request.args.get('check_out')
     if check_in and check_out:
         hotel_data['search_context'] = {'check_in': check_in, 'check_out': check_out}
-    local_reviews = db.execute(
-        "SELECT * FROM user_reviews WHERE property_token = ? ORDER BY created_at DESC", 
-        (property_token,)
-    ).fetchall()
+    
+    # --- XỬ LÝ LỌC & SẮP XẾP REVIEW ---
+    filter_rating = request.args.get('filter_rating')
+    sort_review = request.args.get('sort_review', 'newest') # Mặc định là newest
+
+    # Xây dựng câu truy vấn động
+    query = "SELECT * FROM user_reviews WHERE property_token = ?"
+    params = [property_token]
+
+    if filter_rating and filter_rating.isdigit():
+        query += " AND rating = ?"
+        params.append(int(filter_rating))
+
+    if sort_review == 'oldest':
+        query += " ORDER BY created_at ASC"
+    elif sort_review == 'highest':
+        query += " ORDER BY rating DESC, created_at DESC"
+    elif sort_review == 'lowest':
+        query += " ORDER BY rating ASC, created_at DESC"
+    else: # Default newest
+        query += " ORDER BY created_at DESC"
+
+    # Thực thi query
+    local_reviews = db.execute(query, tuple(params)).fetchall()
+    # ----------------------------------
 
     # Kiểm tra hàm Favorites
     is_favorite = False
