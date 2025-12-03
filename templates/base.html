@@ -2,284 +2,450 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Ligma - Your mind, our care{% endblock %}</title>
+    <title>{% block title %}LigmaStay - Simply Better Hotels{% endblock %}</title>
     
+    <!-- Bootstrap 5 & FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Font: Plus Jakarta Sans (Modern & Clean) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        /* --- CSS CHO BOOKING BAR (Đã chuyển sang Base) --- */
-        .booking-bar-container {
-            position: fixed; 
-            top: 90px; /* Điều chỉnh vị trí ngay dưới Header chính */
-            left: 0;
-            width: 100%;     
-            z-index: 98;    
-            background-color: rgba(255, 255, 255, 0.95); 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
-            border-bottom: 1px solid #ddd;
+        :root {
+            /* --- BLACK & WHITE THEME --- */
+            --primary-color: #000000;
+            --primary-hover: #333333;
+            --bg-body: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            padding-top: 80px; 
+            color: var(--text-main);
+        }
+
+        /* --- NAVBAR --- */
+        .navbar-custom {
+            background-color: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            margin: 0;
-            padding: 15px 20px;
-            transition: transform 0.3s ease-in-out;
+            border-bottom: 1px solid #f1f5f9;
+            height: 80px;
         }
-
-        .booking-bar-container form .row { align-items: center; justify-content: center; }
         
-        /* Labels */
-        .booking-bar-container label {
-            color: #333; font-size: 0.7rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            margin-bottom: 2px; display: block;
-            font-family: 'Poppins', sans-serif;
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+            letter-spacing: -0.5px;
+            display: flex; align-items: center;
+        }
+        
+        /* Logo Icon Đen */
+        .logo-icon {
+            background: var(--primary-color);
+            color: white;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 12px;
+            font-size: 1.1rem;
         }
 
-        /* Inputs */
-        .booking-bar-container .form-select, 
-        .booking-bar-container .form-control {
-            background-color: transparent; border: none; border-radius: 0;
-            border-bottom: 1px solid transparent; padding: 5px 0;
-            font-size: 0.95rem; color: #000; font-weight: 500;
-            box-shadow: none; cursor: pointer;
+        .nav-link {
+            font-weight: 600;
+            color: #475569 !important;
+            margin: 0 10px;
+            font-size: 0.95rem;
+            transition: color 0.2s;
         }
-        .booking-bar-container .form-select:hover,
-        .booking-bar-container .form-control:hover,
-        .booking-bar-container .form-select:focus {
-            border-bottom: 1px solid #000;
+        .nav-link:hover { color: var(--primary-color) !important; }
+
+        /* Nút Login trên Navbar */
+        .btn-login-nav {
+            background: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+            font-weight: 600;
+            padding: 8px 24px;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        .btn-login-nav:hover {
+            background: #333;
+            color: white;
+            transform: translateY(-1px);
         }
 
-        /* Button */
-        .booking-bar-container .btn-check-rates {
-            background-color: #000; color: #fff; border: 1px solid #000;
-            border-radius: 0; text-transform: uppercase; font-size: 0.8rem;
-            font-weight: 600; letter-spacing: 2px; height: 45px;
-            width: 100%; transition: all 0.3s ease; margin-top: 10px;
+        /* --- STICKY SEARCH BAR --- */
+        .sticky-search-bar {
+            position: fixed; top: 80px; left: 0; width: 100%;
+            background: white; z-index: 99;
+            padding: 15px 0;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
-        .booking-bar-container .btn-check-rates:hover {
-            background-color: #333; border-color: #333;
+        .compact-search-form label {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 4px; display: block;
+        }
+        
+        /* CSS CHO DROPDOWN COMPACT (XỊN HƠN) */
+        .compact-search-form .form-select {
+            -webkit-appearance: none; appearance: none;
+            background-color: #f8fafc; 
+            border: 1px solid #e2e8f0;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-weight: 600; color: #334155; border-radius: 8px;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 10px 10px;
+            padding-right: 30px;
         }
 
-        /* Đẩy nội dung chính xuống để không bị Booking Bar che mất */
-        body { padding-top: 180px; } /* Header (~70px) + BookingBar (~110px) */
+        .btn-search-compact {
+            background-color: var(--primary-color);
+            color: white; border: none; font-weight: 700; border-radius: 8px;
+        }
+        .btn-search-compact:hover { background-color: var(--primary-hover); }
+
+        /* --- FOOTER --- */
+        footer { background: #000; color: #94a3b8; padding: 80px 0 40px; margin-top: 80px; }
+        .footer-title { color: white; font-weight: 700; margin-bottom: 20px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; }
+        .footer-link { display: block; color: #64748b; margin-bottom: 12px; text-decoration: none; transition: 0.2s; }
+        .footer-link:hover { color: white; padding-left: 5px; }
+
+        /* --- PREMIUM AUTH MODAL --- */
+        .modal-auth .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        .modal-auth .modal-header { border-bottom: none; padding: 25px 30px 10px; }
+        .modal-auth .modal-body { padding: 0 30px 30px; }
+        
+        .auth-switch-wrapper {
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            display: flex;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .auth-switch-btn {
+            flex: 1; border: none; background: transparent; padding: 10px;
+            border-radius: 10px; font-weight: 600; font-size: 0.95rem;
+            color: #64748b; transition: all 0.3s; z-index: 2;
+        }
+        .auth-switch-btn.active {
+            background: white; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .form-floating-custom { position: relative; margin-bottom: 15px; }
+        .form-control-custom {
+            width: 100%; padding: 14px 15px 14px 45px;
+            border: 2px solid #f1f5f9; border-radius: 12px;
+            font-weight: 500; font-size: 0.95rem; transition: 0.3s;
+            background: #f8fafc;
+        }
+        .form-control-custom:focus { outline: none; background: white; border-color: black; }
+        .input-icon {
+            position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+            color: #94a3b8; font-size: 1.1rem;
+        }
+
+        .btn-black-block {
+            width: 100%; background: black; color: white; padding: 14px;
+            border: none; border-radius: 12px; font-weight: 700; margin-top: 10px;
+            transition: 0.3s;
+        }
+        .btn-black-block:hover { background: #333; transform: translateY(-2px); }
+
+        .divider { display: flex; align-items: center; text-align: center; margin: 25px 0; color: #94a3b8; font-size: 0.85rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
+        .divider span { padding: 0 10px; }
+
+        .social-btn {
+            width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px;
+            background: white; color: #334155; font-weight: 600; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
+            transition: 0.2s;
+        }
+        .social-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .social-btn img { margin-right: 10px; width: 20px; }
+
     </style>
-
     {% block head %}{% endblock %}
 </head>
 <body>
 
-    <header>
-        <h2 class="logo">Logo</h2>
-        <nav class="navigation">
-            <a href="{{ url_for('home') }}">Home</a>
-            <a href="{{ url_for('my_favorites')}}">Favorite</a>
-            <a href="{{ url_for('home') }}#about">About us</a>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <div class="logo-icon"><i class="fas fa-compass"></i></div>
+                LigmaStay
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             
-            {% if user %}
-            <div class="user-menu-wrapper">
-                <img src="{{ url_for('static', filename='avatar.png') }}" class="user-avatar" alt="Avatar">
-                <div class="dropdown">
-                    <a href="{{ url_for('logout') }}">Logout</a>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('my_favorites') }}">Favorites</a></li>
+                    
+                    {% if user %}
+                    <li class="nav-item dropdown ms-3">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" data-bs-toggle="dropdown">
+                            <span class="me-2 fw-bold text-dark">{{ user.username }}</span>
+                            <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">
+                                {{ user.username[0] | upper }}
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-3 rounded-4 p-2">
+                            <li><a class="dropdown-item rounded-2" href="{{ url_for('my_favorites') }}"><i class="fas fa-heart text-danger me-2"></i> Saved Hotels</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item rounded-2 text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item ms-3">
+                        <button class="btn btn-login-nav" onclick="openAuthModal('login')">
+                            Sign In
+                        </button>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- STICKY SEARCH BAR (Logic ẩn ở trang Hotel Results - api_filter) -->
+    {% if request.endpoint != 'home' and request.endpoint != 'register_page' and request.endpoint != 'api_filter' %}
+    <div class="sticky-search-bar">
+        <div class="container">
+            <form action="/hotel_results" method="POST" class="compact-search-form">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label>Destination</label>
+                        <select id="city_compact" name="city" class="form-select" required>
+                            <option value="">Where to?</option>
+                            <option value="Hà Nội">Hanoi</option>
+                            <option value="Đà Nẵng">Da Nang</option>
+                            <option value="TP. Hồ Chí Minh">Ho Chi Minh City</option>
+                            <option value="Nha Trang">Nha Trang</option>
+                            <option value="Đà Lạt">Da Lat</option>
+                            <option value="Huế">Hue</option>
+                            <option value="Phú Quốc">Phu Quoc</option>
+                            <option value="Vũng Tàu">Vung Tau</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Budget</label>
+                        <select id="price_compact" name="price_range" class="form-select">
+                            <option value="">Any</option>
+                            <option value="0-500000">&lt; 500k</option>
+                            <option value="500000-1000000">500k - 1M</option>
+                            <option value="1000000-2000000">1M - 2M</option>
+                            <option value="2000000+">2M+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Rating</label>
+                        <select id="rating_compact" name="rating" class="form-select">
+                            <option value="">Any</option>
+                            <option value="4-5">4+ Stars</option>
+                            <option value="3-5">3+ Stars</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Amenities</label>
+                        <select id="amenity_compact" name="amenities" class="form-select">
+                            <option value="">Optional</option>
+                            <option value="Pool">Swimming Pool</option>
+                            <option value="Fitness centre">Fitness Centre</option>
+                            <option value="Pet-friendly">Pet Friendly</option>
+                            <option value="Child-friendly">Child Friendly</option>
+                            <option value="Free Wi-Fi">Free Wi-Fi</option>
+                            <option value="Air-conditioned">Air Conditioned</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-search-compact w-100 py-2">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div style="height: 70px;"></div> 
+    {% endif %}
+
+    <!-- UPGRADED AUTH MODAL -->
+    <div class="modal fade modal-auth" id="authModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content">
+                <div class="modal-header justify-content-center">
+                    <h5 class="fw-bold mb-0">Welcome to LigmaStay</h5>
+                    <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <!-- Tab Switcher -->
+                    <div class="auth-switch-wrapper">
+                        <button class="auth-switch-btn active" id="btn-tab-login" onclick="switchAuthTab('login')">Log In</button>
+                        <button class="auth-switch-btn" id="btn-tab-register" onclick="switchAuthTab('register')">Sign Up</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div id="login-form-wrapper">
+                        <form action="{{ url_for('login') }}" method="POST">
+                            <div class="form-floating-custom">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" name="username" class="form-control-custom" placeholder="Username" required>
+                            </div>
+                            <div class="form-floating-custom">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password" name="password" class="form-control-custom" placeholder="Password" required>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="remember">
+                                    <label class="form-check-label small text-muted" for="remember">Remember me</label>
+                                </div>
+                                <a href="#" class="small text-dark fw-bold text-decoration-none">Forgot?</a>
+                            </div>
+                            <button type="submit" class="btn-black-block">Log In</button>
+                        </form>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="register-form-wrapper" style="display: none;">
+                        <form action="{{ url_for('register') }}" method="POST">
+                            <div class="form-floating-custom">
+                                <i class="fas fa-user-plus input-icon"></i>
+                                <input type="text" name="username" class="form-control-custom" placeholder="Choose Username" required>
+                            </div>
+                            <div class="form-floating-custom">
+                                <i class="fas fa-key input-icon"></i>
+                                <input type="password" name="password" class="form-control-custom" placeholder="Create Password" required>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" required>
+                                <label class="form-check-label small text-muted">I agree to Terms & Conditions</label>
+                            </div>
+                            <button type="submit" class="btn-black-block">Create Account</button>
+                        </form>
+                    </div>
+
+                    <div class="divider"><span>Or continue with</span></div>
+
+                    <button class="social-btn">
+                        <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google"> Google
+                    </button>
+                    <button class="social-btn">
+                        <img src="https://img.icons8.com/color/48/facebook-new.png" alt="FB"> Facebook
+                    </button>
+
                 </div>
             </div>
-            {% else %}
-            <button id="btnLoginPopup" class="btnLogin-popup">Login</button>
-            {% endif %}
-        </nav>
-    </header>
-
-    {% block search_bar %}
-    <div class="booking-bar-container">
-        <form action="/hotel_results" method="POST">
-            <div class="row g-2 align-items-end"> 
-                <div class="col-md-2">
-                    <label for="city">Provinces, Cities</label>
-                    <select id="city" name="city" class="form-select" required>
-                        <option value="">Select Location</option>
-                        <option value="Hà Nội">Hà Nội</option>
-                        <option value="Đà Nẵng">Đà Nẵng</option>
-                        <option value="Nha Trang">Nha Trang</option>
-                        <option value="TP. Hồ Chí Minh">HCM City</option>
-                        <option value="Huế">Huế</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="price_range">Price Range</label>
-                    <select id="price_range" name="price_range" class="form-select">
-                        <option value="">Select Prices</option>
-                        <option value="0-500000">&lt; 500k</option>
-                        <option value="500000-1000000">500k - 1M</option>
-                        <option value="1000000-2000000">1M - 2M</option>
-                        <option value="2000000+">&gt; 2M</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="rating">Rating</label>
-                    <select id="rating" name="rating" class="form-select">
-                        <option value="">Stars</option>
-                        <option value="4-5">4+ Stars</option>
-                        <option value="3-5">3+ Stars</option>
-                        <option value="1-3">&lt; 3 Stars</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="amenites">Amenities</label>
-                    <select id="amenites" name="amenities" class="form-select">
-                        <option value="">Select Amenities</option>
-                        <option value="Pet-friendly">Pet Friendly</option>
-                        <option value="Pool">Pool</option>
-                        <option value="Fitness centre">Fitness centre</option>
-                        <option value="Child-Friendly">Child Friendly</option>
-                        <option value="Free Wi-Fi">Free Wi-Fi</option>
-                        <option value="Air-conditioned">Air-conditioned</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-check-rates">Check Rates</button>
-                </div>
-            </div> 
-        </form>
-    </div>
-    {% endblock %}
-    {% block content %}
-    {% endblock %}
-
-    <div class="wrapper">
-        <span class="icon-close"><ion-icon name="close-outline"></ion-icon></span>
-        <div class="form-box login">
-            <h2>Login</h2>
-            <form action="{{ url_for('login') }}" method="POST">
-                <div class="input-box"><label>Username</label><input type="text" name="username" required></div>
-                <div class="input-box"><label>Password</label><input type="password" name="password" required></div>
-                <div class="remember-forgot"><label><input type="checkbox">Remember me</label><a href="#">Forgot Password?</a></div>
-                <button type="submit" class="btn">Login</button>
-                <div class="login-register"><p>Don't have an account? <a href="#" class="register-link">Register</a></p></div>
-            </form>
-        </div>
-        <div class="form-box register">
-            <h2>Registration</h2>
-            <form action="{{ url_for('register') }}" method="POST">
-                <div class="input-box"><label>Username</label><input type="text" name="username" required></div>
-                <div class="input-box"><label>Password</label><input type="password" name="password" required></div>
-                <div class="remember-forgot"><label><input type="checkbox">I agree to terms</label></div>
-                <button type="submit" class="btn">Register</button>
-                <div class="login-register"><p>Already have an account? <a href="#" class="login-link">Login</a></p></div>
-            </form>
         </div>
     </div>
 
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <!-- MAIN CONTENT -->
+    {% block content %}{% endblock %}
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="logo-icon bg-white text-black"><i class="fas fa-compass"></i></div>
+                        <h4 class="fw-bold text-white mb-0">LigmaStay</h4>
+                    </div>
+                    <p class="small">
+                        Curated collection of the world's finest hotels. <br>
+                        Smart search, beautiful stays.
+                    </p>
+                </div>
+                <div class="col-md-2 offset-md-1 mb-4">
+                    <h6 class="footer-title">Company</h6>
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Careers</a>
+                    <a href="#" class="footer-link">Mobile</a>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h6 class="footer-title">Support</h6>
+                    <a href="#" class="footer-link">Help Center</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h6 class="footer-title">Social</h6>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-secondary fs-5"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-secondary fs-5"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-secondary fs-5"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-top border-secondary pt-4 mt-4 text-center small text-secondary" style="border-color: #333 !important;">
+                &copy; 2025 LigmaStay Inc. Designed for Luxury.
+            </div>
+        </div>
+    </footer>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script>
-        document.addEventListener('DOMContentLoaded', function() {
-            /* =========================================
-               PHẦN 1: LOGIC GIỮ TRẠNG THÁI BOOKING BAR
-               ========================================= */
+    <script>
+        // Modal Logic
+        const loginForm = document.getElementById('login-form-wrapper');
+        const registerForm = document.getElementById('register-form-wrapper');
+        const btnLogin = document.getElementById('btn-tab-login');
+        const btnRegister = document.getElementById('btn-tab-register');
+        const authModal = new bootstrap.Modal(document.getElementById('authModal'));
+
+        function openAuthModal(tab) {
+            switchAuthTab(tab);
+            authModal.show();
+        }
+
+        function switchAuthTab(tab) {
+            if(tab === 'login') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                btnLogin.classList.add('active');
+                btnRegister.classList.remove('active');
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                btnLogin.classList.remove('active');
+                btnRegister.classList.add('active');
+            }
+        }
+
+        // Filter Persistence
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedCity = localStorage.getItem('hotel_filter_city');
+            const citySelect = document.getElementById('city_compact');
+            if(citySelect && savedCity) citySelect.value = savedCity;
             
-            const filterIds = ['city', 'price_range', 'rating', 'amenites'];
-            const bookingForm = document.querySelector('form[action="/hotel_results"]');
-
-            // Hàm lưu giá trị vào LocalStorage
-            function saveFilters() {
-                filterIds.forEach(id => {
-                    const selectElement = document.getElementById(id);
-                    if (selectElement) {
-                        localStorage.setItem('hotel_filter_' + id, selectElement.value);
-                    }
-                });
-            }
-
-            // Hàm khôi phục giá trị từ LocalStorage
-            function loadFilters() {
-                filterIds.forEach(id => {
-                    const selectElement = document.getElementById(id);
-                    const savedValue = localStorage.getItem('hotel_filter_' + id);
-                    
-                    if (selectElement && savedValue) {
-                        selectElement.value = savedValue;
-                    }
-                });
-            }
-
-            // 1. Khôi phục dữ liệu ngay khi tải trang
-            loadFilters();
-
-            // 2. Lưu dữ liệu khi người dùng thay đổi lựa chọn (Sự kiện change)
-            filterIds.forEach(id => {
-                const selectElement = document.getElementById(id);
-                if (selectElement) {
-                    selectElement.addEventListener('change', function() {
-                        localStorage.setItem('hotel_filter_' + id, this.value);
-                    });
-                }
-            });
-
-            // 3. Lưu dữ liệu khi form được submit (Đảm bảo chắc chắn lưu trước khi chuyển trang)
-            if (bookingForm) {
-                bookingForm.addEventListener('submit', function() {
-                    saveFilters();
-                });
-            }
-
-            /* =========================================
-               PHẦN 2: LOGIC GIAO DIỆN (POPUP, LOGIN, MENU)
-               ========================================= */
-            
-            const wrapper = document.querySelector('.wrapper');
-            const loginForm = document.querySelector('.form-box.login');
-            const registerForm = document.querySelector('.form-box.register');
-            const registerLink = document.querySelector('.register-link');
-            const loginLink = document.querySelector('.login-link');
-            const btnPopup = document.querySelector('.btnLogin-popup');
-            const iconClose = document.querySelector('.icon-close');
-            
-            // Logic mở Popup Login
-            if (btnPopup) {
-                btnPopup.addEventListener('click', () => {
-                    wrapper.classList.add('active-popup');
-                    registerForm.classList.remove('active');
-                    loginForm.classList.add('active');
-                });
-            }
-            
-            // Logic đóng Popup
-            if (iconClose) {
-                iconClose.addEventListener('click', () => { 
-                    wrapper.classList.remove('active-popup'); 
-                });
-            }
-            
-            // Chuyển đổi giữa Login và Register
-            if (registerLink) {
-                registerLink.addEventListener('click', (e) => {
-                    e.preventDefault(); 
-                    loginForm.classList.remove('active'); 
-                    registerForm.classList.add('active');
-                });
-            }
-            if (loginLink) {
-                loginLink.addEventListener('click', (e) => {
-                    e.preventDefault(); 
-                    registerForm.classList.remove('active'); 
-                    loginForm.classList.add('active');
-                });
-            }
-
-            // Logic Dropdown User Menu
-            const userAvatar = document.querySelector('.user-avatar');
-            const dropdown = document.querySelector('.dropdown');
-            if (userAvatar && dropdown) {
-                userAvatar.addEventListener('mouseenter', () => dropdown.style.display = 'block');
-                dropdown.addEventListener('mouseenter', () => dropdown.style.display = 'block');
-                userAvatar.addEventListener('mouseleave', () => {
-                    setTimeout(() => { 
-                        if (!dropdown.matches(':hover')) dropdown.style.display = 'none'; 
-                    }, 100);
-                });
-                dropdown.addEventListener('mouseleave', () => dropdown.style.display = 'none');
-            }
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        alert("{{ message }}");
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
         });
     </script>
     {% block scripts %}{% endblock %}
