@@ -29,3 +29,13 @@ CREATE TABLE IF NOT EXISTS user_reviews (
     comment TEXT,                      
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE TABLE IF NOT EXISTS recently_viewed (
+    user_id INTEGER NOT NULL,
+    property_token TEXT NOT NULL,
+    preview_data TEXT NOT NULL,
+    visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, property_token),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
