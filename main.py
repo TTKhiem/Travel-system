@@ -232,6 +232,25 @@ def hotel_detail(property_token):
                  hotel_data = json.loads(cached_row['data'])
             else:
                 return render_template('hotel_detail.html', error="Không thể tải dữ liệu khách sạn.")
+    if hotel_data:
+        try:
+            # Tạo dữ liệu tóm tắt để hiển thị ở trang danh sách
+            preview_info = {
+                "name": hotel_data.get('name'),
+                "image": hotel_data.get('images')[0].get('original_image') if hotel_data.get('images') else '',
+                "price": hotel_data.get('rate_per_night', {}).get('lowest', 'Liên hệ'),
+                "address": hotel_data.get('address')
+            }
+            preview_json = json.dumps(preview_info, ensure_ascii=False)
+            
+            # Lưu vào DB (INSERT OR REPLACE để cập nhật thời gian nếu đã xem rồi)
+            db.execute(
+                "INSERT OR REPLACE INTO recently_viewed (user_id, property_token, preview_data, visited_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+                (session['user_id'], property_token, preview_json)
+            )
+            db.commit()
+        except Exception as e:
+            print(f"Lỗi lưu lịch sử: {e}")
 
     if not hotel_data:
         return render_template('hotel_detail.html', error="Không tìm thấy khách sạn.")
@@ -467,9 +486,33 @@ def compare_ai_analysis():
     except Exception as e:
         print(f"Compare AI Error: {e}")
         return jsonify({'error': str(e)}), 500
+@app.route('/history')
+def history():
+    if 'user_id' not in session:
+        return redirect(url_for("login"))
+    
+    db = database.get_db()
+    # Lấy 20 khách sạn xem gần nhất
+    rows = db.execute("""
+        SELECT property_token, preview_data, visited_at 
+        FROM recently_viewed 
+        WHERE user_id = ? 
+        ORDER BY visited_at DESC 
+        LIMIT 20
+    """, (session['user_id'],)).fetchall()
+    
+    history_list = []
+    for row in rows:
+        data = json.loads(row['preview_data'])
+        data['property_token'] = row['property_token']
+        # Xử lý thời gian nếu cần (optional)
+        history_list.append(data)
+        
+    return render_template('history.html', history_hotels=history_list)
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATABASE']):
         with app.app_context():
             database.init_db()
     app.run(debug=True)
+
