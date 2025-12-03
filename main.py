@@ -93,6 +93,39 @@ def logout():
     response.set_cookie('session', '', expires=0)
     return response
 
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    db = database.get_db()
+    
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+        
+        try:
+            # Cập nhật vào DB
+            db.execute("""
+                UPDATE users 
+                SET full_name = ?, email = ?, phone = ?, address = ?
+                WHERE id = ?
+            """, (full_name, email, phone, address, session['user_id']))
+            db.commit()
+            flash("✅ Cập nhật hồ sơ thành công!")
+        except Exception as e:
+            print(e)
+            flash("❌ Có lỗi xảy ra, vui lòng thử lại.")
+            
+        return redirect(url_for('profile'))
+    
+    # GET: Lấy thông tin user hiện tại để hiển thị
+    user_info = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+    return render_template('profile.html', user_info=user_info)
+
 @app.route('/favorites', methods=['POST'])
 def save_favorites():
     # Kiểm tra login bằng user_id
@@ -515,4 +548,3 @@ if __name__ == '__main__':
         with app.app_context():
             database.init_db()
     app.run(debug=True)
-
