@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Khách sạn yêu thích{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS GIỐNG HOTEL_RESULTS --- */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+            min-height: 100vh;
+            padding-top: 100px !important; /* Đẩy xuống vì không có Search Bar */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-title {
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        /* Style cho Card */
+        .hotel-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        /* Ảnh Background thay vì thẻ img để đều nhau */
+        .hotel-image {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .hotel-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hotel-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.8em; /* Giới hạn chiều cao tên */
+        }
+
+        .hotel-address {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis; 
+        }
+
+        .price {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: auto; /* Đẩy giá xuống dưới cùng của phần text */
+            margin-bottom: 15px;
+        }
+
+        /* Nút Xóa nhỏ ở góc ảnh */
+        .btn-remove-float {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            color: #dc3545;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .btn-remove-float:hover {
+            background: #dc3545;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .btn-view {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 0;
+            border-radius: 25px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .btn-view:hover { background: #0056b3; color: white; }
+
+        /* Empty State */
+        .empty-state {
+            background: white;
+            border-radius: 15px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+    </style>
+{% endblock %}
+
+{# --- Ẩn thanh tìm kiếm để trang thoáng hơn --- #}
+{% block search_bar %}{% endblock %}
+
+{% block content %}
+    <div class="container pb-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title mb-0">
+                <i class="fas fa-heart text-danger me-2"></i> Khách sạn đã lưu
+            </h2>
+            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-search me-2"></i> Tìm thêm khách sạn
+            </a>
+        </div>
+
+        {% if favorites %}
+        <div class="row g-4">
+            {% for fav in favorites %}
+            <div class="col-lg-3 col-md-6" id="fav-card-{{ fav.property_token }}">
+                <div class="hotel-card">
+                    <button onclick="removeFavItem('{{ fav.property_token }}')" class="btn-remove-float shadow-sm" title="Xóa khỏi danh sách">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+
+                    <div class="hotel-image" style="background-image: url('{{ fav.image if fav.image else 'https://via.placeholder.com/400x300' }}')">
+                    </div>
+                    
+                    <div class="hotel-info">
+                        <h5 class="hotel-name" title="{{ fav.name }}">{{ fav.name }}</h5>
+                        
+                        <p class="hotel-address">
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                            {{ fav.address if fav.address else 'Địa chỉ đang cập nhật' }}
+                        </p>
+
+                        <div class="price">
+                            {{ fav.price if fav.price else 'Liên hệ' }}
+                        </div>
+
+                        <a href="{{ url_for('hotel_detail', property_token=fav.property_token) }}" class="btn btn-view">
+                            Xem chi tiết <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="empty-state">
+                    <i class="far fa-heart fa-4x text-muted mb-3 opacity-25"></i>
+                    <h3>Danh sách trống</h3>
+                    <p class="text-muted">Bạn chưa lưu khách sạn nào. Hãy tìm kiếm và thả tim nhé!</p>
+                    <a href="{{ url_for('home') }}" class="btn btn-primary rounded-pill px-4 mt-2">
+                        Đi tìm khách sạn ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function removeFavItem(token) {
+        if(!confirm("Bạn có chắc muốn xóa khách sạn này khỏi danh sách?")) return;
+
+        try {
+            const resp = await fetch('/favorites/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ property_token: token })
+            });
+
+            if (resp.ok) {
+                // Tìm thẻ Card HTML tương ứng
+                const cardCol = document.getElementById('fav-card-' + token);
+                if(cardCol) {
+                    // Hiệu ứng mờ dần và thu nhỏ
+                    cardCol.style.transition = "all 0.4s ease";
+                    cardCol.style.opacity = "0";
+                    cardCol.style.transform = "scale(0.8)";
+                    
+                    // Đợi hiệu ứng chạy xong mới xóa khỏi DOM
+                    setTimeout(() => {
+                        cardCol.remove();
+                        // Kiểm tra nếu xóa hết thì reload để hiện màn hình Empty State
+                        const remaining = document.querySelectorAll('[id^="fav-card-"]');
+                        if (remaining.length === 0) {
+                            location.reload(); 
+                        }
+                    }, 400);
+                }
+            } else {
+                alert("Không thể xóa. Vui lòng thử lại.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Lỗi kết nối.");
+        }
+    }
+</script>
+{% endblock %}

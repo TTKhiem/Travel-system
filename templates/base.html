@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ligma - Your mind, our care{% endblock %}</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    
+    <style>
+        /* --- CSS CHO BOOKING BAR (Đã chuyển sang Base) --- */
+        .booking-bar-container {
+            position: fixed; 
+            top: 90px; /* Điều chỉnh vị trí ngay dưới Header chính */
+            left: 0;
+            width: 100%;     
+            z-index: 98;    
+            background-color: rgba(255, 255, 255, 0.95); 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
+            border-bottom: 1px solid #ddd;
+            backdrop-filter: blur(10px);
+            margin: 0;
+            padding: 15px 20px;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .booking-bar-container form .row { align-items: center; justify-content: center; }
+        
+        /* Labels */
+        .booking-bar-container label {
+            color: #333; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 2px; display: block;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Inputs */
+        .booking-bar-container .form-select, 
+        .booking-bar-container .form-control {
+            background-color: transparent; border: none; border-radius: 0;
+            border-bottom: 1px solid transparent; padding: 5px 0;
+            font-size: 0.95rem; color: #000; font-weight: 500;
+            box-shadow: none; cursor: pointer;
+        }
+        .booking-bar-container .form-select:hover,
+        .booking-bar-container .form-control:hover,
+        .booking-bar-container .form-select:focus {
+            border-bottom: 1px solid #000;
+        }
+
+        /* Button */
+        .booking-bar-container .btn-check-rates {
+            background-color: #000; color: #fff; border: 1px solid #000;
+            border-radius: 0; text-transform: uppercase; font-size: 0.8rem;
+            font-weight: 600; letter-spacing: 2px; height: 45px;
+            width: 100%; transition: all 0.3s ease; margin-top: 10px;
+        }
+        .booking-bar-container .btn-check-rates:hover {
+            background-color: #333; border-color: #333;
+        }
+
+        /* Đẩy nội dung chính xuống để không bị Booking Bar che mất */
+        body { padding-top: 180px; } /* Header (~70px) + BookingBar (~110px) */
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <header>
+        <h2 class="logo">Logo</h2>
+        <nav class="navigation">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('my_favorites')}}">Favorite</a>
+            <a href="{{ url_for('home') }}#about">About us</a>
+            
+            {% if user %}
+            <div class="user-menu-wrapper">
+                <img src="{{ url_for('static', filename='avatar.png') }}" class="user-avatar" alt="Avatar">
+                <div class="dropdown">
+                    <a href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </div>
+            {% else %}
+            <button id="btnLoginPopup" class="btnLogin-popup">Login</button>
+            {% endif %}
+        </nav>
+    </header>
+
+    {% block search_bar %}
+    <div class="booking-bar-container">
+        <form action="/hotel_results" method="POST">
+            <div class="row g-2 align-items-end"> 
+                <div class="col-md-2">
+                    <label for="city">Provinces, Cities</label>
+                    <select id="city" name="city" class="form-select" required>
+                        <option value="">Select Location</option>
+                        <option value="Hà Nội">Hà Nội</option>
+                        <option value="Đà Nẵng">Đà Nẵng</option>
+                        <option value="Nha Trang">Nha Trang</option>
+                        <option value="TP. Hồ Chí Minh">HCM City</option>
+                        <option value="Huế">Huế</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="price_range">Price Range</label>
+                    <select id="price_range" name="price_range" class="form-select">
+                        <option value="">Select Prices</option>
+                        <option value="0-500000">&lt; 500k</option>
+                        <option value="500000-1000000">500k - 1M</option>
+                        <option value="1000000-2000000">1M - 2M</option>
+                        <option value="2000000+">&gt; 2M</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="rating">Rating</label>
+                    <select id="rating" name="rating" class="form-select">
+                        <option value="">Stars</option>
+                        <option value="4-5">4+ Stars</option>
+                        <option value="3-5">3+ Stars</option>
+                        <option value="1-3">&lt; 3 Stars</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="amenites">Amenities</label>
+                    <select id="amenites" name="amenities" class="form-select">
+                        <option value="">Select Amenities</option>
+                        <option value="Pet-friendly">Pet Friendly</option>
+                        <option value="Pool">Pool</option>
+                        <option value="Fitness centre">Fitness centre</option>
+                        <option value="Child-Friendly">Child Friendly</option>
+                        <option value="Free Wi-Fi">Free Wi-Fi</option>
+                        <option value="Air-conditioned">Air-conditioned</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-check-rates">Check Rates</button>
+                </div>
+            </div> 
+        </form>
+    </div>
+    {% endblock %}
+    {% block content %}
+    {% endblock %}
+
+    <div class="wrapper">
+        <span class="icon-close"><ion-icon name="close-outline"></ion-icon></span>
+        <div class="form-box login">
+            <h2>Login</h2>
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="input-box"><label>Username</label><input type="text" name="username" required></div>
+                <div class="input-box"><label>Password</label><input type="password" name="password" required></div>
+                <div class="remember-forgot"><label><input type="checkbox">Remember me</label><a href="#">Forgot Password?</a></div>
+                <button type="submit" class="btn">Login</button>
+                <div class="login-register"><p>Don't have an account? <a href="#" class="register-link">Register</a></p></div>
+            </form>
+        </div>
+        <div class="form-box register">
+            <h2>Registration</h2>
+            <form action="{{ url_for('register') }}" method="POST">
+                <div class="input-box"><label>Username</label><input type="text" name="username" required></div>
+                <div class="input-box"><label>Password</label><input type="password" name="password" required></div>
+                <div class="remember-forgot"><label><input type="checkbox">I agree to terms</label></div>
+                <button type="submit" class="btn">Register</button>
+                <div class="login-register"><p>Already have an account? <a href="#" class="login-link">Login</a></p></div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            /* =========================================
+               PHẦN 1: LOGIC GIỮ TRẠNG THÁI BOOKING BAR
+               ========================================= */
+            
+            const filterIds = ['city', 'price_range', 'rating', 'amenites'];
+            const bookingForm = document.querySelector('form[action="/hotel_results"]');
+
+            // Hàm lưu giá trị vào LocalStorage
+            function saveFilters() {
+                filterIds.forEach(id => {
+                    const selectElement = document.getElementById(id);
+                    if (selectElement) {
+                        localStorage.setItem('hotel_filter_' + id, selectElement.value);
+                    }
+                });
+            }
+
+            // Hàm khôi phục giá trị từ LocalStorage
+            function loadFilters() {
+                filterIds.forEach(id => {
+                    const selectElement = document.getElementById(id);
+                    const savedValue = localStorage.getItem('hotel_filter_' + id);
+                    
+                    if (selectElement && savedValue) {
+                        selectElement.value = savedValue;
+                    }
+                });
+            }
+
+            // 1. Khôi phục dữ liệu ngay khi tải trang
+            loadFilters();
+
+            // 2. Lưu dữ liệu khi người dùng thay đổi lựa chọn (Sự kiện change)
+            filterIds.forEach(id => {
+                const selectElement = document.getElementById(id);
+                if (selectElement) {
+                    selectElement.addEventListener('change', function() {
+                        localStorage.setItem('hotel_filter_' + id, this.value);
+                    });
+                }
+            });
+
+            // 3. Lưu dữ liệu khi form được submit (Đảm bảo chắc chắn lưu trước khi chuyển trang)
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', function() {
+                    saveFilters();
+                });
+            }
+
+            /* =========================================
+               PHẦN 2: LOGIC GIAO DIỆN (POPUP, LOGIN, MENU)
+               ========================================= */
+            
+            const wrapper = document.querySelector('.wrapper');
+            const loginForm = document.querySelector('.form-box.login');
+            const registerForm = document.querySelector('.form-box.register');
+            const registerLink = document.querySelector('.register-link');
+            const loginLink = document.querySelector('.login-link');
+            const btnPopup = document.querySelector('.btnLogin-popup');
+            const iconClose = document.querySelector('.icon-close');
+            
+            // Logic mở Popup Login
+            if (btnPopup) {
+                btnPopup.addEventListener('click', () => {
+                    wrapper.classList.add('active-popup');
+                    registerForm.classList.remove('active');
+                    loginForm.classList.add('active');
+                });
+            }
+            
+            // Logic đóng Popup
+            if (iconClose) {
+                iconClose.addEventListener('click', () => { 
+                    wrapper.classList.remove('active-popup'); 
+                });
+            }
+            
+            // Chuyển đổi giữa Login và Register
+            if (registerLink) {
+                registerLink.addEventListener('click', (e) => {
+                    e.preventDefault(); 
+                    loginForm.classList.remove('active'); 
+                    registerForm.classList.add('active');
+                });
+            }
+            if (loginLink) {
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault(); 
+                    registerForm.classList.remove('active'); 
+                    loginForm.classList.add('active');
+                });
+            }
+
+            // Logic Dropdown User Menu
+            const userAvatar = document.querySelector('.user-avatar');
+            const dropdown = document.querySelector('.dropdown');
+            if (userAvatar && dropdown) {
+                userAvatar.addEventListener('mouseenter', () => dropdown.style.display = 'block');
+                dropdown.addEventListener('mouseenter', () => dropdown.style.display = 'block');
+                userAvatar.addEventListener('mouseleave', () => {
+                    setTimeout(() => { 
+                        if (!dropdown.matches(':hover')) dropdown.style.display = 'none'; 
+                    }, 100);
+                });
+                dropdown.addEventListener('mouseleave', () => dropdown.style.display = 'none');
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

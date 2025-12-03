@@ -1,85 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"> 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- show the correct ratio in phone,...  -->
-    <title>Travel Recommendation System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-        /* Background Video */
-        .video-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: -1;
-        }
-        .video-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        /* Transparent Div */
-        .center-div {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        .center-div h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        /* Buttons */
-        .btn {
-            display: inline-block;
-            padding: 15px 30px;
-            margin: 10px;
-            font-size: 1.2rem;
-            color: #fff;
-            text-decoration: none;
-            background: linear-gradient(90deg, #007BFF, #00B4DB);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-    </style>
-</head>
-<body>
-    <!-- Background Video -->
-    <div class="video-container">
-        <video autoplay loop muted>
-            <source src="{{url_for('static',filename='Travel Agency Logo Advert.mp4')}}" type="video/mp4">
-            Your browser does not support HTML5 video.
-        </video>
-    </div>
+{% extends "base.html" %}
 
-    <!-- Center Div -->
-    <div class="center-div">
-        <h1>Welcome to the Travel Recommendation System</h1>
-        <a href="/recommendation" class="btn">Travel Recommendation</a>
-    </div>
-</body>
-</html>
+{% block title %}Ligma - Home{% endblock %}
+
+{% block head %}
+<style>
+    /* Hero Section điều chỉnh padding vì Base đã có padding-top */
+    .hero-section {
+        display: flex; flex-direction: column; justify-content: center;
+        align-items: center; min-height: 100vh;
+        /* Trừ đi khoảng cách của header + booking bar để căn giữa đẹp hơn */
+        margin-top: -100px; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <section id="home" class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h3 class="hero-subtitle">Ligma</h3>
+            <h1 class="hero-title">Your mind, our care</h1>
+            <p class="hero-text">
+                At <strong>Ligma</strong>, we provide compassionate and confidential
+                psychological care to help you navigate through stress, anxiety, and
+                emotional challenges.
+                <br><br>
+                <em>Your mind matters. Your growth matters. Together, we heal.</em>
+            </p>
+            <div class="hero-buttons">
+                <a href="#booking" class="btn-orange">Book a consultation</a>
+                <a href="https://facebook.com" target="_blank" class="btn-blue">Message us on Facebook</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">--- NEXT SECTION ---</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Logic đổi màu nền (Giữ nguyên)
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainBody = document.querySelector('body');
+        const sections = document.querySelectorAll('section');
+        const allBgClasses = ['bg-home', 'bg-about', 'bg-services'];
+        mainBody.classList.add('bg-home'); 
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const targetId = entry.target.id; 
+                    const newBgClass = `bg-${targetId}`;
+                    if (allBgClasses.includes(newBgClass)) {
+                        allBgClasses.forEach(c => mainBody.classList.remove(c));
+                        mainBody.classList.add(newBgClass);
+                    }
+                }
+            });
+        }, { threshold: 0.1 }); // Nhạy hơn một chút
+        sections.forEach(s => observer.observe(s));
+    });
+</script>
+{% endblock %}

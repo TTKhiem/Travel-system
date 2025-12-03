@@ -1,0 +1,638 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hotel.name }} - Hotel Details{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Ghi đè padding của Base vì trang này không có thanh Search Bar */
+        body {
+            background-color: #f0f2f5;
+            padding-top: 100px !important; /* Điều chỉnh lại khoảng cách với Header */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Carousel Styles */
+        .hotel-carousel {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .carousel-item img {
+            height: 450px;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        /* Section Styling */
+        .content-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+            padding-left: 10px;
+        }
+
+        /* Sidebar Sticky */
+        .sidebar-sticky {
+            position: sticky;
+            top: 100px; /* Điều chỉnh lại top khi cuộn vì header thấp hơn */
+            z-index: 90;
+        }
+
+        /* Nearby Places List */
+        .nearby-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .nearby-item:last-child { border-bottom: none; }
+        .nearby-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        
+        /* Amenities Accordion */
+        .accordion-button:not(.collapsed) {
+            color: #007bff;
+            background-color: #e7f1ff;
+        }
+        .amenity-badge {
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+
+        /* Rating & Price */
+        .price-box {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        /* Excluded Amenities */
+        .excluded-item {
+            color: #dc3545;
+            font-size: 0.9rem;
+        }
+
+        
+    </style>
+{% endblock %}
+
+{# --- QUAN TRỌNG: Ghi đè block search_bar bằng rỗng để ẩn form --- #}
+{% block search_bar %}{% endblock %}
+
+{% block content %}
+    <div class="container pb-5">
+        <div class="mb-3">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% else %}
+
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <div>
+                <h1 class="fw-bold mb-1">{{ hotel.name }}</h1>
+                <p class="text-muted mb-0"><i class="fas fa-map-marker-alt text-danger"></i> {{ hotel.address }}</p>
+                <div class="text-warning mt-1">
+                    {% for i in range(5) %}
+                        {% if i < (hotel.overall_rating|int if hotel.overall_rating else 0) %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="text-dark fw-bold ms-2">{{ hotel.overall_rating }}/5</span>
+                    <span class="text-muted small">({{ hotel.reviews }} reviews)</span>
+                </div>
+            </div>
+        </div>
+
+        {% if hotel.images %}
+        <div id="hotelCarousel" class="carousel slide hotel-carousel" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for img in hotel.images %}
+                <div class="carousel-item {{ 'active' if loop.first }}">
+                    <img src="{{ img.original_image }}" class="d-block w-100" referrerpolicy="no-referrer" alt="Hotel Image">
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#hotelCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-8">
+                
+                <div class="content-card position-relative">
+                    <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2">
+                        <h3 class="section-title mb-0 border-0 p-0">Giới thiệu</h3>
+                        
+                        <button id="openChatBtn" class="btn btn-primary rounded-pill shadow-sm px-4">
+                            <i class="fas fa-sparkles text-warning me-2"></i> Hỏi AI về nơi này
+                        </button>
+                    </div>
+
+                    <div class="description-content">
+                        <p class="lead" style="font-size: 1.05rem; line-height: 1.6;">
+                            {{ hotel.description if hotel.description else 'Hiện chưa có mô tả chi tiết cho khách sạn này.' }}
+                            <div id="aiSummaryBox" class="mt-4 p-3 rounded-3 border-0 bg-light" style="display: none;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-magic text-primary me-2"></i>
+                                    <h6 class="fw-bold mb-0 text-primary">Tóm tắt đánh giá từ cộng đồng (AI)</h6>
+                                </div>
+                                <div id="aiSummaryContent" class="text-dark small" style="line-height: 1.6;">
+                                    <i class="fas fa-spinner fa-spin text-muted"></i> Đang phân tích ý kiến khách hàng...
+                                </div>
+                            </div>
+                        </p>
+                    </div>
+                    
+                    {% if hotel.sustainability %}
+                    <div class="alert alert-success d-flex align-items-center mt-4 rounded-3 border-0 bg-opacity-10 bg-success text-success">
+                        <i class="fas fa-leaf fa-2x me-3"></i>
+                        <div>
+                            <strong class="text-dark">Du lịch bền vững</strong><br>
+                            <small>Khách sạn này có các biện pháp tiết kiệm năng lượng và giảm rác thải.</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if hotel.amenities_detailed and hotel.amenities_detailed.groups %}
+                <div class="content-card">
+                    <h3 class="section-title">Tiện nghi chi tiết</h3>
+                    <div class="accordion" id="amenitiesAccordion">
+                        {% for group in hotel.amenities_detailed.groups %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button {{ 'collapsed' if not loop.first }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                    <strong>{{ group.title }}</strong>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {{ 'show' if loop.first }}" data-bs-parent="#amenitiesAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        {% for item in group.list %}
+                                        <div class="col-md-6 mb-2">
+                                            {% if item.available %}
+                                                <i class="fas fa-check text-success me-2"></i> {{ item.title }}
+                                                {% if item.label %}
+                                                    <span class="badge bg-secondary amenity-badge">{{ item.label }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <i class="fas fa-times text-danger me-2"></i> <span class="text-decoration-line-through text-muted">{{ item.title }}</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if hotel.health_and_safety %}
+                <div class="content-card">
+                    <h3 class="section-title"><i class="fas fa-shield-virus text-primary"></i> Sức khỏe & An toàn</h3>
+                    <div class="row">
+                        {% for group in hotel.health_and_safety.groups %}
+                        <div class="col-12 mb-3">
+                            <h6 class="fw-bold">{{ group.title }}</h6>
+                            <ul class="list-unstyled">
+                                {% for item in group.list %}
+                                    <li class="mb-1"><i class="fas fa-check-circle text-info me-2"></i>{{ item.title }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if hotel.reviews_breakdown %}
+                <div class="content-card">
+                    <h3 class="section-title">Đánh giá từ khách hàng</h3>
+                    <div class="row">
+                        {% for topic in hotel.reviews_breakdown %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ topic.name }}</strong>
+                                <span class="badge bg-light text-dark border">{{ topic.total_mentioned }} mentions</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 8px;">
+                                {% set total = topic.positive + topic.negative + topic.neutral %}
+                                {% set pos_pct = (topic.positive / total * 100) if total > 0 else 0 %}
+                                {% set neg_pct = (topic.negative / total * 100) if total > 0 else 0 %}
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ pos_pct }}%"></div>
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ neg_pct }}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mt-1">
+                                <span><i class="fas fa-smile text-success"></i> {{ topic.positive }}</span>
+                                <span><i class="fas fa-frown text-danger"></i> {{ topic.negative }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="content-card mt-4">
+                    <h3 class="section-title"><i class="fas fa-comments text-primary"></i> Đánh giá từ cộng đồng</h3>
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Viết đánh giá của bạn</h5>
+                            <form action="{{ url_for('add_review') }}" method="POST">
+                                <input type="hidden" name="property_token" value="{{ hotel.property_token }}">
+                                
+                                <input type="hidden" name="current_price" value="{{ hotel.rate_per_night.lowest if hotel.rate_per_night else '' }}">
+                                <input type="hidden" name="check_in" value="{{ hotel.search_context.check_in if hotel.search_context else '' }}">
+                                <input type="hidden" name="check_out" value="{{ hotel.search_context.check_out if hotel.search_context else '' }}">
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Bạn chấm mấy sao?</label>
+                                    <div class="rating-input">
+                                        <div class="btn-group" role="group">
+                                            {% for i in range(1, 6) %}
+                                            <input type="radio" class="btn-check" name="rating" id="star{{i}}" value="{{i}}" required>
+                                            <label class="btn btn-outline-warning" for="star{{i}}">{{i}} <i class="fas fa-star"></i></label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <textarea name="comment" class="form-control" rows="3" placeholder="Chia sẻ trải nghiệm của bạn về khách sạn này..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Gửi đánh giá</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="review-list">
+                        {% if local_reviews %}
+                            {% for review in local_reviews %}
+                            <div class="d-flex mb-3 border-bottom pb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; font-weight: bold;">
+                                        {{ review.username[0] | upper }}
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="mb-0 fw-bold">{{ review.username }}</h6>
+                                        <small class="text-muted">{{ review.created_at }}</small>
+                                    </div>
+                                    <div class="text-warning small mb-1">
+                                        {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                                    </div>
+                                    <p class="mb-0 text-dark">{{ review.comment }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center py-3">Chưa có đánh giá nào từ cộng đồng. Hãy là người đầu tiên!</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="sidebar-sticky">
+                    <div class="price-box mb-4 shadow">
+                        <h4 class="mb-2">Giá mỗi đêm</h4>
+                        <div class="display-5 fw-bold mb-2">
+                            {{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}
+                        </div>
+                        <p class="small opacity-75">Đã bao gồm thuế & phí (nếu có)</p>
+                        <a href="{{ hotel.link }}" target="_blank" class="btn btn-light text-primary w-100 fw-bold">
+                            <i class="fas fa-external-link-alt"></i> Đặt phòng ngay
+                        </a>
+                        <button id="btnFavorite" onclick="toggleFavorite()" 
+                                class="btn w-100 mt-2 {{ 'btn-danger' if is_favorite else 'btn-outline-danger' }}">
+                            <i class="{{ 'fas' if is_favorite else 'far' }} fa-heart"></i> 
+                            <span id="favText">{{ 'Đã yêu thích' if is_favorite else 'Lưu yêu thích' }}</span>
+                        </button>
+                    </div>
+
+                    {% if hotel.excluded_amenities %}
+                    <div class="content-card border-danger border-start border-4">
+                        <h5 class="text-danger"><i class="fas fa-exclamation-circle"></i> Lưu ý không có:</h5>
+                        <ul class="list-unstyled mb-0">
+                            {% for item in hotel.excluded_amenities %}
+                            <li class="excluded-item mb-1"><i class="fas fa-times-circle"></i> {{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if hotel.gps_coordinates %}
+                    <div class="content-card p-0 overflow-hidden">
+                        <iframe 
+                            width="100%" 
+                            height="250" 
+                            style="border:0;" 
+                            loading="lazy" 
+                            allowfullscreen
+                            src="https://maps.google.com/maps?q={{ hotel.gps_coordinates.latitude }},{{ hotel.gps_coordinates.longitude }}&hl=vi&z=16&output=embed">
+                        </iframe>
+                        <div class="p-3">
+                            <small class="text-muted"><i class="fas fa-map-pin"></i> {{ hotel.address }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if hotel.nearby_places %}
+                    <div class="content-card">
+                        <h5 class="mb-3">Địa điểm xung quanh</h5>
+                        <div class="nearby-list">
+                            {% for place in hotel.nearby_places[:6] %}
+                            <div class="nearby-item">
+                                <img src="{{ place.thumbnail if place.thumbnail else 'https://via.placeholder.com/50' }}" class="nearby-thumb" alt="Place">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 small fw-bold">{{ place.name }}</h6>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">
+                                        {% if place.transportations %}
+                                            {% for trans in place.transportations %}
+                                                <span class="me-2">
+                                                    {% if trans.type == 'Walking' %}<i class="fas fa-walking"></i>
+                                                    {% elif trans.type == 'Taxi' %}<i class="fas fa-taxi"></i>
+                                                    {% else %}<i class="fas fa-bus"></i>{% endif %}
+                                                    {{ trans.duration }}
+                                                </span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+        
+        <div id="chatWidget" class="card shadow" style="display:none; position: fixed; bottom: 80px; right: 20px; width: 350px; z-index: 1000; border-radius: 15px;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 15px 15px 0 0;">
+                <strong><i class="fas fa-robot"></i> Trợ lý ảo</strong>
+                <button id="closeChatBtn" class="btn btn-sm text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="chatMessages" class="card-body bg-light" style="height: 300px; overflow-y: auto;">
+                <div class="text-center text-muted small mt-4">
+                    Bạn có thể hỏi về:<br>
+                    "Khách sạn có bể bơi không?"<br>
+                    "Giờ check-in là mấy giờ?"<br>
+                    "Cách Hồ Gươm bao xa?"
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="input-group">
+                    <input id="chatInput" type="text" class="form-control" placeholder="Nhập câu hỏi...">
+                    <button id="sendChatBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        {% endif %} 
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function(){
+            const chatWidget = document.getElementById('chatWidget');
+            const openBtn = document.getElementById('openChatBtn');
+            const closeBtn = document.getElementById('closeChatBtn');
+            const sendBtn = document.getElementById('sendChatBtn');
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+
+            // Hàm hiển thị tin nhắn lên màn hình
+            function appendMessage(text, role){
+                const wrapper = document.createElement('div');
+                wrapper.className = role === 'user' ? 'text-end mb-3' : 'text-start mb-3';
+                
+                const bubble = document.createElement('div');
+                // Style khác nhau cho user (xanh) và bot (trắng xám)
+                bubble.className = role === 'user' 
+                    ? 'd-inline-block p-2 px-3 bg-primary text-white rounded-3' 
+                    : 'd-inline-block p-2 px-3 bg-light border text-dark rounded-3 shadow-sm';
+                
+                bubble.style.maxWidth = '85%';
+                bubble.style.textAlign = 'left';
+                
+                // Xử lý xuống dòng cho đẹp nếu AI trả về văn bản dài
+                bubble.style.whiteSpace = 'pre-wrap'; 
+                bubble.textContent = text;
+                
+                wrapper.appendChild(bubble);
+                messages.appendChild(wrapper);
+                
+                // Tự động cuộn xuống tin nhắn mới nhất
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            // Hàm gửi tin nhắn (Xử lý chính)
+            async function sendMessage(){
+                const text = (input.value || '').trim();
+                if(!text) return;
+
+                // 1. Hiện tin nhắn của User ngay lập tức
+                appendMessage(text, 'user');
+                input.value = '';
+                sendBtn.disabled = true; // Khóa nút gửi để tránh spam
+                
+                // Hiển thị trạng thái "Đang gõ..." (Optional - cho mượt)
+                const loadingId = 'loading-' + Date.now();
+                const loadingWrapper = document.createElement('div');
+                loadingWrapper.className = 'text-start mb-2 small text-muted fst-italic';
+                loadingWrapper.id = loadingId;
+                loadingWrapper.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> AI đang trả lời...';
+                messages.appendChild(loadingWrapper);
+                messages.scrollTop = messages.scrollHeight;
+
+                try {
+                    // Lấy dữ liệu từ Template Jinja2 để gửi kèm request
+                    const hotelToken = "{{ hotel.property_token }}";
+                    const currentPrice = "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}";
+
+                    // 2. Gọi API Backend (Real-time)
+                    const resp = await fetch('/api/hotel_chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            message: text, 
+                            property_token: hotelToken,
+                            // Gửi kèm ngữ cảnh động (Dynamic Context)
+                            dynamic_context: { 
+                                price: currentPrice,
+                                check_in: "{{ hotel.search_context.check_in if hotel.search_context else '' }}",
+                                check_out: "{{ hotel.search_context.check_out if hotel.search_context else '' }}"
+                            },
+                            // Fallback phòng khi Database chưa kịp cache
+                            hotel_fallback: { 
+                                name: "{{ hotel.name }}", 
+                                address: "{{ hotel.address }}" 
+                            }
+                        })
+                    });
+
+                    const data = await resp.json();
+                    
+                    // Xóa trạng thái "Đang gõ..."
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+
+                    // 3. Hiện phản hồi từ Gemini
+                    if(data.reply){
+                        appendMessage(data.reply, 'bot');
+                    } else {
+                        appendMessage("Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.", 'bot');
+                    }
+
+                } catch(err){
+                    console.error("Chat Error:", err);
+                    // Xóa loader nếu lỗi
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+                    
+                    appendMessage('Lỗi kết nối mạng. Vui lòng kiểm tra lại.', 'bot');
+                } finally {
+                    sendBtn.disabled = false;
+                    input.focus();
+                }
+            }
+
+            // Các sự kiện click/enter
+            if(openBtn) openBtn.onclick = () => { 
+                chatWidget.style.display = 'block'; 
+                // Scroll xuống cuối khi mở box
+                messages.scrollTop = messages.scrollHeight;
+                input.focus(); 
+            };
+            
+            if(closeBtn) closeBtn.onclick = () => chatWidget.style.display = 'none';
+            
+            if(sendBtn) sendBtn.onclick = sendMessage;
+            
+            if(input) input.onkeydown = (e) => { 
+                if(e.key === 'Enter') sendMessage(); 
+            };
+        })();
+
+        document.addEventListener("DOMContentLoaded", async function() {
+            const summaryBox = document.getElementById('aiSummaryBox');
+            const summaryContent = document.getElementById('aiSummaryContent');
+            const propertyToken = "{{ hotel.property_token }}";
+
+            if (!summaryBox) return;
+
+            // Hiển thị box và trạng thái loading
+            summaryBox.style.display = 'block';
+
+            try {
+                const resp = await fetch('/api/summarize_reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ property_token: propertyToken })
+                });
+
+                const data = await resp.json();
+
+                if (data.summary) {
+                    // Hiệu ứng gõ chữ hoặc hiện thẳng
+                    summaryContent.innerHTML = data.summary;
+                } else {
+                    // Nếu không có review nào
+                    summaryContent.innerHTML = '<span class="text-muted fst-italic">Chưa có đánh giá nào từ cộng đồng để tóm tắt.</span>';
+                }
+            } catch (err) {
+                console.error("Summary error:", err);
+                summaryBox.style.display = 'none'; // Ẩn luôn nếu lỗi
+            }
+        });
+
+        let isFav = {{ 'true' if is_favorite else 'false' }};
+        const propertyToken = "{{ hotel.property_token }}";
+
+        async function toggleFavorite() {
+            const btn = document.getElementById('btnFavorite');
+            const icon = btn.querySelector('i');
+            const text = document.getElementById('favText');
+            
+            // 1. Xác định hành động dựa trên trạng thái hiện tại
+            const url = isFav ? '/favorites/remove' : '/favorites';
+            
+            // Dữ liệu gửi đi (Nếu là Remove thì chỉ cần token, nếu Add thì cần full info)
+            const payload = {
+                property_token: propertyToken,
+                name: "{{ hotel.name }}",
+                image: "{{ hotel.images[0].original_image if hotel.images else '' }}",
+                price: "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}",
+                address: "{{ hotel.address }}"
+            };
+
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (resp.ok) {
+                    // 2. Đảo ngược trạng thái
+                    isFav = !isFav; 
+
+                    // 3. Cập nhật giao diện ngay lập tức
+                    if (isFav) {
+                        // Đã thích: Nền đỏ, Tim đặc
+                        btn.classList.remove('btn-outline-danger');
+                        btn.classList.add('btn-danger');
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        text.innerText = "Đã yêu thích";
+                    } else {
+                        // Bỏ thích: Nền trắng, Tim rỗng
+                        btn.classList.remove('btn-danger');
+                        btn.classList.add('btn-outline-danger');
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        text.innerText = "Lưu yêu thích";
+                    }
+                } else {
+                    alert("Có lỗi xảy ra, vui lòng thử lại.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối.");
+            }
+        }
+    </script>
+{% endblock %}
