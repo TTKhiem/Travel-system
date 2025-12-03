@@ -229,7 +229,7 @@
     </nav>
 
     <!-- STICKY SEARCH BAR (Logic ẩn ở trang Hotel Results - api_filter) -->
-    {% if request.endpoint != 'home' and request.endpoint != 'register_page' and request.endpoint != 'api_filter' %}
+    {% if request.endpoint != 'home' and request.endpoint != 'register_page' and request.endpoint != 'hotel_detail' %}
     <div class="sticky-search-bar">
         <div class="container">
             <form action="/hotel_results" method="POST" class="compact-search-form">
