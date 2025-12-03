@@ -2,6 +2,10 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    full_name TEXT,       
+    email TEXT,           
+    phone TEXT,           
+    address TEXT,         
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
