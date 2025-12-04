@@ -1,50 +1,78 @@
+
+
 {% extends "base.html" %}
 
 {% block title %}Khách sạn yêu thích{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- CSS GIỐNG HOTEL_RESULTS --- */
+        /* --- CẤU HÌNH GIAO DIỆN (LUXURY THEME) --- */
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
-            min-height: 100vh;
-            padding-top: 100px !important; /* Đẩy xuống vì không có Search Bar */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa !important; /* Nền xám nhạt hiện đại */
+            padding-top: 100px !important;
         }
 
+        /* Ẩn thanh tìm kiếm trên trang này */
+        .sticky-search-bar { display: none !important; }
+
+        .page-header {
+            margin-bottom: 40px;
+        }
         .page-title {
             font-weight: 800;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            position: relative;
-            display: inline-block;
+            color: #0f172a;
+            letter-spacing: -1px;
+            font-size: 2rem;
         }
-        
-        /* Style cho Card */
+
+        /* --- CARD STYLE (Đồng bộ với Hotel Results) --- */
         .hotel-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+            background: #fff;
+            border: 1px solid #f1f5f9; /* Viền siêu mỏng */
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
             height: 100%;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
         }
 
         .hotel-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #000;
         }
 
-        /* Ảnh Background thay vì thẻ img để đều nhau */
         .hotel-image {
-            height: 200px;
+            height: 220px;
             background-size: cover;
             background-position: center;
             position: relative;
+        }
+
+        /* Nút Xóa Tròn (Góc trên phải) */
+        .btn-remove-circle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            color: #dc3545;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: 0.2s;
+            z-index: 10;
+            cursor: pointer;
+        }
+        .btn-remove-circle:hover {
+            transform: scale(1.15);
+            background: #dc3545;
+            color: white;
         }
 
         .hotel-info {
@@ -55,96 +83,89 @@
         }
 
         .hotel-name {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 6px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            height: 2.8em; /* Giới hạn chiều cao tên */
+            line-height: 1.4;
         }
 
         .hotel-address {
             font-size: 0.85rem;
-            color: #6c757d;
-            margin-bottom: 10px;
+            color: #64748b;
+            margin-bottom: 15px;
             white-space: nowrap; 
             overflow: hidden;
             text-overflow: ellipsis; 
         }
 
-        .price {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #28a745;
-            margin-top: auto; /* Đẩy giá xuống dưới cùng của phần text */
-            margin-bottom: 15px;
-        }
-
-        /* Nút Xóa nhỏ ở góc ảnh */
-        .btn-remove-float {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            color: #dc3545;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
+        .price-section {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid #f1f5f9;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            z-index: 10;
-        }
-        .btn-remove-float:hover {
-            background: #dc3545;
-            color: white;
-            transform: scale(1.1);
         }
 
-        .btn-view {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 0;
-            border-radius: 25px;
-            text-decoration: none;
-            display: block;
-            width: 100%;
-            text-align: center;
-            transition: all 0.3s ease;
-            font-weight: 600;
+        .price-val {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #000;
         }
-        .btn-view:hover { background: #0056b3; color: white; }
+        .price-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #94a3b8;
+        }
+
+        /* Nút Xem chi tiết (Đen) */
+        .btn-view {
+            background: #000;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-view:hover {
+            background: #333;
+            color: white;
+            transform: translateY(-2px);
+        }
 
         /* Empty State */
         .empty-state {
             background: white;
-            border-radius: 15px;
-            padding: 50px;
+            border-radius: 24px;
+            padding: 60px 20px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+            border: 1px solid #f1f5f9;
         }
     </style>
 {% endblock %}
 
-{# --- Ẩn thanh tìm kiếm để trang thoáng hơn --- #}
+{# --- Block search_bar rỗng --- #}
 {% block search_bar %}{% endblock %}
 
 {% block content %}
     <div class="container pb-5">
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center page-header">
             <h2 class="page-title mb-0">
                 <i class="fas fa-heart text-danger me-2"></i> Khách sạn đã lưu
             </h2>
-            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary rounded-pill px-4">
-                <i class="fas fa-search me-2"></i> Tìm thêm khách sạn
+            <a href="{{ url_for('home') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+                <i class="fas fa-search me-2"></i> Khám phá thêm
             </a>
         </div>
 
@@ -152,12 +173,16 @@
         <div class="row g-4">
             {% for fav in favorites %}
             <div class="col-lg-3 col-md-6" id="fav-card-{{ fav.property_token }}">
-                <div class="hotel-card">
-                    <button onclick="removeFavItem('{{ fav.property_token }}')" class="btn-remove-float shadow-sm" title="Xóa khỏi danh sách">
-                        <i class="fas fa-trash-alt"></i>
+                <div class="hotel-card animate__animated animate__fadeInUp">
+                    <!-- Nút Xóa -->
+                    <button onclick="removeFavItem('{{ fav.property_token }}')" class="btn-remove-circle" title="Xóa khỏi danh sách">
+                        <i class="fas fa-times"></i>
                     </button>
 
+                    <!-- Ảnh nền -->
                     <div class="hotel-image" style="background-image: url('{{ fav.image if fav.image else 'https://via.placeholder.com/400x300' }}')">
+                        <!-- Hiệu ứng bóng mờ bên dưới ảnh -->
+                        <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);"></div>
                     </div>
                     
                     <div class="hotel-info">
@@ -168,13 +193,15 @@
                             {{ fav.address if fav.address else 'Địa chỉ đang cập nhật' }}
                         </p>
 
-                        <div class="price">
-                            {{ fav.price if fav.price else 'Liên hệ' }}
+                        <div class="price-section">
+                            <div>
+                                <div class="price-label">Mỗi đêm</div>
+                                <div class="price-val">{{ fav.price if fav.price else 'Liên hệ' }}</div>
+                            </div>
+                            <a href="{{ url_for('hotel_detail', property_token=fav.property_token) }}" class="btn-view">
+                                Xem ngay
+                            </a>
                         </div>
-
-                        <a href="{{ url_for('hotel_detail', property_token=fav.property_token) }}" class="btn btn-view">
-                            Xem chi tiết <i class="fas fa-arrow-right ms-1"></i>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -182,14 +209,17 @@
         </div>
         {% else %}
         
+        <!-- Trạng thái trống -->
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="empty-state">
-                    <i class="far fa-heart fa-4x text-muted mb-3 opacity-25"></i>
-                    <h3>Danh sách trống</h3>
-                    <p class="text-muted">Bạn chưa lưu khách sạn nào. Hãy tìm kiếm và thả tim nhé!</p>
-                    <a href="{{ url_for('home') }}" class="btn btn-primary rounded-pill px-4 mt-2">
-                        Đi tìm khách sạn ngay
+            <div class="col-md-6">
+                <div class="empty-state animate__animated animate__fadeIn">
+                    <div class="mb-4">
+                        <i class="far fa-heart fa-4x text-muted opacity-25"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Danh sách trống</h3>
+                    <p class="text-muted mb-4">Bạn chưa lưu khách sạn nào. Hãy tìm kiếm và thả tim nhé!</p>
+                    <a href="{{ url_for('home') }}" class="btn btn-dark rounded-pill px-5 py-3 fw-bold shadow-lg">
+                        Bắt đầu tìm kiếm
                     </a>
                 </div>
             </div>
@@ -214,10 +244,8 @@
                 // Tìm thẻ Card HTML tương ứng
                 const cardCol = document.getElementById('fav-card-' + token);
                 if(cardCol) {
-                    // Hiệu ứng mờ dần và thu nhỏ
-                    cardCol.style.transition = "all 0.4s ease";
-                    cardCol.style.opacity = "0";
-                    cardCol.style.transform = "scale(0.8)";
+                    // Hiệu ứng animate.css: bay xuống và mờ đi
+                    cardCol.classList.add('animate__animated', 'animate__fadeOutDown');
                     
                     // Đợi hiệu ứng chạy xong mới xóa khỏi DOM
                     setTimeout(() => {
@@ -227,14 +255,21 @@
                         if (remaining.length === 0) {
                             location.reload(); 
                         }
-                    }, 400);
+                    }, 500); // 500ms khớp với thời gian animation mặc định
+
+                    // Dùng Toast từ base.html (nếu có)
+                    if(window.showToast) {
+                        window.showToast("Đã xóa khách sạn khỏi danh sách.", "success");
+                    }
                 }
             } else {
-                alert("Không thể xóa. Vui lòng thử lại.");
+                if(window.showToast) window.showToast("Không thể xóa. Vui lòng thử lại.", "error");
+                else alert("Lỗi xóa.");
             }
         } catch (e) {
             console.error(e);
-            alert("Lỗi kết nối.");
+            if(window.showToast) window.showToast("Lỗi kết nối mạng.", "error");
+            else alert("Lỗi mạng.");
         }
     }
 </script>

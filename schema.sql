@@ -2,6 +2,10 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    full_name TEXT,       
+    email TEXT,           
+    phone TEXT,           
+    address TEXT,         
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -28,4 +32,14 @@ CREATE TABLE IF NOT EXISTS user_reviews (
     rating INTEGER NOT NULL,            
     comment TEXT,                      
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE IF NOT EXISTS recently_viewed (
+    user_id INTEGER NOT NULL,
+    property_token TEXT NOT NULL,
+    preview_data TEXT NOT NULL,
+    visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, property_token),
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );

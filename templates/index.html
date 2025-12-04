@@ -1,64 +1,361 @@
 {% extends "base.html" %}
 
-{% block title %}Ligma - Home{% endblock %}
+{% block title %}LigmaStay - Tìm nơi bình yên của bạn{% endblock %}
 
 {% block head %}
 <style>
-    /* Hero Section điều chỉnh padding vì Base đã có padding-top */
+    /* HERO SECTION */
     .hero-section {
-        display: flex; flex-direction: column; justify-content: center;
-        align-items: center; min-height: 100vh;
-        /* Trừ đi khoảng cách của header + booking bar để căn giữa đẹp hơn */
-        margin-top: -100px; 
+        position: relative;
+        /* Ảnh nền kiến trúc sang trọng, tối màu */
+        background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+        height: 700px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: -80px; /* Kéo lên đè vào navbar trong suốt */
     }
+    
+    .hero-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.3); /* Lớp phủ đen mờ nhẹ để nổi bật chữ */
+    }
+
+    /* SEARCH WIDGET - GLASSMORPHISM */
+    .search-widget {
+        position: relative; z-index: 10;
+        /* Hiệu ứng kính mờ */
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 40px;
+        border-radius: 24px; 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2); 
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        max-width: 1100px; width: 95%;
+        animation: fadeInUp 1s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .widget-headline {
+        font-weight: 800; font-size: 3.5rem; color: white;
+        text-align: center; margin-bottom: 40px; position: relative; z-index: 10;
+        letter-spacing: -1.5px; text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        animation: fadeInDown 1s ease-out;
+    }
+
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-label {
+        font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px;
+        text-transform: uppercase; color: #475569; margin-bottom: 6px; display: block;
+    }
+
+    /* CSS CUSTOM DROPDOWN - ĐÃ FIX CĂN CHỈNH */
+    .custom-select-hero {
+        -webkit-appearance: none; appearance: none; 
+        border: 1px solid #cbd5e1; border-radius: 12px;
+        /* Padding chuẩn để không bị che chữ */
+        padding: 0 35px 0 15px; 
+        font-size: 0.95rem; font-weight: 600; color: #0f172a;
+        height: 55px; line-height: 55px;
+        background-color: #f8fafc; cursor: pointer;
+        width: 100%;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        
+        /* Mũi tên SVG */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 12px 12px;
+        transition: all 0.2s;
+    }
+    .custom-select-hero:focus { 
+        border-color: #000; background-color: white; outline: none; 
+        box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+    }
+    .custom-select-hero:hover {
+        border-color: #94a3b8;
+    }
+
+    .btn-search-hero {
+        background-color: #000000; color: white; border: none;
+        border-radius: 12px; font-weight: 700; font-size: 1.1rem;
+        height: 55px; 
+        margin-top: 0; /* Quan trọng: Xóa margin để căn đáy với Flexbox */
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 100%;
+    }
+    .btn-search-hero:hover { background-color: #333; transform: translateY(-2px); }
+
+    /* TRIVAGO SCROLL STYLE */
+    .scrolling-wrapper-container {
+        position: relative; margin-top: 20px;
+    }
+    
+    .scrolling-wrapper {
+        display: flex; flex-wrap: nowrap; overflow-x: auto;
+        scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+        gap: 20px; padding: 10px 5px 20px 5px;
+    }
+    
+    .scrolling-wrapper::-webkit-scrollbar { display: none; }
+    .scrolling-wrapper { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .scrolling-card {
+        flex: 0 0 auto; width: 280px;
+        background: white; border-radius: 12px; overflow: hidden;
+        cursor: pointer; border: 1px solid #f1f5f9;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .scrolling-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        border-color: #e2e8f0;
+    }
+
+    .card-img-top { height: 180px; width: 100%; object-fit: cover; }
+    .card-body-custom { padding: 15px; }
+
+    /* Scroll Buttons */
+    .scroll-btn {
+        position: absolute; top: 40%; transform: translateY(-50%);
+        width: 45px; height: 45px; border-radius: 50%;
+        background: white; border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; z-index: 5; transition: 0.2s; color: #000;
+    }
+    .scroll-btn:hover { background: #f8fafc; transform: translateY(-50%) scale(1.1); }
+    .scroll-left { left: -20px; }
+    .scroll-right { right: -20px; }
+
 </style>
 {% endblock %}
 
 {% block content %}
-    <section id="home" class="hero-section">
+    <section class="hero-section">
         <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h3 class="hero-subtitle">Ligma</h3>
-            <h1 class="hero-title">Your mind, our care</h1>
-            <p class="hero-text">
-                At <strong>Ligma</strong>, we provide compassionate and confidential
-                psychological care to help you navigate through stress, anxiety, and
-                emotional challenges.
-                <br><br>
-                <em>Your mind matters. Your growth matters. Together, we heal.</em>
-            </p>
-            <div class="hero-buttons">
-                <a href="#booking" class="btn-orange">Book a consultation</a>
-                <a href="https://facebook.com" target="_blank" class="btn-blue">Message us on Facebook</a>
+        <div class="container">
+            <h1 class="widget-headline">Tìm nơi bình yên của bạn.</h1>
+            
+            <div class="d-flex justify-content-center">
+                <div class="search-widget">
+                    <form action="{{ url_for('api_filter') }}" method="POST">
+                        <!-- QUAN TRỌNG: align-items-end để căn thẳng hàng nút và ô nhập -->
+                        <div class="row g-2 align-items-end">
+                            
+                            <!-- Cột 1: Địa điểm -->
+                            <div class="col-lg-3 col-md-6">
+                                <label class="input-label"><i class="fas fa-map-marker-alt"></i> Địa điểm</label>
+                                <select name="city" class="custom-select-hero" required>
+                                    <option value="" disabled selected>Bạn muốn đi đâu?</option>
+                                    <option value="Hà Nội">Hà Nội</option>
+                                    <option value="Đà Nẵng">Đà Nẵng</option>
+                                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                                    <option value="Nha Trang">Nha Trang</option>
+                                    <option value="Đà Lạt">Đà Lạt</option>
+                                    <option value="Huế">Huế</option>
+                                    <option value="Sa Pa">Sa Pa</option>
+                                    <option value="Phú Quốc">Phú Quốc</option>
+                                    <option value="Vũng Tàu">Vũng Tàu</option>
+                                </select>
+                            </div>
+
+                            <!-- Cột 2: Ngân sách -->
+                            <div class="col-lg-2 col-md-6">
+                                <label class="input-label"><i class="fas fa-wallet"></i> Ngân sách</label>
+                                <select name="price_range" class="custom-select-hero">
+                                    <option value="">Tất cả</option>
+                                    <option value="0-500000">&lt; 500k</option>
+                                    <option value="500000-1000000">500k - 1tr</option>
+                                    <option value="1000000-2000000">1tr - 2tr</option>
+                                    <option value="2000000+">Trên 2tr</option>
+                                </select>
+                            </div>
+
+                            <!-- Cột 3: Hạng sao -->
+                            <div class="col-lg-2 col-md-6">
+                                <label class="input-label"><i class="fas fa-star"></i> Hạng sao</label>
+                                <select name="rating" class="custom-select-hero">
+                                    <option value="">Tất cả</option>
+                                    <option value="4-5">Sang trọng (4-5*)</option>
+                                    <option value="3-5">Thoải mái (3+)</option>
+                                </select>
+                            </div>
+
+                            <!-- Cột 4: Tiện nghi (Rộng hơn chút để chứa chữ) -->
+                            <div class="col-lg-3 col-md-6">
+                                <label class="input-label"><i class="fas fa-concierge-bell"></i> Tiện nghi</label>
+                                <select name="amenities" class="custom-select-hero">
+                                    <option value="">Tùy chọn</option>
+                                    <option value="Pool">Bể bơi</option>
+                                    <option value="Fitness centre">Phòng Gym</option>
+                                    <option value="Pet-friendly">Thú cưng</option>
+                                    <option value="Bar">Quầy Bar</option>
+                                    <option value="Free Wi-Fi">Wi-Fi miễn phí</option>
+                                    <option value="Air-conditioned">Điều hòa</option>
+                                </select>
+                            </div>
+
+                            <!-- Cột 5: Nút tìm kiếm -->
+                            <div class="col-lg-2 col-md-12">
+                                <button type="submit" class="btn-search-hero w-100">Tìm kiếm</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </section>
 
-    <div class="section-divider">--- NEXT SECTION ---</div>
+    <!-- TRENDING DESTINATIONS -->
+    <section class="container py-5 mt-4">
+        <h2 class="fw-bold display-6 mb-1 text-dark">Điểm đến xu hướng</h2>
+        <p class="text-muted mb-4">Lựa chọn phổ biến nhất của du khách tại Việt Nam</p>
+
+        <div class="scrolling-wrapper-container">
+            <button class="scroll-btn scroll-left" onclick="scrollDest(-1)"><i class="fas fa-chevron-left"></i></button>
+            <button class="scroll-btn scroll-right" onclick="scrollDest(1)"><i class="fas fa-chevron-right"></i></button>
+            
+            <div class="scrolling-wrapper" id="destWrapper">
+                
+                <div class="scrolling-card">
+                    <img src="https://images.unsplash.com/photo-1555921015-5532091f6026?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Hanoi">
+                    <div class="card-body-custom">
+                        <h5 class="fw-bold mb-1">Hà Nội</h5>
+                        <p class="text-muted small mb-0">Thủ đô • 12,302 nơi lưu trú</p>
+                        <div class="mt-2 fw-bold small">TB 1.2M VND</div>
+                    </div>
+                </div>
+                
+                <div class="scrolling-card">
+                    <img src="https://i.pinimg.com/1200x/ef/69/c5/ef69c56e319d6db337527303f3501ee1.jpg" class="card-img-top" alt="Da Nang">
+                    <div class="card-body-custom">
+                        <h5 class="fw-bold mb-1">Đà Nẵng</h5>
+                        <p class="text-muted small mb-0">Biển • 8,400 nơi lưu trú</p>
+                        <div class="mt-2 fw-bold small">TB 900k VND</div>
+                    </div>
+                </div>
+
+                <div class="scrolling-card">
+                    <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="HCM">
+                    <div class="card-body-custom">
+                        <h5 class="fw-bold mb-1">TP. Hồ Chí Minh</h5>
+                        <p class="text-muted small mb-0">Đô thị • 15,000 nơi lưu trú</p>
+                        <div class="mt-2 fw-bold small">TB 1.5M VND</div>
+                    </div>
+                </div>
+
+                <div class="scrolling-card">
+                    <img src="https://i.pinimg.com/736x/86/a3/45/86a34585480f9d495d6e5a54922d7cf2.jpg" class="card-img-top" alt="Da Lat">
+                    <div class="card-body-custom">
+                        <h5 class="fw-bold mb-1">Đà Lạt</h5>
+                        <p class="text-muted small mb-0">Núi • 6,200 nơi lưu trú</p>
+                        <div class="mt-2 fw-bold small">TB 800k VND</div>
+                    </div>
+                </div>
+
+                <div class="scrolling-card">
+                    <img src="https://i.pinimg.com/1200x/20/13/0d/20130d96442b00c5bccffdb250a25c93.jpg" class="card-img-top" alt="Sapa">
+                    <div class="card-body-custom">
+                        <h5 class="fw-bold mb-1">Sa Pa</h5>
+                        <p class="text-muted small mb-0">Thiên nhiên • 3,100 nơi lưu trú</p>
+                        <div class="mt-2 fw-bold small">TB 1.1M VND</div>
+                    </div>
+                </div>
+
+                <div class="scrolling-card">
+                    <img src="https://i.pinimg.com/736x/93/bd/0f/93bd0f07eee43f72bcf100cf48b79bc1.jpg" class="card-img-top" alt="Phu Quoc">
+                    <div class="card-body-custom">
+                        <h5 class="fw-bold mb-1">Phú Quốc</h5>
+                        <p class="text-muted small mb-0">Đảo • 4,500 nơi lưu trú</p>
+                        <div class="mt-2 fw-bold small">TB 2.2M VND</div>
+                    </div>
+                </div>
+
+                 <div class="scrolling-card">
+                    <img src="https://i.pinimg.com/1200x/a7/ed/f2/a7edf2456a129a8f1e88886a4ad8595a.jpg" class="card-img-top" alt="Vung Tau">
+                    <div class="card-body-custom">
+                        <h5 class="fw-bold mb-1">Vũng Tàu</h5>
+                        <p class="text-muted small mb-0">Vùng duyên hải • 2,800 nơi lưu trú</p>
+                        <div class="mt-2 fw-bold small">TB 1.3M VND</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- WHY CHOOSE US -->
+    <section class="bg-light py-5 my-5">
+        <div class="container py-4">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <h6 class="text-uppercase fw-bold text-muted mb-2">Tại sao chọn LigmaStay?</h6>
+                    <h2 class="fw-bold display-6 mb-4">Đặt phòng đơn giản<br>& đầy tinh tế.</h2>
+                    <p class="text-muted mb-4">
+                        Trải nghiệm tiêu chuẩn mới về đặt phòng khách sạn. Không phí ẩn, minh bạch tuyệt đối và gợi ý thông minh từ AI.
+                    </p>
+                    <a href="#" class="btn btn-dark rounded-pill px-4 py-2 fw-bold">Tìm hiểu thêm</a>
+                </div>
+                <div class="col-md-6 offset-md-1">
+                    <div class="row g-4">
+                        <div class="col-6">
+                            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                                <i class="fas fa-check-circle fs-2 mb-3 text-dark"></i>
+                                <h5 class="fw-bold">Giá tốt nhất</h5>
+                                <p class="text-muted small mb-0">Đảm bảo mức giá thấp nhất từ hơn 100 nền tảng.</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                                <i class="fas fa-robot fs-2 mb-3 text-dark"></i>
+                                <h5 class="fw-bold">Trợ lý AI</h5>
+                                <p class="text-muted small mb-0">Nhận câu trả lời ngay lập tức và tóm tắt đánh giá.</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                                <i class="fas fa-shield-alt fs-2 mb-3 text-dark"></i>
+                                <h5 class="fw-bold">Bảo mật</h5>
+                                <p class="text-muted small mb-0">Dữ liệu của bạn được bảo vệ với tiêu chuẩn doanh nghiệp.</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                                <i class="fas fa-headset fs-2 mb-3 text-dark"></i>
+                                <h5 class="fw-bold">Hỗ trợ 24/7</h5>
+                                <p class="text-muted small mb-0">Luôn sẵn sàng hỗ trợ bạn bất cứ lúc nào.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Logic đổi màu nền (Giữ nguyên)
-    document.addEventListener('DOMContentLoaded', function() {
-        const mainBody = document.querySelector('body');
-        const sections = document.querySelectorAll('section');
-        const allBgClasses = ['bg-home', 'bg-about', 'bg-services'];
-        mainBody.classList.add('bg-home'); 
+    // JS Logic cho Slider (Trivago Style)
+    function scrollDest(direction) {
+        const wrapper = document.getElementById('destWrapper');
+        const scrollAmount = 300; // Khoảng cách trượt mỗi lần click
         
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const targetId = entry.target.id; 
-                    const newBgClass = `bg-${targetId}`;
-                    if (allBgClasses.includes(newBgClass)) {
-                        allBgClasses.forEach(c => mainBody.classList.remove(c));
-                        mainBody.classList.add(newBgClass);
-                    }
-                }
-            });
-        }, { threshold: 0.1 }); // Nhạy hơn một chút
-        sections.forEach(s => observer.observe(s));
-    });
+        if (direction === 1) {
+            wrapper.scrollLeft += scrollAmount;
+        } else {
+            wrapper.scrollLeft -= scrollAmount;
+        }
+    }
 </script>
 {% endblock %}
