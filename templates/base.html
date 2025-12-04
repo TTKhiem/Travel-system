@@ -7,7 +7,7 @@
     
     <!-- Bootstrap 5 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <!-- FontAwesome -->
+    <!-- FontAwes% if request.endpoint != 'homeome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
@@ -195,7 +195,7 @@
     </nav>
 
     <!-- STICKY SEARCH BAR (Ẩn ở home, register và detail) -->
-    {% if request.endpoint != 'home' and request.endpoint != 'register_page' and request.endpoint != 'hotel_detail' %}
+    {% if request.endpoint != 'home' and request.endpoint != 'register_page' and request.endpoint != 'hotel_detail' and request.endpoint != 'login' %}
     <div class="sticky-search-bar">
         <div class="container">
             <form action="/hotel_results" method="POST" class="compact-search-form">
@@ -299,9 +299,25 @@
                     </div>
 
                     <div class="text-center mt-3 small text-muted">Hoặc tiếp tục với</div>
-                    <div class="mt-3">
-                        <button class="social-btn"><img src="https://img.icons8.com/color/48/google-logo.png" style="width:20px;margin-right:8px;"> Google</button>
-                    </div>
+                    <div class="d-flex flex-column gap-2 mt-3">
+    <!-- Google -->
+    <button class="social-btn m-0">
+        <img src="https://img.icons8.com/color/48/google-logo.png" style="width:20px;margin-right:10px;"> 
+        Tiếp tục với Google
+    </button>
+    
+    <!-- Facebook -->
+    <button class="social-btn m-0">
+        <i class="fab fa-facebook" style="color: #1877F2; font-size: 20px; margin-right: 10px;"></i> 
+        Tiếp tục với Facebook
+    </button>
+
+    <!-- Apple -->
+    <button class="social-btn m-0">
+        <i class="fab fa-apple" style="color: #000; font-size: 20px; margin-right: 10px;"></i> 
+        Tiếp tục với Apple
+    </button>
+</div>
                 </div>
             </div>
         </div>
