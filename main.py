@@ -43,7 +43,7 @@ def home():
         user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     return render_template('index.html', user = user_data, form_type='login')
 
-app.route('/register_page')
+@app.route('/register_page')
 def register_page():
     return render_template('index.html', form_type='register')
 
@@ -92,6 +92,39 @@ def logout():
     response.headers["Expires"] = "0"
     response.set_cookie('session', '', expires=0)
     return response
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    db = database.get_db()
+    
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+        
+        try:
+            # Cập nhật vào DB
+            db.execute("""
+                UPDATE users 
+                SET full_name = ?, email = ?, phone = ?, address = ?
+                WHERE id = ?
+            """, (full_name, email, phone, address, session['user_id']))
+            db.commit()
+            flash("✅ Cập nhật hồ sơ thành công!")
+        except Exception as e:
+            print(e)
+            flash("❌ Có lỗi xảy ra, vui lòng thử lại.")
+            
+        return redirect(url_for('profile'))
+    
+    # GET: Lấy thông tin user hiện tại để hiển thị
+    user_info = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+    return render_template('profile.html', user_info=user_info)
 
 @app.route('/favorites', methods=['POST'])
 def save_favorites():
@@ -232,6 +265,25 @@ def hotel_detail(property_token):
                  hotel_data = json.loads(cached_row['data'])
             else:
                 return render_template('hotel_detail.html', error="Không thể tải dữ liệu khách sạn.")
+    if hotel_data:
+        try:
+            # Tạo dữ liệu tóm tắt để hiển thị ở trang danh sách
+            preview_info = {
+                "name": hotel_data.get('name'),
+                "image": hotel_data.get('images')[0].get('original_image') if hotel_data.get('images') else '',
+                "price": hotel_data.get('rate_per_night', {}).get('lowest', 'Liên hệ'),
+                "address": hotel_data.get('address')
+            }
+            preview_json = json.dumps(preview_info, ensure_ascii=False)
+            
+            # Lưu vào DB (INSERT OR REPLACE để cập nhật thời gian nếu đã xem rồi)
+            db.execute(
+                "INSERT OR REPLACE INTO recently_viewed (user_id, property_token, preview_data, visited_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+                (session['user_id'], property_token, preview_json)
+            )
+            db.commit()
+        except Exception as e:
+            print(f"Lỗi lưu lịch sử: {e}")
 
     if not hotel_data:
         return render_template('hotel_detail.html', error="Không tìm thấy khách sạn.")
@@ -250,10 +302,31 @@ def hotel_detail(property_token):
     check_out = request.args.get('check_out')
     if check_in and check_out:
         hotel_data['search_context'] = {'check_in': check_in, 'check_out': check_out}
-    local_reviews = db.execute(
-        "SELECT * FROM user_reviews WHERE property_token = ? ORDER BY created_at DESC", 
-        (property_token,)
-    ).fetchall()
+    
+    # --- XỬ LÝ LỌC & SẮP XẾP REVIEW ---
+    filter_rating = request.args.get('filter_rating')
+    sort_review = request.args.get('sort_review', 'newest') # Mặc định là newest
+
+    # Xây dựng câu truy vấn động
+    query = "SELECT * FROM user_reviews WHERE property_token = ?"
+    params = [property_token]
+
+    if filter_rating and filter_rating.isdigit():
+        query += " AND rating = ?"
+        params.append(int(filter_rating))
+
+    if sort_review == 'oldest':
+        query += " ORDER BY created_at ASC"
+    elif sort_review == 'highest':
+        query += " ORDER BY rating DESC, created_at DESC"
+    elif sort_review == 'lowest':
+        query += " ORDER BY rating ASC, created_at DESC"
+    else: # Default newest
+        query += " ORDER BY created_at DESC"
+
+    # Thực thi query
+    local_reviews = db.execute(query, tuple(params)).fetchall()
+    # ----------------------------------
 
     # Kiểm tra hàm Favorites
     is_favorite = False
@@ -446,6 +519,29 @@ def compare_ai_analysis():
     except Exception as e:
         print(f"Compare AI Error: {e}")
         return jsonify({'error': str(e)}), 500
+@app.route('/history')
+def history():
+    if 'user_id' not in session:
+        return redirect(url_for("login"))
+    
+    db = database.get_db()
+    # Lấy 20 khách sạn xem gần nhất
+    rows = db.execute("""
+        SELECT property_token, preview_data, visited_at 
+        FROM recently_viewed 
+        WHERE user_id = ? 
+        ORDER BY visited_at DESC 
+        LIMIT 20
+    """, (session['user_id'],)).fetchall()
+    
+    history_list = []
+    for row in rows:
+        data = json.loads(row['preview_data'])
+        data['property_token'] = row['property_token']
+        # Xử lý thời gian nếu cần (optional)
+        history_list.append(data)
+        
+    return render_template('history.html', history_hotels=history_list)
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATABASE']):

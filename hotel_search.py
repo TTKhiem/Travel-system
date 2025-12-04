@@ -4,8 +4,6 @@ import os
 from datetime import date, timedelta
 import time
 from dotenv import load_dotenv
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 load_dotenv()
 
 output_directory = "fetched_data"
@@ -18,7 +16,7 @@ class HotelSearchAPI:
 
     def search_hotels(self, location, price_range=None, rating_range=None, amenity=None):
         price_mapping = {
-            "0-500000": {"min": 0, "max": 500000},
+            "0-500000": {"min": 1, "max": 500000},
             "500000-1000000": {"min": 500000, "max": 1000000},
             "1000000-2000000": {"min": 1000000, "max": 2000000},
             "2000000+": {"min": 2000000, "max": None}
@@ -31,12 +29,12 @@ class HotelSearchAPI:
         }
 
         amenities_mapping = {
-            "Pet-friendly": "24",
-            "Pool": "32",
-            "Fitness centre": "16",
-            "Child-friendly": "21",
-            "Free Wi-Fi": "29",
-            "Air-conditioned": "4"
+            "Pet-friendly": "19",
+            "Pool": "5",
+            "Fitness centre": "7",
+            "Bar": "15",
+            "Free Wi-Fi": "35",
+            "Air-conditioned": "40"
         }
         
         params = {
@@ -90,22 +88,3 @@ class HotelSearchAPI:
         except requests.exceptions.RequestException as e:
             print(f"Error fetching detail: {e}")
             return None
-
-
-def main():
-    api_key = os.getenv("SERPAPI_KEY")
-    search_api = HotelSearchAPI(api_key)
-    location = "Hà Nội"
-    price_range = "500000-1000000"
-    rating_range = "4-5"
-    
-    print(f"Searching for hotels in {location}...")
-    search_results = search_api.search_hotels(location, price_range, rating_range)
-    
-    if search_results:
-        search_api.export_data(search_results)
-    else:
-        print("Failed to fetch hotel data")
-
-if __name__ == "__main__":
-    main()

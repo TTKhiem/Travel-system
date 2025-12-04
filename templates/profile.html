@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Hồ sơ cá nhân{% endblock %}
+
+{% block head %}
+    <style>
+        body { background-color: #f8f9fa !important; padding-top: 100px !important; }
+        .sticky-search-bar { display: none !important; }
+
+        .profile-card {
+            background: white; border: 1px solid #f1f5f9; border-radius: 16px;
+            overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+        
+        .avatar-circle-lg {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: #000; color: white; font-size: 2.5rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .form-label-custom {
+            font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 5px;
+        }
+        
+        .form-control-profile {
+            border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;
+            font-weight: 500; color: #0f172a; background: #fcfcfc;
+        }
+        .form-control-profile:focus {
+            border-color: #000; box-shadow: none; background: #fff;
+        }
+
+        .btn-save {
+            background: #000; color: white; border: none; padding: 12px 30px;
+            border-radius: 10px; font-weight: 700; transition: 0.2s;
+        }
+        .btn-save:hover { background: #333; transform: translateY(-2px); }
+    </style>
+{% endblock %}
+
+{% block search_bar %}{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <!-- Cột trái: Avatar & Info cơ bản -->
+        <div class="col-lg-4 mb-4">
+            <div class="profile-card p-4 text-center h-100">
+                <div class="avatar-circle-lg">
+                    {{ user.username[0] | upper }}
+                </div>
+                <h4 class="fw-bold mb-1">{{ user.username }}</h4>
+                <p class="text-muted small mb-3">Thành viên từ {{ user.created_at[:4] }}</p>
+                
+                <hr class="opacity-25 my-4">
+                
+                <div class="text-start px-3">
+                    <div class="d-flex align-items-center mb-3 text-muted">
+                        <i class="fas fa-envelope w-25 text-center"></i> 
+                        <span class="small">{{ user_info.email if user_info.email else 'Chưa cập nhật email' }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3 text-muted">
+                        <i class="fas fa-phone w-25 text-center"></i> 
+                        <span class="small">{{ user_info.phone if user_info.phone else 'Chưa cập nhật SĐT' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Form chỉnh sửa -->
+        <div class="col-lg-8">
+            <div class="profile-card p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold mb-0">Chỉnh sửa hồ sơ</h3>
+                </div>
+
+                <form action="{{ url_for('profile') }}" method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Tên đăng nhập</label>
+                            <input type="text" class="form-control form-control-profile bg-light" value="{{ user.username }}" readonly disabled>
+                            <small class="text-muted" style="font-size: 0.75rem;">Không thể thay đổi tên đăng nhập</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Họ và tên</label>
+                            <input type="text" name="full_name" class="form-control form-control-profile" placeholder="Nhập họ tên của bạn" value="{{ user_info.full_name if user_info.full_name }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Email</label>
+                            <input type="email" name="email" class="form-control form-control-profile" placeholder="name@example.com" value="{{ user_info.email if user_info.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Số điện thoại</label>
+                            <input type="text" name="phone" class="form-control form-control-profile" placeholder="09xxxxxxxx" value="{{ user_info.phone if user_info.phone }}">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label-custom">Địa chỉ</label>
+                            <input type="text" name="address" class="form-control form-control-profile" placeholder="Ví dụ: Hà Nội, Việt Nam" value="{{ user_info.address if user_info.address }}">
+                        </div>
+                    </div>
+
+                    <div class="mt-5 text-end">
+                        <button type="button" class="btn btn-light me-2" onclick="history.back()">Hủy</button>
+                        <button type="submit" class="btn btn-save"><i class="fas fa-save me-2"></i> Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

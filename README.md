@@ -1,13 +1,14 @@
-# Hotel (Beta 2.0)
+# Hotel (Release 1.0)
 - API được lưu trong .env (Source tìm hiểu: https://chatgpt.com/share/68fdb9c9-2620-800d-a488-5fe4db254087)
-- Xuất khách sạn
 - Display khách sạn
-- Tất cả chạy theo nhu cầu trong filter (có bug với option dưới 3 sao nhé :skull:)
+- Tất cả chạy theo nhu cầu trong filter gồm: Địa điểm, Mức giá, Mức sao, Tiện nghi
+- AI implemented (**Hỗ trợ trang khách sạn**, **Hỗ trợ so sánh khách sạn**)
+- So sánh khách sạn
+- Reviews của User
 
 ## Known issues:
 1. I have skill issue
 2. Lỗi load images chưa sửa được
-3. Format frontend của một vài tính năng trong trang **hotel_details.html" hơi lỗi do Bootstrap mới (có gì chỉnh lại sau)
 
 ## Refactored Notes:
 1. Tối ưu lại hệ thống search: 
@@ -23,12 +24,7 @@
 7. Thêm một trường filter theo **Amenities** và chỉ bắt buộc chọn Location còn lại **Optional** 
 
 
-# To be updated:
-~~1. Thêm trường filter để tìm khách sạn *(có thể sẽ tích hợp AI tìm kiếm)* - lọc theo **amenities**~~
-~~2. Thêm tính năng so sánh giữa 2 khách sạn **(Để ở ngoài *hotel_results*)**~~
-~~4. Favorite places~~
-~~5. Cải tiến lại trang **hotel_results**: Thêm tính năng display theo filter theo giá hoặc theo reviews, remake UI~~
-6. Filter reviews
+# To be updated: (All finished)
 
 # Source tham khảo:
 - SerpAPI: https://serpapi.com/google-hotels-api
@@ -46,7 +42,6 @@
 
 # Notes: Chưa có file .env
 - Tự tạo file ".env" và nhập theo format (Copy paste 2 dòng dưới là đc - tự thay {key}): 
-(Sẵn track giùm số API call nha)
-
 SERPAPI_KEY = {key}  
 GEMINI_API_KEY = {key}
+APP_SECRET=ligma

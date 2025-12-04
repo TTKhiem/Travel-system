@@ -1,0 +1,94 @@
+
+
+{% extends "base.html" %}
+
+{% block title %}Đã xem gần đây{% endblock %}
+
+{% block head %}
+    <style>
+        body { background-color: #f8f9fa !important; padding-top: 100px !important; }
+        .sticky-search-bar { display: none !important; } /* Ẩn search bar */
+
+        .page-header { margin-bottom: 40px; }
+        .page-title { font-weight: 800; color: #0f172a; letter-spacing: -1px; font-size: 2rem; }
+
+        /* Card Style giống Favorites */
+        .hotel-card {
+            background: #fff; border: 1px solid #f1f5f9; border-radius: 16px;
+            overflow: hidden; height: 100%; display: flex; flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: all 0.3s;
+        }
+        .hotel-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-color: #000; }
+        .hotel-image { height: 200px; background-size: cover; background-position: center; position: relative; }
+        
+        .hotel-info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .hotel-name { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.8em; }
+        .hotel-address { font-size: 0.85rem; color: #64748b; margin-bottom: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .price-section { margin-top: auto; padding-top: 15px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .price-val { font-size: 1.1rem; font-weight: 800; color: #000; }
+        .btn-view { background: #000; color: white; padding: 8px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; text-decoration: none; transition: 0.2s; }
+        .btn-view:hover { background: #333; color: white; transform: translateY(-2px); }
+
+        .empty-state { background: white; border-radius: 24px; padding: 60px 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.03); }
+    </style>
+{% endblock %}
+
+{% block search_bar %}{% endblock %}
+
+{% block content %}
+    <div class="container pb-5">
+        <div class="d-flex justify-content-between align-items-center page-header">
+            <h2 class="page-title mb-0">
+                <i class="fas fa-history text-primary me-2"></i> Đã xem gần đây
+            </h2>
+            <a href="{{ url_for('home') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+                <i class="fas fa-search me-2"></i> Khám phá thêm
+            </a>
+        </div>
+
+        {% if history_hotels %}
+        <div class="row g-4">
+            {% for hotel in history_hotels %}
+            <div class="col-lg-3 col-md-6">
+                <div class="hotel-card animate__animated animate__fadeInUp">
+                    <div class="hotel-image" style="background-image: url('{{ hotel.image if hotel.image else 'https://via.placeholder.com/400x300' }}')">
+                        <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);"></div>
+                    </div>
+                    
+                    <div class="hotel-info">
+                        <h5 class="hotel-name" title="{{ hotel.name }}">{{ hotel.name }}</h5>
+                        <p class="hotel-address">
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ hotel.address }}
+                        </p>
+
+                        <div class="price-section">
+                            <div class="price-val">{{ hotel.price }}</div>
+                            <a href="{{ url_for('hotel_detail', property_token=hotel.property_token) }}" class="btn-view">
+                                Xem lại
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="empty-state animate__animated animate__fadeIn">
+                    <div class="mb-4">
+                        <i class="fas fa-history fa-4x text-muted opacity-25"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Lịch sử trống</h3>
+                    <p class="text-muted mb-4">Bạn chưa xem khách sạn nào. Hãy dạo một vòng nhé!</p>
+                    <a href="{{ url_for('home') }}" class="btn btn-dark rounded-pill px-5 py-3 fw-bold shadow-lg">
+                        Bắt đầu tìm kiếm
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
