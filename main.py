@@ -32,6 +32,7 @@ def inject_user():
     user_data = None
     if 'user_id' in session:
         db = database.get_db()
+        # Lấy thông tin user (username, avatar...) để hiển thị
         user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     return dict(user=user_data)
 
@@ -464,7 +465,7 @@ def history():
         
     return render_template('history.html', history_hotels=history_list)
 
-# --- START BIG UPDATE (CHAT CONCIERGE WITH MEMORY & SMART PROMPT) ---
+# --- START BIG UPDATE (SMART CHATBOT CONCIERGE) ---
 
 @app.route('/api/get_chat_history', methods=['GET'])
 def get_chat_history():
@@ -482,11 +483,9 @@ def clear_chat():
 @app.route('/api/chat_search', methods=['POST'])
 def api_chat_search():
     """
-    API Chatbot thông minh:
-    - Biết gợi ý địa điểm nếu khách chưa biết đi đâu.
-    - Không lặp lại câu hỏi như robot.
-    - Chỉ Search khi đã chốt được tên thành phố.
-    - JSON đầu ra được chuẩn hóa.
+    API Chatbot thông minh (Tích hợp Code 1 & 2):
+    - Logic Prompt tối ưu: Phân loại Chat/Search, chuẩn hóa amenities, xử lý logic fallback City.
+    - Tối ưu Session: Chỉ lưu danh sách khách sạn rút gọn (Lite) vào lịch sử để tránh lỗi tràn cookie.
     """
     data = request.get_json()
     user_msg = data.get('message', '').strip()
@@ -499,12 +498,14 @@ def api_chat_search():
     
     history = session['chat_history']
     
+    # --- XỬ LÝ LỊCH SỬ (Từ Code 1 & 2) ---
     # Lấy context lịch sử (6 tin gần nhất)
     recent_history = history[-6:] 
     history_text = ""
     for msg in recent_history:
         role = "User" if msg['role'] == 'user' else "AI"
         content = msg['content']
+        # Nếu tin nhắn cũ là kết quả search, thay thế nội dung dài dòng bằng placeholder
         if msg.get('type') == 'search_result':
             content = "[Đã hiển thị danh sách khách sạn]"
         history_text += f"{role}: {content}\n"
@@ -512,7 +513,7 @@ def api_chat_search():
     gemini_api_key = os.getenv('GEMINI_API_KEY')
     client = genai.Client(api_key=gemini_api_key)
 
-    # --- PROMPT ĐƯỢC NÂNG CẤP VÀ TỐI ƯU ---
+    # --- PROMPT (Sử dụng bản NÂNG CẤP từ Code 1) ---
     prompt = f"""
     Bạn là LigmaStay AI - Trợ lý đặt phòng khách sạn thông minh tại Việt Nam.
 
@@ -539,35 +540,32 @@ def api_chat_search():
     LOGIC XỬ LÝ:
 
     1. KIỂM TRA LẠC ĐỀ:
-       - Nếu User hỏi chuyện KHÔNG LIÊN QUAN (code, toán, chính trị, tình cảm...):
+       - Nếu User hỏi chuyện KHÔNG LIÊN QUAN (code, toán, chính trị...):
          => "type": "chat", "reply_text": "Mình chỉ hỗ trợ tìm kiếm khách sạn và du lịch thôi ạ. Bạn cần tìm phòng ở đâu không?"
 
     2. XÁC ĐỊNH ĐỊA ĐIỂM (CITY):
-       - Ưu tiên 1: Lấy trong User Input hiện tại (VD: "Đà Lạt", "đi SG", "Hà Nội").
+       - Ưu tiên 1: Lấy trong User Input hiện tại.
        - Ưu tiên 2: Nếu Input không có, tìm ngược lại trong LỊCH SỬ.
-       - Lưu ý:
-         + Nếu User nhắc > 1 thành phố (VD: "Đà Nẵng hay Nha Trang?"): => "type": "chat", "city": null, "reply_text": "Gợi ý so sánh 2 nơi và hỏi user chốt nơi nào."
-         + Chuẩn hóa tên: "SG"/"HCM" -> "Ho Chi Minh City", "Đà Lạt" -> "Da Lat".
+       - Lưu ý: Chuẩn hóa tên: "SG"/"HCM" -> "Ho Chi Minh City", "Đà Lạt" -> "Da Lat".
 
     3. PHÂN LOẠI HÀNH ĐỘNG (TYPE):
        - Gán "type": "search" KHI VÀ CHỈ KHI:
-         + Đã xác định được "city" (từ Input hoặc Lịch sử).
-         + VÀ User thể hiện ý định tìm kiếm/đặt phòng/hỏi giá/hỏi tiện ích (VD: "tìm khách sạn", "giá bao nhiêu", "có phòng không", "ở đâu tốt", "có bể bơi không", "tìm đi", "ok chốt").
+         + Đã xác định được "city".
+         + VÀ User thể hiện ý định tìm kiếm/đặt phòng/hỏi giá/tiện ích.
        
        - Gán "type": "chat" KHI:
          + Chưa có "city".
-         + Hoặc User chỉ hỏi chung chung "đi đâu chơi", "gợi ý cho tôi", "nơi nào rẻ", "chỗ nào mát mẻ".
-         => "reply_text": Gợi ý 2-3 địa điểm phù hợp context (Tuyệt đối TRÁNH lặp lại câu hỏi cũ 'Bạn định đi đâu' nếu user đang nhờ gợi ý). Hãy đóng vai hướng dẫn viên du lịch.
+         + Hoặc User chỉ hỏi chung chung "đi đâu chơi", "gợi ý cho tôi".
+         => "reply_text": Gợi ý 2-3 địa điểm phù hợp context.
 
     4. TRÍCH XUẤT THAM SỐ (Chỉ khi type="search"):
-       - price_range: Dựa vào con số user đưa. Nếu không rõ -> null.
-       - rating: "4 sao", "sang trọng" -> "4-5"; "3 sao", "thoải mái" -> "3-5"; Khác -> null.
-       - amenities: Map từ khóa sang tiếng Anh chuẩn: "Pool", "Fitness centre", "Pet-friendly", "Child-friendly", "Free Wi-Fi", "Air-conditioned".
-         + Trả về dạng MẢNG (Array). Ví dụ: ["Pool", "Free Wi-Fi"]. Nếu không có -> null.
+       - price_range: Dựa vào con số user đưa.
+       - rating: "4 sao" -> "4-5", "3 sao" -> "3-5".
+       - amenities: Map từ khóa sang tiếng Anh chuẩn (Pool, Free Wi-Fi...). Trả về MẢNG.
 
     5. REPLY_TEXT:
        - Nếu Search: "OK, mình tìm thấy vài nơi ở [City] theo ý bạn..."
-       - Nếu Chat: Trả lời tự nhiên, thân thiện, gợi mở.
+       - Nếu Chat: Trả lời tự nhiên, thân thiện.
     """
 
     try:
@@ -576,21 +574,20 @@ def api_chat_search():
             contents=prompt
         )
         
-        # Xử lý JSON từ AI (Clean kỹ hơn để tránh lỗi)
+        # Xử lý JSON từ AI
         json_str = response.text.strip()
-        # Regex loại bỏ markdown code block nếu AI lỡ thêm vào
         json_str = re.sub(r"^```json|^```|```$", "", json_str, flags=re.MULTILINE).strip()
         
         parsed = json.loads(json_str)
         
-        # Lưu tin nhắn User
+        # Lưu tin nhắn User vào lịch sử
         history.append({"role": "user", "content": user_msg})
 
-        # XỬ LÝ LOGIC
+        # --- LOGIC XỬ LÝ ---
         if parsed.get('type') == 'search':
             city = parsed.get('city')
             
-            # Logic dự phòng: Nếu AI detect là search nhưng quên city (fallback)
+            # Logic dự phòng: Nếu AI quên city, tìm lại trong lịch sử cũ (Từ Code 1)
             if not city:
                  for old_msg in reversed(history):
                      if old_msg.get('search_params', {}).get('city'):
@@ -608,7 +605,6 @@ def api_chat_search():
             serp_api_key = os.getenv("SERPAPI_KEY")
             search_api = HotelSearchAPI(serp_api_key)
             
-            # amenities trả về là List, HotelSearchAPI hỗ trợ cả List và String
             hotels = search_api.search_hotels(
                 city, 
                 parsed.get('price_range'), 
@@ -616,29 +612,46 @@ def api_chat_search():
                 parsed.get('amenities')
             )
             
+            # --- TỐI ƯU SESSION (Quan trọng từ Code 2) ---
+            # Chỉ lưu danh sách rút gọn vào Session để tránh lỗi Cookie too large
+            hotels_lite = []
+            if hotels:
+                # Chỉ lưu tối đa 4 khách sạn đầu tiên vào lịch sử
+                for h in hotels[:4]:
+                    hotels_lite.append({
+                        "name": h.get('name'),
+                        "property_token": h.get('property_token'),
+                        "rate_per_night": h.get('rate_per_night'),
+                        "overall_rating": h.get('overall_rating'),
+                        # Chỉ lưu 1 ảnh thumb nhỏ gọn
+                        "images": [{"original_image": h['images'][0]['original_image']}] if h.get('images') else []
+                    })
+
             reply_text = parsed.get('reply_text', f"Kết quả tìm kiếm tại {city}:")
             
+            # Lưu vào lịch sử (Lưu hotels_lite thay vì full hotels)
             history.append({
                 "role": "ai", 
                 "content": reply_text, 
                 "type": "search_result",
-                # Lưu params để context sau AI biết đang search ở đâu
                 "search_params": {
                     "city": city,
                     "price_range": parsed.get('price_range'),
                     "amenities": parsed.get('amenities')
-                }
+                },
+                "hotels": hotels_lite  # <--- Lưu bản rút gọn
             })
             session.modified = True 
             
+            # Trả về JSON cho Client (Trả về full hotels để hiển thị đẹp)
             return jsonify({
                 "type": "search_result",
                 "reply_text": reply_text,
-                "hotels": hotels
+                "hotels": hotels 
             })
             
         else:
-            # Type = CHAT (Gợi ý địa điểm, chào hỏi, từ chối trả lời lạc đề...)
+            # Type = CHAT (Code 1 Logic)
             reply_text = parsed.get('reply_text')
             history.append({"role": "ai", "content": reply_text, "type": "chat"})
             session.modified = True
@@ -650,13 +663,10 @@ def api_chat_search():
 
     except Exception as e:
         print(f"Chat Error: {e}")
-        # Trả về lỗi thân thiện
         return jsonify({
             "type": "chat",
             "reply_text": "Xin lỗi, server đang bận xíu. Bạn thử lại sau nhé!"
         })
-
-# --- END BIG UPDATE ---
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATABASE']):
