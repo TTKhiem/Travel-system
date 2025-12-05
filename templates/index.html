@@ -7,24 +7,22 @@
     /* HERO SECTION */
     .hero-section {
         position: relative;
-        /* Ảnh nền kiến trúc sang trọng, tối màu */
         background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
         height: 700px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: -80px; /* Kéo lên đè vào navbar trong suốt */
+        margin-top: -80px; 
     }
     
     .hero-overlay {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.3); /* Lớp phủ đen mờ nhẹ để nổi bật chữ */
+        background: rgba(0,0,0,0.3); 
     }
 
-    /* SEARCH WIDGET - GLASSMORPHISM */
+    /* SEARCH WIDGET */
     .search-widget {
         position: relative; z-index: 10;
-        /* Hiệu ứng kính mờ */
         background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -58,19 +56,15 @@
         text-transform: uppercase; color: #475569; margin-bottom: 6px; display: block;
     }
 
-    /* CSS CUSTOM DROPDOWN - ĐÃ FIX CĂN CHỈNH */
     .custom-select-hero {
         -webkit-appearance: none; appearance: none; 
         border: 1px solid #cbd5e1; border-radius: 12px;
-        /* Padding chuẩn để không bị che chữ */
         padding: 0 35px 0 15px; 
         font-size: 0.95rem; font-weight: 600; color: #0f172a;
         height: 55px; line-height: 55px;
         background-color: #f8fafc; cursor: pointer;
         width: 100%;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        
-        /* Mũi tên SVG */
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
         background-repeat: no-repeat;
         background-position: right 15px center;
@@ -81,31 +75,23 @@
         border-color: #000; background-color: white; outline: none; 
         box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
     }
-    .custom-select-hero:hover {
-        border-color: #94a3b8;
-    }
+    .custom-select-hero:hover { border-color: #94a3b8; }
 
     .btn-search-hero {
         background-color: #000000; color: white; border: none;
         border-radius: 12px; font-weight: 700; font-size: 1.1rem;
-        height: 55px; 
-        margin-top: 0; /* Quan trọng: Xóa margin để căn đáy với Flexbox */
-        transition: all 0.3s;
+        height: 55px; margin-top: 0; transition: all 0.3s;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 100%;
     }
     .btn-search-hero:hover { background-color: #333; transform: translateY(-2px); }
 
     /* TRIVAGO SCROLL STYLE */
-    .scrolling-wrapper-container {
-        position: relative; margin-top: 20px;
-    }
-    
+    .scrolling-wrapper-container { position: relative; margin-top: 20px; }
     .scrolling-wrapper {
         display: flex; flex-wrap: nowrap; overflow-x: auto;
         scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
         gap: 20px; padding: 10px 5px 20px 5px;
     }
-    
     .scrolling-wrapper::-webkit-scrollbar { display: none; }
     .scrolling-wrapper { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -115,17 +101,10 @@
         cursor: pointer; border: 1px solid #f1f5f9;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    
-    .scrolling-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        border-color: #e2e8f0;
-    }
-
+    .scrolling-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #e2e8f0; }
     .card-img-top { height: 180px; width: 100%; object-fit: cover; }
     .card-body-custom { padding: 15px; }
 
-    /* Scroll Buttons */
     .scroll-btn {
         position: absolute; top: 40%; transform: translateY(-50%);
         width: 45px; height: 45px; border-radius: 50%;
@@ -138,40 +117,142 @@
     .scroll-left { left: -20px; }
     .scroll-right { right: -20px; }
 
-    /* --- CSS CHO CHATBOT --- */
+    /* --- LIGMASTAY PREMIUM CHATBOT (MAX SIZE & CENTER FIX) --- */
+    
+    /* Nút tròn mở chat */
     #chatToggleBtn {
-        position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-        border-radius: 50%; background: #000; color: white; border: none;
-        z-index: 1000; font-size: 24px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: fixed; bottom: 30px; right: 30px; 
+        width: 65px; height: 65px;
+        border-radius: 50%; 
+        background: linear-gradient(135deg, #000000 0%, #333333 100%);
+        color: white; border: none;
+        z-index: 1040; /* Cao hơn navbar mặc định của BS5 */
+        font-size: 26px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    #chatToggleBtn:hover { transform: scale(1.1); }
+    #chatToggleBtn:hover { transform: scale(1.1) rotate(15deg); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
 
+    /* Khung Chat Mặc Định */
     #aiChatBox {
-        display: none; position: fixed; bottom: 100px; right: 30px;
-        width: 380px; height: 550px; background: white; border-radius: 20px;
-        z-index: 1000; flex-direction: column; overflow: hidden;
-        border: 1px solid #e2e8f0; animation: slideInUp 0.3s ease-out;
+        display: none; 
+        position: fixed; 
+        bottom: 110px; right: 30px;
+        width: 380px; height: 600px; 
+        background: #fff; 
+        border-radius: 24px;
+        z-index: 1050; /* Cực cao để đè mọi thứ */
+        flex-direction: column; overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    /* === TRẠNG THÁI MỞ RỘNG (MAX SIZE & CENTERED) === */
+    #aiChatBox.expanded {
+        /* Kích thước "Khổng lồ" */
+        width: 90vw;  /* 90% chiều ngang màn hình */
+        height: 85vh; /* 85% chiều cao màn hình */
+        
+        /* Căn giữa màn hình tuyệt đối */
+        bottom: 50% !important; 
+        right: 50% !important;
+        transform: translate(50%, 50%) !important;
+        
+        border-radius: 24px;
+        
+        /* Hiệu ứng làm tối nền (Backdrop) bằng Box Shadow khổng lồ */
+        box-shadow: 0 10px 50px rgba(0,0,0,0.2), 0 0 0 100vmax rgba(0, 0, 0, 0.6);
+        z-index: 9999; /* Đè lên tất cả, kể cả modal hay navbar */
+    }
 
-    .msg-user { align-self: flex-end; background: #000; color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 80%; margin-bottom: 10px; font-size: 0.9rem; }
-    .msg-bot { align-self: flex-start; background: #f1f5f9; color: #333; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 90%; margin-bottom: 10px; font-size: 0.9rem; border: 1px solid #eee; }
+    /* Header Chat */
+    .chat-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 18px 25px;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        display: flex; justify-content: space-between; align-items: center;
+        position: absolute; top: 0; left: 0; width: 100%; z-index: 20;
+    }
+
+    /* Nội dung tin nhắn */
+    #chatContent {
+        flex: 1; 
+        padding: 90px 25px 100px 25px; /* Padding để nội dung không bị che bởi header/input */
+        overflow-y: auto; 
+        display: flex; flex-direction: column;
+        background: #f8f9fc;
+        scroll-behavior: smooth;
+    }
+
+    /* Bong bóng Chat User */
+    .msg-user { 
+        align-self: flex-end; 
+        background: #000; color: white; 
+        padding: 14px 20px; 
+        border-radius: 20px 20px 4px 20px; 
+        max-width: 75%; margin-bottom: 20px; font-size: 1rem; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        animation: slideInRight 0.3s ease-out;
+        line-height: 1.5;
+    }
+
+    /* Bong bóng Chat Bot */
+    .msg-bot { 
+        align-self: flex-start; 
+        background: #fff; color: #1e293b; 
+        padding: 18px; 
+        border-radius: 20px 20px 20px 4px; 
+        max-width: 85%; margin-bottom: 20px; font-size: 1rem; 
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        animation: slideInLeft 0.3s ease-out;
+        line-height: 1.6;
+    }
+
+    /* Vùng nhập liệu (Floating) */
+    .chat-input-area {
+        position: absolute; bottom: 0; left: 0; width: 100%;
+        padding: 25px;
+        background: linear-gradient(to top, rgba(255,255,255,1) 85%, rgba(255,255,255,0));
+        z-index: 20;
+        display: flex; justify-content: center; /* Căn giữa input khi mở rộng */
+    }
     
-    /* Mini Hotel Card inside Chat */
-    .mini-hotel-card {
-        display: flex; background: white; border-radius: 12px; overflow: hidden;
-        border: 1px solid #e2e8f0; margin-top: 8px; transition: 0.2s; text-decoration: none; color: inherit;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    .input-wrapper {
+        background: white; border-radius: 50px;
+        display: flex; align-items: center;
+        padding: 6px 6px 6px 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+        width: 100%; max-width: 900px; /* Giới hạn chiều rộng input khi full screen cho đẹp */
     }
-    .mini-hotel-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-color: #000; }
-    .mini-img { width: 90px; height: 90px; object-fit: cover; }
-    .mini-info { padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; width: calc(100% - 90px); }
-    .mini-name { font-size: 0.85rem; font-weight: 700; line-height: 1.3; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .mini-price { font-weight: 800; color: #000; font-size: 0.9rem; }
+    .input-wrapper:focus-within { border-color: #000; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+    
+    #chatInput { border: none; background: transparent; flex: 1; outline: none; font-size: 1rem; padding: 12px 0; }
+    #sendChatBtn {
+        width: 50px; height: 50px; border-radius: 50%; background: #000; color: white; border: none;
+        transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    #sendChatBtn:hover { transform: scale(1.1); background: #333; }
 
-    /* Typing Animation */
+    /* Thẻ khách sạn nhỏ */
+    .mini-hotel-card {
+        display: flex; background: white; border-radius: 16px; overflow: hidden;
+        border: 1px solid #f1f5f9; margin-top: 15px; transition: 0.2s; text-decoration: none; color: inherit;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+    .mini-hotel-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: #000; }
+    .mini-img { width: 120px; height: 120px; object-fit: cover; } /* Ảnh to hơn */
+    .mini-info { padding: 15px 20px; display: flex; flex-direction: column; justify-content: center; width: calc(100% - 120px); }
+    .mini-name { font-size: 1rem; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
+
+    /* Animations */
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
     .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: #adb5bd; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; margin: 0 2px; }
     .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
     .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
@@ -373,45 +454,59 @@
 
     <!-- ================== AI CHAT UI START ================== -->
     <!-- Nút mở chat -->
-    <button id="chatToggleBtn" class="shadow-lg">
+    <button id="chatToggleBtn">
         <i class="fas fa-comment-dots"></i>
     </button>
 
     <!-- Hộp Chat -->
-    <div id="aiChatBox" class="shadow-lg">
+    <div id="aiChatBox">
         <!-- Header -->
-        <div class="p-3 bg-dark text-white d-flex justify-content-between align-items-center">
+        <div class="chat-header">
             <div class="d-flex align-items-center">
-                <div class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; font-size: 1.2rem;">
                     <i class="fas fa-robot"></i>
                 </div>
-                <div>
-                    <h6 class="mb-0 fw-bold">Trợ lý AI Ligma</h6>
-                    <small class="text-white-50" style="font-size: 0.7rem;">● Sẵn sàng hỗ trợ</small>
+                <div style="line-height: 1.2;">
+                    <h6 class="mb-0 fw-bold text-dark">LigmaStay AI</h6>
+                    <small class="text-success" style="font-size: 0.75rem;">● Đang hoạt động</small>
                 </div>
             </div>
             <div>
-                <button id="clearChatBtn" class="btn btn-sm text-white-50 me-1" title="Xóa lịch sử chat"><i class="fas fa-trash"></i></button>
-                <button id="closeChatBtn" class="btn btn-sm text-white"><i class="fas fa-times"></i></button>
+                <!-- Nút Mở rộng -->
+                <button id="expandChatBtn" class="btn btn-sm btn-light rounded-circle me-1 text-muted" title="Mở rộng/Thu nhỏ" style="width: 32px; height: 32px;">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+                <!-- Nút Xóa -->
+                <button id="clearChatBtn" class="btn btn-sm btn-light rounded-circle me-1 text-muted" title="Xóa lịch sử" style="width: 32px; height: 32px;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <!-- Nút Đóng -->
+                <button id="closeChatBtn" class="btn btn-sm btn-light rounded-circle text-muted" style="width: 32px; height: 32px;">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
 
         <!-- Chat Content -->
-        <div id="chatContent" class="p-3 bg-white" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+        <div id="chatContent">
             <!-- Tin nhắn mặc định -->
-            <div class="msg-bot shadow-sm border">
-                <small class="text-muted fw-bold d-block mb-1">AI Concierge</small>
+            <div class="msg-bot">
+                <div class="d-flex align-items-center mb-2">
+                    <strong class="me-2">AI Concierge</strong> <span class="badge bg-dark text-white rounded-pill" style="font-size: 0.6rem;">Bot</span>
+                </div>
                 Chào {% if user %}{{ user.username }}{% else %}bạn{% endif %}! 👋 <br>
-                Bạn muốn đi du lịch ở đâu? Cứ nói với mình nhé.
-                <br><em class="text-muted small mt-1 d-block" style="font-size: 0.75rem;">(VD: "Tìm phòng ở Đà Lạt cho cặp đôi, giá tầm 1 triệu")</em>
+                Hôm nay bạn muốn đi du lịch ở đâu? <br>
+                <div class="mt-2 p-2 bg-light rounded text-muted small border border-start-0 border-end-0 border-top-0 border-3 border-dark fst-italic">
+                    "Tìm khách sạn ở Đà Lạt giá dưới 1 triệu..."
+                </div>
             </div>
         </div>
 
-        <!-- Input -->
-        <div class="p-3 bg-white border-top">
-            <div class="input-group">
-                <input type="text" id="chatInput" class="form-control border bg-light" placeholder="Nhập yêu cầu..." style="border-radius: 20px 0 0 20px; box-shadow: none;">
-                <button id="sendChatBtn" class="btn btn-dark" style="border-radius: 0 20px 20px 0;">
+        <!-- Input Area (Nổi) -->
+        <div class="chat-input-area">
+            <div class="input-wrapper">
+                <input type="text" id="chatInput" placeholder="Nhập yêu cầu của bạn..." autocomplete="off">
+                <button id="sendChatBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -435,20 +530,22 @@
         }
     }
 
-    // --- JS CHO CHATBOT (BIG UPDATE) ---
+    // --- JS CHO CHATBOT (PREMIUM VERSION) ---
     const chatBtn = document.getElementById('chatToggleBtn');
     const chatBox = document.getElementById('aiChatBox');
     const closeChat = document.getElementById('closeChatBtn');
     const clearChat = document.getElementById('clearChatBtn');
+    const expandChat = document.getElementById('expandChatBtn'); // Nút mới
     const input = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendChatBtn');
     const content = document.getElementById('chatContent');
 
-    // Hàm render 1 tin nhắn ra màn hình
+    let isExpanded = false; // Trạng thái mở rộng
+
+    // Hàm render tin nhắn (Giữ nguyên logic, chỉ đổi style HTML)
     function renderMessage(msg) {
         let html = '';
         if (msg.type === 'search_result' && msg.hotels) {
-            // Render text dẫn dắt trước
             html += `<div>${msg.content || msg.reply_text}</div>`;
             // Render thẻ khách sạn
             msg.hotels.slice(0, 4).forEach(h => {
@@ -468,58 +565,78 @@
                     </a>
                 `;
             });
-            html += `<div class="text-center mt-2"><small class="text-muted">Nhấn vào thẻ để xem chi tiết</small></div>`;
+            html += `<div class="text-center mt-2"><small class="text-muted" style="font-size:0.7rem;">Nhấn vào thẻ để xem chi tiết</small></div>`;
         } else {
-            // Chat thường
             html = msg.content || msg.reply_text;
         }
 
         const div = document.createElement('div');
-        div.className = msg.role === 'user' ? 'msg-user' : 'msg-bot shadow-sm border';
+        div.className = msg.role === 'user' ? 'msg-user' : 'msg-bot';
         div.innerHTML = html;
         content.appendChild(div);
         content.scrollTop = content.scrollHeight;
     }
 
-    // 1. Load lịch sử chat khi trang web tải xong
+    // Load lịch sử
     document.addEventListener('DOMContentLoaded', async () => {
         try {
             const resp = await fetch('/api/get_chat_history');
             const history = await resp.json();
-            
-            // Xóa nội dung mặc định nếu có lịch sử
             if (history.length > 0) {
                 content.innerHTML = ''; 
-                history.forEach(msg => {
-                    // Mapping lại format lưu trong session với format hàm render
-                    renderMessage(msg);
-                });
+                history.forEach(msg => renderMessage(msg));
             }
-        } catch (e) { console.error("Lỗi load history:", e); }
+        } catch (e) { console.error(e); }
     });
 
     // Mở Chat
     chatBtn.onclick = () => { 
         chatBox.style.display = 'flex'; 
-        chatBtn.style.transform = 'scale(0)'; 
+        // Delay nhỏ để animation hoạt động mượt
+        setTimeout(() => {
+            chatBox.style.opacity = '1';
+            chatBox.style.transform = 'scale(1)';
+        }, 10);
+        chatBtn.style.transform = 'scale(0) rotate(180deg)'; 
         input.focus();
     };
     
     // Đóng Chat
     closeChat.onclick = () => { 
         chatBox.style.display = 'none'; 
-        chatBtn.style.transform = 'scale(1)'; 
+        chatBtn.style.transform = 'scale(1) rotate(0deg)'; 
+        // Reset expand khi đóng để lần sau mở lên nó gọn
+        if(isExpanded) toggleExpand();
     };
+
+    // Logic Mở Rộng / Thu Nhỏ (ĐÃ FIX CĂN GIỮA)
+    function toggleExpand() {
+        isExpanded = !isExpanded;
+        chatBox.classList.toggle('expanded');
+        
+        // Đổi icon
+        const icon = expandChat.querySelector('i');
+        if (isExpanded) {
+            icon.classList.remove('fa-expand-alt');
+            icon.classList.add('fa-compress-alt');
+        } else {
+            icon.classList.remove('fa-compress-alt');
+            icon.classList.add('fa-expand-alt');
+        }
+    }
+    expandChat.onclick = toggleExpand;
 
     // Xóa Chat
     clearChat.onclick = async () => {
-        if(confirm("Bạn muốn xóa toàn bộ cuộc trò chuyện?")) {
+        if(confirm("Xóa lịch sử trò chuyện?")) {
             await fetch('/api/clear_chat', { method: 'POST' });
             content.innerHTML = `
-                <div class="msg-bot shadow-sm border">
-                    <small class="text-muted fw-bold d-block mb-1">AI Concierge</small>
-                    Chào bạn! 👋 Mình đã quên hết chuyện cũ rồi. <br>
-                    Giờ mình đi đâu đây?
+                <div class="msg-bot">
+                     <div class="d-flex align-items-center mb-2">
+                        <strong class="me-2">AI Concierge</strong> <span class="badge bg-dark text-white rounded-pill" style="font-size: 0.6rem;">Bot</span>
+                    </div>
+                    Đã xóa bộ nhớ! Chúng ta bắt đầu lại nhé. <br>
+                    Bạn muốn đi đâu?
                 </div>`;
         }
     }
@@ -542,35 +659,31 @@
         const text = input.value.trim();
         if(!text) return;
 
-        // 1. Hiện tin nhắn user
         renderMessage({ role: 'user', content: text });
         input.value = '';
         showTyping();
 
         try {
-            // 2. Gửi về API
             const resp = await fetch('/api/chat_search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text })
             });
             const data = await resp.json();
-            
             removeTyping();
 
-            // 3. Xử lý phản hồi từ AI
             const msgData = {
                 role: 'ai',
                 type: data.type,
                 content: data.reply_text,
-                hotels: data.hotels // Nếu có
+                hotels: data.hotels
             };
             renderMessage(msgData);
 
         } catch (e) {
             console.error(e);
             removeTyping();
-            renderMessage({ role: 'ai', content: "Mạng đang chập chờn, bạn thử lại chút nhé!" });
+            renderMessage({ role: 'ai', content: "Mạng lỗi rồi, thử lại sau nha!" });
         }
     }
 
