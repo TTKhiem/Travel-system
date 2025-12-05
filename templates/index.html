@@ -85,34 +85,6 @@
         border-color: #94a3b8;
     }
 
-    .hero-dropdown-btn {
-        width: 100%;
-        height: 55px; /* Đồng nhất chiều cao */
-        background-color: #f8fafc;
-        border: 1px solid #cbd5e1; /* Đồng nhất màu viền */
-        border-radius: 12px;
-        padding: 0 15px;
-        color: #0f172a;
-        font-weight: 600;
-        font-size: 0.95rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        transition: all 0.2s;
-        text-align: left;
-    }
-    
-    .hero-dropdown-btn:hover { border-color: #94a3b8; }
-    
-    /* Khi dropdown đang mở hoặc nút được focus */
-    .hero-dropdown-btn[aria-expanded="true"], 
-    .hero-dropdown-btn:focus {
-        border-color: #000;
-        background-color: white;
-        box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
-        outline: none;
-    }
-
     .btn-search-hero {
         background-color: #000000; color: white; border: none;
         border-radius: 12px; font-weight: 700; font-size: 1.1rem;
@@ -166,6 +138,45 @@
     .scroll-left { left: -20px; }
     .scroll-right { right: -20px; }
 
+    /* --- CSS CHO CHATBOT --- */
+    #chatToggleBtn {
+        position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+        border-radius: 50%; background: #000; color: white; border: none;
+        z-index: 1000; font-size: 24px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    #chatToggleBtn:hover { transform: scale(1.1); }
+
+    #aiChatBox {
+        display: none; position: fixed; bottom: 100px; right: 30px;
+        width: 380px; height: 550px; background: white; border-radius: 20px;
+        z-index: 1000; flex-direction: column; overflow: hidden;
+        border: 1px solid #e2e8f0; animation: slideInUp 0.3s ease-out;
+    }
+
+    @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .msg-user { align-self: flex-end; background: #000; color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 80%; margin-bottom: 10px; font-size: 0.9rem; }
+    .msg-bot { align-self: flex-start; background: #f1f5f9; color: #333; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 90%; margin-bottom: 10px; font-size: 0.9rem; border: 1px solid #eee; }
+    
+    /* Mini Hotel Card inside Chat */
+    .mini-hotel-card {
+        display: flex; background: white; border-radius: 12px; overflow: hidden;
+        border: 1px solid #e2e8f0; margin-top: 8px; transition: 0.2s; text-decoration: none; color: inherit;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .mini-hotel-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-color: #000; }
+    .mini-img { width: 90px; height: 90px; object-fit: cover; }
+    .mini-info { padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; width: calc(100% - 90px); }
+    .mini-name { font-size: 0.85rem; font-weight: 700; line-height: 1.3; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .mini-price { font-weight: 800; color: #000; font-size: 0.9rem; }
+
+    /* Typing Animation */
+    .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: #adb5bd; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; margin: 0 2px; }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
 </style>
 {% endblock %}
 
@@ -178,10 +189,7 @@
             <div class="d-flex justify-content-center">
                 <div class="search-widget">
                     <form action="{{ url_for('api_filter') }}" method="POST">
-                        <!-- QUAN TRỌNG: align-items-end để căn thẳng hàng nút và ô nhập -->
                         <div class="row g-2 align-items-end">
-                            
-                            <!-- Cột 1: Địa điểm -->
                             <div class="col-lg-3 col-md-6">
                                 <label class="input-label"><i class="fas fa-map-marker-alt"></i> Địa điểm</label>
                                 <select name="city" class="custom-select-hero" required>
@@ -197,8 +205,6 @@
                                     <option value="Vũng Tàu">Vũng Tàu</option>
                                 </select>
                             </div>
-
-                            <!-- Cột 2: Ngân sách -->
                             <div class="col-lg-2 col-md-6">
                                 <label class="input-label"><i class="fas fa-wallet"></i> Ngân sách</label>
                                 <select name="price_range" class="custom-select-hero">
@@ -209,8 +215,6 @@
                                     <option value="2000000+">Trên 2tr</option>
                                 </select>
                             </div>
-
-                            <!-- Cột 3: Hạng sao -->
                             <div class="col-lg-2 col-md-6">
                                 <label class="input-label"><i class="fas fa-star"></i> Hạng sao</label>
                                 <select name="rating" class="custom-select-hero">
@@ -219,62 +223,18 @@
                                     <option value="3-5">Thoải mái (3+)</option>
                                 </select>
                             </div>
-
-                            <!-- Cột 4: Tiện nghi (Rộng hơn chút để chứa chữ) -->
                             <div class="col-lg-3 col-md-6">
                                 <label class="input-label"><i class="fas fa-concierge-bell"></i> Tiện nghi</label>
-                                <div class="dropdown">
-                                    <button class="hero-dropdown-btn" 
-                                            type="button" 
-                                            id="amenityHeroBtn" 
-                                            data-bs-toggle="dropdown" 
-                                            aria-expanded="false">
-                                        <span id="amenityHeroText" class="text-truncate">Tùy chọn</span>
-                                        <i class="fas fa-chevron-down small text-secondary"></i>
-                                    </button>
-                                    
-                                    <ul class="dropdown-menu p-3 shadow-lg border-0" aria-labelledby="amenityHeroBtn" style="width: 100%; border-radius: 12px; max-height: 250px; overflow-y: auto;">
-                                        <li>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="amenities" value="Pool" id="hero_am_pool">
-                                                <label class="form-check-label" for="hero_am_pool">Bể bơi</label>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="amenities" value="Fitness centre" id="hero_am_gym">
-                                                <label class="form-check-label" for="hero_am_gym">Phòng Gym</label>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="amenities" value="Pet-friendly" id="hero_am_pet">
-                                                <label class="form-check-label" for="hero_am_pet">Thú cưng</label>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="amenities" value="Child-friendly" id="hero_am_child">
-                                                <label class="form-check-label" for="hero_am_child">Trẻ em</label>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="amenities" value="Free Wi-Fi" id="hero_am_wifi">
-                                                <label class="form-check-label" for="hero_am_wifi">Wi-Fi miễn phí</label>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="amenities" value="Air-conditioned" id="hero_am_ac">
-                                                <label class="form-check-label" for="hero_am_ac">Điều hòa</label>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <select name="amenities" class="custom-select-hero">
+                                    <option value="">Tùy chọn</option>
+                                    <option value="Pool">Bể bơi</option>
+                                    <option value="Fitness centre">Phòng Gym</option>
+                                    <option value="Pet-friendly">Thú cưng</option>
+                                    <option value="Child-friendly">Trẻ em</option>
+                                    <option value="Free Wi-Fi">Wi-Fi miễn phí</option>
+                                    <option value="Air-conditioned">Điều hòa</option>
+                                </select>
                             </div>
-
-                            <!-- Cột 5: Nút tìm kiếm -->
                             <div class="col-lg-2 col-md-12">
                                 <button type="submit" class="btn-search-hero w-100">Tìm kiếm</button>
                             </div>
@@ -410,14 +370,63 @@
             </div>
         </div>
     </section>
+
+    <!-- ================== AI CHAT UI START ================== -->
+    <!-- Nút mở chat -->
+    <button id="chatToggleBtn" class="shadow-lg">
+        <i class="fas fa-comment-dots"></i>
+    </button>
+
+    <!-- Hộp Chat -->
+    <div id="aiChatBox" class="shadow-lg">
+        <!-- Header -->
+        <div class="p-3 bg-dark text-white d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Trợ lý AI Ligma</h6>
+                    <small class="text-white-50" style="font-size: 0.7rem;">● Sẵn sàng hỗ trợ</small>
+                </div>
+            </div>
+            <div>
+                <button id="clearChatBtn" class="btn btn-sm text-white-50 me-1" title="Xóa lịch sử chat"><i class="fas fa-trash"></i></button>
+                <button id="closeChatBtn" class="btn btn-sm text-white"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <!-- Chat Content -->
+        <div id="chatContent" class="p-3 bg-white" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+            <!-- Tin nhắn mặc định -->
+            <div class="msg-bot shadow-sm border">
+                <small class="text-muted fw-bold d-block mb-1">AI Concierge</small>
+                Chào {% if user %}{{ user.username }}{% else %}bạn{% endif %}! 👋 <br>
+                Bạn muốn đi du lịch ở đâu? Cứ nói với mình nhé.
+                <br><em class="text-muted small mt-1 d-block" style="font-size: 0.75rem;">(VD: "Tìm phòng ở Đà Lạt cho cặp đôi, giá tầm 1 triệu")</em>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="p-3 bg-white border-top">
+            <div class="input-group">
+                <input type="text" id="chatInput" class="form-control border bg-light" placeholder="Nhập yêu cầu..." style="border-radius: 20px 0 0 20px; box-shadow: none;">
+                <button id="sendChatBtn" class="btn btn-dark" style="border-radius: 0 20px 20px 0;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ================== AI CHAT UI END ================== -->
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // JS Logic cho Slider (Trivago Style)
+    // JS Logic cho Slider (Giữ nguyên)
     function scrollDest(direction) {
         const wrapper = document.getElementById('destWrapper');
-        const scrollAmount = 300; // Khoảng cách trượt mỗi lần click
+        const scrollAmount = 300; 
         
         if (direction === 1) {
             wrapper.scrollLeft += scrollAmount;
@@ -426,36 +435,146 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Selector cho các checkbox trong Hero Section
-        const heroCheckboxes = document.querySelectorAll('#amenityHeroBtn + .dropdown-menu input[type="checkbox"]');
-        const heroBtnText = document.getElementById('amenityHeroText');
+    // --- JS CHO CHATBOT (BIG UPDATE) ---
+    const chatBtn = document.getElementById('chatToggleBtn');
+    const chatBox = document.getElementById('aiChatBox');
+    const closeChat = document.getElementById('closeChatBtn');
+    const clearChat = document.getElementById('clearChatBtn');
+    const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendChatBtn');
+    const content = document.getElementById('chatContent');
 
-        function updateHeroLabel() {
-            const checked = Array.from(heroCheckboxes).filter(cb => cb.checked);
-            if (checked.length === 0) {
-                heroBtnText.textContent = "Tùy chọn";
-            } else if (checked.length === 1) {
-                // Lấy label của checkbox đang chọn
-                const label = document.querySelector(`label[for="${checked[0].id}"]`).textContent;
-                heroBtnText.textContent = label;
-            } else {
-                heroBtnText.textContent = `${checked.length} tiện nghi`;
-            }
-        }
-
-        // Gán sự kiện
-        heroCheckboxes.forEach(cb => {
-            cb.addEventListener('change', updateHeroLabel);
-        });
-
-        // Ngăn dropdown đóng khi click vào bên trong
-        const heroDropdownMenu = document.querySelector('#amenityHeroBtn + .dropdown-menu');
-        if (heroDropdownMenu) {
-            heroDropdownMenu.addEventListener('click', function (e) {
-                e.stopPropagation();
+    // Hàm render 1 tin nhắn ra màn hình
+    function renderMessage(msg) {
+        let html = '';
+        if (msg.type === 'search_result' && msg.hotels) {
+            // Render text dẫn dắt trước
+            html += `<div>${msg.content || msg.reply_text}</div>`;
+            // Render thẻ khách sạn
+            msg.hotels.slice(0, 4).forEach(h => {
+                let img = (h.images && h.images.length > 0) ? h.images[0].original_image : 'https://via.placeholder.com/90';
+                let price = (h.rate_per_night && h.rate_per_night.lowest) ? h.rate_per_night.lowest : 'Liên hệ';
+                let stars = h.overall_rating ? `<span class="text-warning ms-2 small"><i class="fas fa-star"></i> ${h.overall_rating}</span>` : '';
+                html += `
+                    <a href="/hotel/${h.property_token}" class="mini-hotel-card">
+                        <img src="${img}" class="mini-img" alt="Hotel">
+                        <div class="mini-info">
+                            <div class="mini-name">${h.name}</div>
+                            <div class="d-flex align-items-center mt-1">
+                                <div class="mini-price">${price}</div>
+                                ${stars}
+                            </div>
+                        </div>
+                    </a>
+                `;
             });
+            html += `<div class="text-center mt-2"><small class="text-muted">Nhấn vào thẻ để xem chi tiết</small></div>`;
+        } else {
+            // Chat thường
+            html = msg.content || msg.reply_text;
         }
+
+        const div = document.createElement('div');
+        div.className = msg.role === 'user' ? 'msg-user' : 'msg-bot shadow-sm border';
+        div.innerHTML = html;
+        content.appendChild(div);
+        content.scrollTop = content.scrollHeight;
+    }
+
+    // 1. Load lịch sử chat khi trang web tải xong
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const resp = await fetch('/api/get_chat_history');
+            const history = await resp.json();
+            
+            // Xóa nội dung mặc định nếu có lịch sử
+            if (history.length > 0) {
+                content.innerHTML = ''; 
+                history.forEach(msg => {
+                    // Mapping lại format lưu trong session với format hàm render
+                    renderMessage(msg);
+                });
+            }
+        } catch (e) { console.error("Lỗi load history:", e); }
     });
+
+    // Mở Chat
+    chatBtn.onclick = () => { 
+        chatBox.style.display = 'flex'; 
+        chatBtn.style.transform = 'scale(0)'; 
+        input.focus();
+    };
+    
+    // Đóng Chat
+    closeChat.onclick = () => { 
+        chatBox.style.display = 'none'; 
+        chatBtn.style.transform = 'scale(1)'; 
+    };
+
+    // Xóa Chat
+    clearChat.onclick = async () => {
+        if(confirm("Bạn muốn xóa toàn bộ cuộc trò chuyện?")) {
+            await fetch('/api/clear_chat', { method: 'POST' });
+            content.innerHTML = `
+                <div class="msg-bot shadow-sm border">
+                    <small class="text-muted fw-bold d-block mb-1">AI Concierge</small>
+                    Chào bạn! 👋 Mình đã quên hết chuyện cũ rồi. <br>
+                    Giờ mình đi đâu đây?
+                </div>`;
+        }
+    }
+
+    function showTyping() {
+        const div = document.createElement('div');
+        div.id = 'typingLoader';
+        div.className = 'msg-bot';
+        div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+        content.appendChild(div);
+        content.scrollTop = content.scrollHeight;
+    }
+
+    function removeTyping() {
+        const loader = document.getElementById('typingLoader');
+        if(loader) loader.remove();
+    }
+
+    async function handleChat() {
+        const text = input.value.trim();
+        if(!text) return;
+
+        // 1. Hiện tin nhắn user
+        renderMessage({ role: 'user', content: text });
+        input.value = '';
+        showTyping();
+
+        try {
+            // 2. Gửi về API
+            const resp = await fetch('/api/chat_search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await resp.json();
+            
+            removeTyping();
+
+            // 3. Xử lý phản hồi từ AI
+            const msgData = {
+                role: 'ai',
+                type: data.type,
+                content: data.reply_text,
+                hotels: data.hotels // Nếu có
+            };
+            renderMessage(msgData);
+
+        } catch (e) {
+            console.error(e);
+            removeTyping();
+            renderMessage({ role: 'ai', content: "Mạng đang chập chờn, bạn thử lại chút nhé!" });
+        }
+    }
+
+    sendBtn.onclick = handleChat;
+    input.onkeydown = (e) => { if(e.key === 'Enter') handleChat(); }
 </script>
 {% endblock %}
