@@ -85,6 +85,34 @@
         border-color: #94a3b8;
     }
 
+    .hero-dropdown-btn {
+        width: 100%;
+        height: 55px; /* Đồng nhất chiều cao */
+        background-color: #f8fafc;
+        border: 1px solid #cbd5e1; /* Đồng nhất màu viền */
+        border-radius: 12px;
+        padding: 0 15px;
+        color: #0f172a;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s;
+        text-align: left;
+    }
+    
+    .hero-dropdown-btn:hover { border-color: #94a3b8; }
+    
+    /* Khi dropdown đang mở hoặc nút được focus */
+    .hero-dropdown-btn[aria-expanded="true"], 
+    .hero-dropdown-btn:focus {
+        border-color: #000;
+        background-color: white;
+        box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+        outline: none;
+    }
+
     .btn-search-hero {
         background-color: #000000; color: white; border: none;
         border-radius: 12px; font-weight: 700; font-size: 1.1rem;
@@ -195,15 +223,55 @@
                             <!-- Cột 4: Tiện nghi (Rộng hơn chút để chứa chữ) -->
                             <div class="col-lg-3 col-md-6">
                                 <label class="input-label"><i class="fas fa-concierge-bell"></i> Tiện nghi</label>
-                                <select name="amenities" class="custom-select-hero">
-                                    <option value="">Tùy chọn</option>
-                                    <option value="Pool">Bể bơi</option>
-                                    <option value="Fitness centre">Phòng Gym</option>
-                                    <option value="Pet-friendly">Thú cưng</option>
-                                    <option value="Bar">Quầy Bar</option>
-                                    <option value="Free Wi-Fi">Wi-Fi miễn phí</option>
-                                    <option value="Air-conditioned">Điều hòa</option>
-                                </select>
+                                <div class="dropdown">
+                                    <button class="hero-dropdown-btn" 
+                                            type="button" 
+                                            id="amenityHeroBtn" 
+                                            data-bs-toggle="dropdown" 
+                                            aria-expanded="false">
+                                        <span id="amenityHeroText" class="text-truncate">Tùy chọn</span>
+                                        <i class="fas fa-chevron-down small text-secondary"></i>
+                                    </button>
+                                    
+                                    <ul class="dropdown-menu p-3 shadow-lg border-0" aria-labelledby="amenityHeroBtn" style="width: 100%; border-radius: 12px; max-height: 250px; overflow-y: auto;">
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Pool" id="hero_am_pool">
+                                                <label class="form-check-label" for="hero_am_pool">Bể bơi</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Fitness centre" id="hero_am_gym">
+                                                <label class="form-check-label" for="hero_am_gym">Phòng Gym</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Pet-friendly" id="hero_am_pet">
+                                                <label class="form-check-label" for="hero_am_pet">Thú cưng</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Child-friendly" id="hero_am_child">
+                                                <label class="form-check-label" for="hero_am_child">Trẻ em</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Free Wi-Fi" id="hero_am_wifi">
+                                                <label class="form-check-label" for="hero_am_wifi">Wi-Fi miễn phí</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Air-conditioned" id="hero_am_ac">
+                                                <label class="form-check-label" for="hero_am_ac">Điều hòa</label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
 
                             <!-- Cột 5: Nút tìm kiếm -->
@@ -357,5 +425,37 @@
             wrapper.scrollLeft -= scrollAmount;
         }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Selector cho các checkbox trong Hero Section
+        const heroCheckboxes = document.querySelectorAll('#amenityHeroBtn + .dropdown-menu input[type="checkbox"]');
+        const heroBtnText = document.getElementById('amenityHeroText');
+
+        function updateHeroLabel() {
+            const checked = Array.from(heroCheckboxes).filter(cb => cb.checked);
+            if (checked.length === 0) {
+                heroBtnText.textContent = "Tùy chọn";
+            } else if (checked.length === 1) {
+                // Lấy label của checkbox đang chọn
+                const label = document.querySelector(`label[for="${checked[0].id}"]`).textContent;
+                heroBtnText.textContent = label;
+            } else {
+                heroBtnText.textContent = `${checked.length} tiện nghi`;
+            }
+        }
+
+        // Gán sự kiện
+        heroCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateHeroLabel);
+        });
+
+        // Ngăn dropdown đóng khi click vào bên trong
+        const heroDropdownMenu = document.querySelector('#amenityHeroBtn + .dropdown-menu');
+        if (heroDropdownMenu) {
+            heroDropdownMenu.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        }
+    });
 </script>
 {% endblock %}

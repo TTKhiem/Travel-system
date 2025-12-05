@@ -234,15 +234,55 @@
                     </div>
                     <div class="col-md-3">
                         <label>Tiện nghi</label>
-                        <select id="amenity_compact" name="amenities" class="form-select">
-                            <option value="">Tùy chọn</option>
-                            <option value="Pool">Bể bơi</option>
-                            <option value="Fitness centre">Phòng Gym</option>
-                            <option value="Pet-friendly">Thú cưng</option>
-                            <option value="Child-friendly">Trẻ em</option>
-                            <option value="Free Wi-Fi">Wi-Fi miễn phí</option>
-                            <option value="Air-conditioned">Điều hòa</option>
-                        </select>
+                        <div class="dropdown">
+                            <button class="form-select text-start d-flex justify-content-between align-items-center" 
+                                    type="button" 
+                                    id="amenityDropdownBtn" 
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false" 
+                                    style="background-color: #f8fafc; border: 1px solid #e2e8f0; color: #334155; font-weight: 600;">
+                                <span id="amenityBtnText">Tùy chọn</span>
+                            </button>
+                            
+                            <ul class="dropdown-menu p-3 shadow-lg border-0" aria-labelledby="amenityDropdownBtn" style="width: 100%; border-radius: 12px;">
+                                <li>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Pool" id="am_pool">
+                                        <label class="form-check-label" for="am_pool">Bể bơi</label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Fitness centre" id="am_gym">
+                                        <label class="form-check-label" for="am_gym">Phòng Gym</label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Pet-friendly" id="am_pet">
+                                        <label class="form-check-label" for="am_pet">Thú cưng</label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Child-friendly" id="am_child">
+                                        <label class="form-check-label" for="am_child">Trẻ em</label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Free Wi-Fi" id="am_wifi">
+                                        <label class="form-check-label" for="am_wifi">Wi-Fi miễn phí</label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Air-conditioned" id="am_ac">
+                                        <label class="form-check-label" for="am_ac">Điều hòa</label>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-search-compact w-100 py-2">
@@ -430,6 +470,32 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
+        });
+
+        // --- AMENITY DROPDOWN LOGIC ---
+        const amenityCheckboxes = document.querySelectorAll('input[name="amenities"]');
+        const amenityBtnText = document.getElementById('amenityBtnText');
+
+        function updateAmenityLabel() {
+            const checked = Array.from(amenityCheckboxes).filter(cb => cb.checked);
+            if (checked.length === 0) {
+                amenityBtnText.textContent = "Tùy chọn";
+            } else if (checked.length === 1) {
+                // Get the label text of the checked item
+                const label = document.querySelector(`label[for="${checked[0].id}"]`).textContent;
+                amenityBtnText.textContent = label;
+            } else {
+                amenityBtnText.textContent = `${checked.length} tiện nghi`;
+            }
+        }
+
+        amenityCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateAmenityLabel);
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        document.querySelector('.dropdown-menu').addEventListener('click', function (e) {
+            e.stopPropagation();
         });
     </script>
     {% block scripts %}{% endblock %}

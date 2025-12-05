@@ -205,7 +205,7 @@ def api_filter():
         return redirect(url_for('home'))
     price_range = request.form.get('price_range')
     rating_range = request.form.get('rating')
-    amenities = request.form.get('amenities')
+    amenities = request.form.getlist('amenities')
 
     try:
         serp_api_key = os.getenv("SERPAPI_KEY")
@@ -217,7 +217,7 @@ def api_filter():
                                    'city:': city,
                                    'price_range': price_range,
                                    'rating_range': rating_range,
-                                   'amenity': amenities
+                                   'amenities': amenities
                                })
     except Exception as e:
         return render_template('hotel_results.html', 

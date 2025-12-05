@@ -8,13 +8,19 @@ load_dotenv()
 
 output_directory = "fetched_data"
 
+def enlarge_thumbnail(thumbnail_url, width, height):
+    if not thumbnail_url:
+        return None
+    base_url = thumbnail_url.split('=')[0]
+    return f"{base_url}=w{width}-h{height}-k-no"
+
 class HotelSearchAPI:
     def __init__(self, api_key):
         self.api_key = api_key
         self.base_url = "https://serpapi.com/search"
         self.geo_api_key = os.getenv("GEOAPIFY_KEY")
 
-    def search_hotels(self, location, price_range=None, rating_range=None, amenity=None):
+    def search_hotels(self, location, price_range=None, rating_range=None, amenities=None):
         price_mapping = {
             "0-500000": {"min": 1, "max": 500000},
             "500000-1000000": {"min": 500000, "max": 1000000},
@@ -34,7 +40,8 @@ class HotelSearchAPI:
             "Fitness centre": "7",
             "Bar": "15",
             "Free Wi-Fi": "35",
-            "Air-conditioned": "40"
+            "Air-conditioned": "40",
+            "Child-friendly": "12"
         }
         
         params = {
@@ -56,14 +63,30 @@ class HotelSearchAPI:
         if rating_range in rating_mapping:
             params["hotel_class"] = rating_mapping[rating_range]
         
-        if amenity in amenities_mapping:
-            params["amenities"] = amenities_mapping[amenity]
+        if amenities:
+            # Single amenity is passed only
+            if isinstance(amenities, str):
+                amenities = [amenities]
+            # Map names to IDs
+            selected_ids = []
+            for a in amenities:
+                if a in amenities_mapping:
+                    selected_ids.append(amenities_mapping[a])
+            if selected_ids:
+                params['amenitites'] = ",".join(selected_ids)
         try:
             print(f"Fetching hotel list for: {location}...")
             response = requests.get(self.base_url, params=params)
             response.raise_for_status()
             data = response.json()
+            properties = data.get('properties')
+            for hotel in properties:
+                images = hotel.get('images', [])
+                for img in images:
+                    thumbnail = img['thumbnail']
+                    img['original_image'] = enlarge_thumbnail(thumbnail, 1920, 1280)
             return data.get("properties", [])
+
         except requests.exceptions.RequestException as e:
             print(f"Error searching hotels: {e}")
             return []
@@ -84,7 +107,12 @@ class HotelSearchAPI:
             print(f"Fetching details for token: {property_token}...")
             response = requests.get(self.base_url, params=params, timeout=15)
             response.raise_for_status()
-            return response.json() 
+            data = response.json()
+            images = data.get('images', [])
+            for img in images:
+                thumbnail = img['thumbnail']
+                img['original_image'] = enlarge_thumbnail(thumbnail, 1920, 1280)
+            return data
         except requests.exceptions.RequestException as e:
             print(f"Error fetching detail: {e}")
             return None

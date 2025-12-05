@@ -1,4 +1,4 @@
-# Hotel (Release 1.0)
+# Hotel (Release 1.1)
 - API được lưu trong .env (Source tìm hiểu: https://chatgpt.com/share/68fdb9c9-2620-800d-a488-5fe4db254087)
 - Display khách sạn
 - Tất cả chạy theo nhu cầu trong filter gồm: Địa điểm, Mức giá, Mức sao, Tiện nghi
@@ -8,7 +8,6 @@
 
 ## Known issues:
 1. I have skill issue
-2. Lỗi load images chưa sửa được
 
 ## Refactored Notes:
 1. Tối ưu lại hệ thống search: 
@@ -20,8 +19,9 @@
 3. Trang details của từng khách sạn đã được sửa lại trực quan hơn
 4. Fixed My Favorites
 5. Remade full UI 
-6. Đã thêm tính năng so sánh 2 khách sạn (+AI tóm tắt so sánh)
+6. Đã thêm tính năng so sánh ~~2~~ 3 khách sạn (+AI tóm tắt so sánh)
 7. Thêm một trường filter theo **Amenities** và chỉ bắt buộc chọn Location còn lại **Optional** 
+8. Đã fixed được hình ảnh (finally)
 
 
 # To be updated: (All finished)
