@@ -77,6 +77,34 @@
     }
     .custom-select-hero:hover { border-color: #94a3b8; }
 
+    .hero-dropdown-btn {
+        width: 100%;
+        height: 55px; /* Đồng nhất chiều cao */
+        background-color: #f8fafc;
+        border: 1px solid #cbd5e1; /* Đồng nhất màu viền */
+        border-radius: 12px;
+        padding: 0 15px;
+        color: #0f172a;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s;
+        text-align: left;
+    }
+    
+    .hero-dropdown-btn:hover { border-color: #94a3b8; }
+    
+    /* Khi dropdown đang mở hoặc nút được focus */
+    .hero-dropdown-btn[aria-expanded="true"], 
+    .hero-dropdown-btn:focus {
+        border-color: #000;
+        background-color: white;
+        box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+        outline: none;
+    }
+
     .btn-search-hero {
         background-color: #000000; color: white; border: none;
         border-radius: 12px; font-weight: 700; font-size: 1.1rem;
@@ -84,6 +112,11 @@
         box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 100%;
     }
     .btn-search-hero:hover { background-color: #333; transform: translateY(-2px); }
+
+    /* Format cho form khảo sát*/
+    .survey-card:hover { background-color: #f8f9fa; transform: translateY(-3px); border-color: #000 !important; }
+    .btn-check:checked + .survey-card { background-color: #000; color: white !important; border-color: #000; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    .btn-check:checked + label.btn-outline-secondary { background-color: #000; color: white; border-color: #000; }
 
     /* TRIVAGO SCROLL STYLE */
     .scrolling-wrapper-container { position: relative; margin-top: 20px; }
@@ -269,6 +302,35 @@
             
             <div class="d-flex justify-content-center">
                 <div class="search-widget">
+                    <div id="aiSuggestionBox" class="alert border-0 shadow-sm d-flex align-items-center mb-4 p-3 bg-white rounded-4 animate__animated animate__fadeIn" style="display: none;">
+                        <div class="fs-1 me-3" id="aiIcon">✨</div>
+                        <div class="flex-grow-1">
+                            <div id="aiLoading">
+                                <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-spinner fa-spin text-primary"></i> AI đang tìm điểm đến phù hợp...</h6>
+                            </div>
+                            <div id="aiContent" style="display: none;">
+                                <h6 class="fw-bold mb-0 text-dark" id="aiTitle"></h6>
+                                <p class="mb-0 text-muted small fst-italic" id="aiGreeting"></p>
+                            </div>
+                            <!-- Banner mời đăng nhập (nếu chưa login) -->
+                            <div id="aiLoginPrompt" style="display: none;">
+                                <h6 class="fw-bold mb-0 text-dark">✨ Gợi ý cá nhân hóa từ AI</h6>
+                                <p class="mb-0 text-muted small">Đăng nhập để nhận gợi ý điểm đến phù hợp với sở thích của bạn</p>
+                            </div>
+                        </div>
+                        <div id="aiActionArea">
+                            <form action="{{ url_for('api_filter') }}" method="POST" id="aiActionForm" style="display: none;">
+                                <input type="hidden" name="city" id="aiInputCity">
+                                <input type="hidden" name="price_range" id="aiInputPrice">
+                                <input type="hidden" name="rating" value="4-5">
+                                <button type="submit" class="btn btn-dark rounded-pill btn-sm px-4 fw-bold">Xem ngay <i class="fas fa-arrow-right"></i></button>
+                            </form>
+                            <button id="aiLoginBtn" class="btn btn-dark rounded-pill btn-sm px-4 fw-bold" style="display: none;" onclick="openAuthModal('login')">
+                                Đăng nhập <i class="fas fa-sign-in-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <form action="{{ url_for('api_filter') }}" method="POST">
                         <div class="row g-2 align-items-end">
                             <div class="col-lg-3 col-md-6">
@@ -306,15 +368,55 @@
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <label class="input-label"><i class="fas fa-concierge-bell"></i> Tiện nghi</label>
-                                <select name="amenities" class="custom-select-hero">
-                                    <option value="">Tùy chọn</option>
-                                    <option value="Pool">Bể bơi</option>
-                                    <option value="Fitness centre">Phòng Gym</option>
-                                    <option value="Pet-friendly">Thú cưng</option>
-                                    <option value="Child-friendly">Trẻ em</option>
-                                    <option value="Free Wi-Fi">Wi-Fi miễn phí</option>
-                                    <option value="Air-conditioned">Điều hòa</option>
-                                </select>
+                                <div class="dropdown">
+                                    <button class="hero-dropdown-btn" 
+                                            type="button" 
+                                            id="amenityHeroBtn" 
+                                            data-bs-toggle="dropdown" 
+                                            aria-expanded="false">
+                                        <span id="amenityHeroText" class="text-truncate">Tùy chọn</span>
+                                        <i class="fas fa-chevron-down small text-secondary"></i>
+                                    </button>
+                                    
+                                    <ul class="dropdown-menu p-3 shadow-lg border-0" aria-labelledby="amenityHeroBtn" style="width: 100%; border-radius: 12px; max-height: 250px; overflow-y: auto;">
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Pool" id="hero_am_pool">
+                                                <label class="form-check-label" for="hero_am_pool">Bể bơi</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Fitness centre" id="hero_am_gym">
+                                                <label class="form-check-label" for="hero_am_gym">Phòng Gym</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Pet-friendly" id="hero_am_pet">
+                                                <label class="form-check-label" for="hero_am_pet">Thú cưng</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Child-friendly" id="hero_am_child">
+                                                <label class="form-check-label" for="hero_am_child">Trẻ em</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Free Wi-Fi" id="hero_am_wifi">
+                                                <label class="form-check-label" for="hero_am_wifi">Wi-Fi miễn phí</label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="amenities" value="Air-conditioned" id="hero_am_ac">
+                                                <label class="form-check-label" for="hero_am_ac">Điều hòa</label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="col-lg-2 col-md-12">
                                 <button type="submit" class="btn-search-hero w-100">Tìm kiếm</button>
@@ -325,6 +427,65 @@
             </div>
         </div>
     </section>
+
+    {% if user and not user.preferences %}
+    <div class="modal fade" id="surveyModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 bg-light p-4 pb-0">
+                    <div>
+                        <h4 class="fw-bold mb-1">✨ Chào {{ user.username }},</h4>
+                        <p class="text-muted small mb-0">Giúp LigmaStay hiểu gu của bạn trong 30 giây nhé!</p>
+                    </div>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="surveyForm">
+                        <h6 class="fw-bold mb-3 small text-muted text-uppercase">1. Bạn thường đi cùng ai?</h6>
+                        <div class="row g-3 mb-4">
+                            {% for val, label, icon in [('solo', 'Một mình', '👤'), ('couple', 'Cặp đôi', '❤️'), ('family', 'Gia đình', '👨‍👩‍👧‍👦'), ('friends', 'Nhóm bạn', '👯')] %}
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="companion" id="c_{{val}}" value="{{val}}" {% if loop.first %}checked{% endif %}>
+                                <label class="btn btn-outline-light text-dark border w-100 py-3 rounded-4 survey-card text-center" for="c_{{val}}">
+                                    <div class="fs-2 mb-1">{{icon}}</div><span class="small fw-bold">{{label}}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <h6 class="fw-bold mb-3 small text-muted text-uppercase">2. Phong cách chuyến đi?</h6>
+                        <div class="row g-3 mb-4">
+                            {% for val, label, icon in [('healing', 'Chữa lành', '🌿'), ('adventure', 'Khám phá', '🎒'), ('luxury', 'Sang chảnh', '💎'), ('business', 'Công tác', '💼')] %}
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="vibe" id="v_{{val}}" value="{{val}}" {% if loop.first %}checked{% endif %}>
+                                <label class="btn btn-outline-light text-dark border w-100 py-3 rounded-4 survey-card text-center" for="v_{{val}}">
+                                    <div class="fs-2 mb-1">{{icon}}</div><span class="small fw-bold">{{label}}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <h6 class="fw-bold mb-3 small text-muted text-uppercase">3. Ngân sách dự kiến/đêm?</h6>
+                        <div class="d-flex gap-2">
+                            <input type="radio" class="btn-check" name="budget" id="b_low" value="low" checked>
+                            <label class="btn btn-outline-secondary rounded-pill px-4 fw-bold" for="b_low">&lt; 500k</label>
+                            
+                            <input type="radio" class="btn-check" name="budget" id="b_mid" value="mid">
+                            <label class="btn btn-outline-secondary rounded-pill px-4 fw-bold" for="b_mid">500k - 2tr</label>
+
+                            <input type="radio" class="btn-check" name="budget" id="b_high" value="high">
+                            <label class="btn btn-outline-secondary rounded-pill px-4 fw-bold" for="b_high">&gt; 2tr</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" onclick="submitSurvey()" class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow">
+                        Hoàn tất & Tìm phòng ngay 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- TRENDING DESTINATIONS -->
     <section class="container py-5 mt-4">
@@ -453,10 +614,13 @@
     </section>
 
     <!-- ================== AI CHAT UI START ================== -->
+
+    {% if user %}
     <!-- Nút mở chat -->
     <button id="chatToggleBtn">
         <i class="fas fa-comment-dots"></i>
     </button>
+    {% endif %}
 
     <!-- Hộp Chat -->
     <div id="aiChatBox">
@@ -513,7 +677,6 @@
         </div>
     </div>
     <!-- ================== AI CHAT UI END ================== -->
-
 {% endblock %}
 
 {% block scripts %}
@@ -529,6 +692,48 @@
             wrapper.scrollLeft -= scrollAmount;
         }
     }
+
+    {% if user and not user.preferences %}
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            new bootstrap.Modal(document.getElementById('surveyModal')).show();
+        }, 1000);
+    });
+
+    async function submitSurvey() {
+        const form = document.getElementById('surveyForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        const btn = document.querySelector('#surveyModal .btn-dark');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu hồ sơ...';
+
+        try {
+            const resp = await fetch('/api/update_preferences', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if(resp.ok) {
+                // Đóng modal trước
+                const modal = bootstrap.Modal.getInstance(document.getElementById('surveyModal'));
+                if(modal) modal.hide();
+                
+                // Đợi một chút để modal đóng xong rồi mới reload
+                setTimeout(() => {
+                    location.reload();
+                }, 300);
+            } else {
+                alert('Có lỗi xảy ra, vui lòng thử lại');
+                btn.innerHTML = 'Hoàn tất & Tìm phòng ngay 🚀';
+            }
+        } catch(e) { 
+            console.error(e);
+            alert('Có lỗi xảy ra, vui lòng thử lại');
+            btn.innerHTML = 'Hoàn tất & Tìm phòng ngay 🚀';
+        }
+    }
+    {% endif %}
 
     // --- JS CHO CHATBOT (PREMIUM VERSION) ---
     const chatBtn = document.getElementById('chatToggleBtn');
@@ -579,6 +784,77 @@
 
     // Load lịch sử
     document.addEventListener('DOMContentLoaded', async () => {
+        const heroCheckboxes = document.querySelectorAll('#amenityHeroBtn + .dropdown-menu input[type="checkbox"]');
+        const heroBtnText = document.getElementById('amenityHeroText');
+        
+        const box = document.getElementById('aiSuggestionBox');
+        
+        // Gọi API để kiểm tra trạng thái
+        try {
+            const resp = await fetch('/api/get_home_suggestion');
+            const data = await resp.json();
+            
+            // Case 1: Chưa đăng nhập -> Hiện banner mời đăng nhập
+            if (!data.is_logged_in) {
+                box.style.display = 'flex';
+                document.getElementById('aiLoading').style.display = 'none';
+                document.getElementById('aiContent').style.display = 'none';
+                document.getElementById('aiLoginPrompt').style.display = 'block';
+                document.getElementById('aiActionForm').style.display = 'none';
+                document.getElementById('aiLoginBtn').style.display = 'block';
+            }
+            // Case 2: Đã login và có preferences -> Hiện gợi ý
+            else if (data.suggestion) {
+                const s = data.suggestion;
+                
+                box.style.display = 'flex';
+                document.getElementById('aiIcon').innerText = s.vibe_icon;
+                document.getElementById('aiTitle').innerText = `Gợi ý riêng cho bạn: ${s.city}`;
+                document.getElementById('aiGreeting').innerText = `"${s.greeting}"`;
+                
+                document.getElementById('aiInputCity').value = s.city;
+                document.getElementById('aiInputPrice').value = s.price_range;
+                
+                document.getElementById('aiLoading').style.display = 'none';
+                document.getElementById('aiContent').style.display = 'block';
+                document.getElementById('aiLoginPrompt').style.display = 'none';
+                document.getElementById('aiActionForm').style.display = 'block';
+                document.getElementById('aiLoginBtn').style.display = 'none';
+            }
+            // Case 3: Đã login nhưng chưa có preferences -> Ẩn (sẽ hiện sau khi survey)
+            else {
+                box.style.display = 'none';
+            }
+        } catch (e) {
+            console.error("AI Suggestion Failed", e);
+            box.style.display = 'none';
+        }
+
+        function updateHeroLabel() {
+            const checked = Array.from(heroCheckboxes).filter(cb => cb.checked);
+            if (checked.length === 0) {
+                heroBtnText.textContent = "Tùy chọn";
+            } else if (checked.length === 1) {
+                // Lấy label của checkbox đang chọn
+                const label = document.querySelector(`label[for="${checked[0].id}"]`).textContent;
+                heroBtnText.textContent = label;
+            } else {
+                heroBtnText.textContent = `${checked.length} tiện nghi`;
+            }
+        }
+
+        // Gán sự kiện
+        heroCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateHeroLabel);
+        });
+
+        // Ngăn dropdown đóng khi click vào bên trong
+        const heroDropdownMenu = document.querySelector('#amenityHeroBtn + .dropdown-menu');
+        if (heroDropdownMenu) {
+            heroDropdownMenu.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        }
         try {
             const resp = await fetch('/api/get_chat_history');
             const history = await resp.json();

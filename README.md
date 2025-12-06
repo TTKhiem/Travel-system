@@ -1,4 +1,37 @@
-# Hotel (Release 1.1)
+# Hotel (Release 1.2) - Personalization Update
+
+## IMPORTANT: CHANGELOG (Version 1.2)
+1. Làm khảo sát nhỏ khi người dùng đăng nhập lần đầu (Vibe, Companion, Budget) - **CÓ THỂ SẼ SỬA COMPANION**.
+2. Smart Ranking Engine: Thêm Filter tự động chấm điểm và sắp xếp lại kết quả tìm kiếm khách sạn dựa trên độ phù hợp với hồ sơ người dùng (thay vì chỉ sắp xếp theo Giá hay Reviews).
+3. Auto-fill bộ lọc **(Price, Stars, Amenities)** khi người dùng để trống (based on **preferences**).
+4. Passive: Tự động học và cập nhật lại Budget và Vibe của người dùng dựa trên lịch sử xem phòng (Khoảng 3-4 lần xem).
+5. Hiển thị lý do cụ thể "Tại sao khách sạn này hợp với bạn" (Ví dụ: "90% Match - Vì có Spa yên tĩnh") trong trang chi tiết.
+6. Chatbot ghi nhớ được lịch sử trò chuyện và biết rõ sở thích người dùng để tư vấn cá nhân hóa.
+7. So sánh **2 hoặc 3** khách sạn
+8. Fixed bugs trong **hotel_search.py**
+
+## Cơ chế "Học" của AI
+### Cơ chế sort theo preferences trong trang kết quả (Có thể improve)
+1. Nếu user thích Luxury và khách sạn >= 4.5 sao: +50 điểm.
+2. Nếu user đi Family và khách sạn có "Child-friendly" hoặc "Pool": +40 điểm.
+3. Nếu user thích Healing và có "Spa/Garden": +40 điểm.
+=> Danh sách được sắp xếp lại theo điểm số giảm dần. Khách sạn điểm cao nhất: **is_best_match**.
+### Cơ chế Passive learning (Có thể improve)
+1. Nếu giá xem khách sạn **3 lần** liên tiếp lớn hơn **1tr8** thì sẽ up vibe lên **luxury**
+2. Học theo **Amenties**:
+- Example: 
++ Tìm từ khóa: spa, yoga, meditation -> Cộng điểm Healing.
++ Tìm từ khóa: gym, hiking, fitness -> Cộng điểm Adventure.
+Điểm của **vibe** nào mà lỡn hơn **4**  thì tự động update vibe của user trong Database.
+### Cách Chatbot hiểu ngữ cảnh
+- Tự động chèn một đoạn văn bản ẩn (System Prompt) chứa toàn bộ hồ sơ user vào trước câu hỏi: "User này thích Healing, đi Cặp đôi, ngân sách Cao. Hãy tư vấn dựa trên đó".
+- Lưu lại lịch sử chat (Session) để user có thể hỏi nối tiếp ("Tìm ở Đà Lạt" -> "Có bể bơi không?" -> Chatbot hiểu đang nói về Đà Lạt).
+### Cách mà AI gợi ý trên Filter hoạt động
+1. Lấy 10 khách sạn gần nhất từ **recently_viewed**.
+2. Đếm thành phố nào xuất hiện nhiều nhất trong địa chỉ của các khách sạn đó.
+3. Ưu tiên đưa thành phố đó ra trang chủ
+**Notes: Nếu chưa có thành phố nào được xem trước đó thì sẽ tự gợi ý khách sạn dựa trên preferences của user**
+## Base features
 - API được lưu trong .env (Source tìm hiểu: https://chatgpt.com/share/68fdb9c9-2620-800d-a488-5fe4db254087)
 - Display khách sạn
 - Tất cả chạy theo nhu cầu trong filter gồm: Địa điểm, Mức giá, Mức sao, Tiện nghi

@@ -214,32 +214,32 @@
                             <option value="Vũng Tàu">Vũng Tàu</option>
                         </select>
                     </div>
+
                     <div class="col-md-2">
                         <label>Ngân sách</label>
                         <select id="price_compact" name="price_range" class="form-select">
                             <option value="">Tất cả</option>
-                            <option value="0-500000">&lt; 500k</option>
+                            <option value="0-500000" {% if user and user.preferences_dict.budget == 'low' %}selected{% endif %}>&lt; 500k</option>
                             <option value="500000-1000000">500k - 1tr</option>
-                            <option value="1000000-2000000">1tr - 2tr</option>
-                            <option value="2000000+">Trên 2tr</option>
+                            <option value="1000000-2000000" {% if user and user.preferences_dict.budget == 'mid' %}selected{% endif %}>1tr - 2tr</option>
+                            <option value="2000000+" {% if user and user.preferences_dict.budget == 'high' %}selected{% endif %}>Trên 2tr</option>
                         </select>
                     </div>
+
                     <div class="col-md-2">
                         <label>Hạng sao</label>
                         <select id="rating_compact" name="rating" class="form-select">
                             <option value="">Tất cả</option>
-                            <option value="4-5">4+ Sao</option>
+                            <option value="4-5" {% if user and user.preferences_dict.vibe == 'luxury' %}selected{% endif %}>4+ Sao</option>
                             <option value="3-5">3+ Sao</option>
                         </select>
                     </div>
+
                     <div class="col-md-3">
                         <label>Tiện nghi</label>
                         <div class="dropdown">
                             <button class="form-select text-start d-flex justify-content-between align-items-center" 
-                                    type="button" 
-                                    id="amenityDropdownBtn" 
-                                    data-bs-toggle="dropdown" 
-                                    aria-expanded="false" 
+                                    type="button" id="amenityDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" 
                                     style="background-color: #f8fafc; border: 1px solid #e2e8f0; color: #334155; font-weight: 600;">
                                 <span id="amenityBtnText">Tùy chọn</span>
                             </button>
@@ -247,47 +247,33 @@
                             <ul class="dropdown-menu p-3 shadow-lg border-0" aria-labelledby="amenityDropdownBtn" style="width: 100%; border-radius: 12px;">
                                 <li>
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="amenities" value="Pool" id="am_pool">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Pool" id="am_pool"
+                                        {% if user and (user.preferences_dict.vibe in ['healing', 'luxury'] or user.preferences_dict.companion == 'family') %}checked{% endif %}>
                                         <label class="form-check-label" for="am_pool">Bể bơi</label>
                                     </div>
                                 </li>
                                 <li>
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="amenities" value="Fitness centre" id="am_gym">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Fitness centre" id="am_gym"
+                                        {% if user and user.preferences_dict.vibe in ['adventure', 'luxury'] %}checked{% endif %}>
                                         <label class="form-check-label" for="am_gym">Phòng Gym</label>
                                     </div>
                                 </li>
+                                <li><div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="amenities" value="Pet-friendly" id="am_pet"><label class="form-check-label" for="am_pet">Thú cưng</label></div></li>
                                 <li>
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="amenities" value="Pet-friendly" id="am_pet">
-                                        <label class="form-check-label" for="am_pet">Thú cưng</label>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="amenities" value="Child-friendly" id="am_child">
+                                        <input class="form-check-input" type="checkbox" name="amenities" value="Child-friendly" id="am_child"
+                                        {% if user and user.preferences_dict.companion == 'family' %}checked{% endif %}>
                                         <label class="form-check-label" for="am_child">Trẻ em</label>
                                     </div>
                                 </li>
-                                <li>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="amenities" value="Free Wi-Fi" id="am_wifi">
-                                        <label class="form-check-label" for="am_wifi">Wi-Fi miễn phí</label>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="amenities" value="Air-conditioned" id="am_ac">
-                                        <label class="form-check-label" for="am_ac">Điều hòa</label>
-                                    </div>
-                                </li>
+                                <li><div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="amenities" value="Free Wi-Fi" id="am_wifi"><label class="form-check-label" for="am_wifi">Wi-Fi miễn phí</label></div></li>
+                                <li><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="Air-conditioned" id="am_ac"><label class="form-check-label" for="am_ac">Điều hòa</label></div></li>
                             </ul>
                         </div>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-search-compact w-100 py-2">
-                            Tìm kiếm
-                        </button>
+                        <button type="submit" class="btn btn-search-compact w-100 py-2">Tìm kiếm</button>
                     </div>
                 </div>
             </form>
@@ -496,6 +482,74 @@
         // Prevent dropdown from closing when clicking inside it
         document.querySelector('.dropdown-menu').addEventListener('click', function (e) {
             e.stopPropagation();
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchForms = document.querySelectorAll('form[action="/hotel_results"]');
+            
+            // 1. KHÔI PHỤC STATE TỪ LOCAL STORAGE
+            restoreSearchState();
+
+            // 2. LƯU STATE KHI SUBMIT FORM
+            searchForms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    saveSearchState(new FormData(form));
+                });
+            });
+
+            // Hàm lưu
+            function saveSearchState(formData) {
+                const state = {
+                    city: formData.get('city'),
+                    price: formData.get('price_range'),
+                    rating: formData.get('rating'),
+                    amenities: formData.getAll('amenities') // Lưu mảng các tiện nghi
+                };
+                localStorage.setItem('ligma_search_state', JSON.stringify(state));
+            }
+
+            // Hàm khôi phục
+            function restoreSearchState() {
+                const savedRaw = localStorage.getItem('ligma_search_state');
+                if (!savedRaw) return;
+
+                try {
+                    const state = JSON.parse(savedRaw);
+                    
+                    // Khôi phục City
+                    const citySelects = document.querySelectorAll('select[name="city"]');
+                    citySelects.forEach(sel => { if(state.city) sel.value = state.city; });
+
+                    // Khôi phục Price
+                    const priceSelects = document.querySelectorAll('select[name="price_range"]');
+                    priceSelects.forEach(sel => { if(state.price) sel.value = state.price; });
+
+                    // Khôi phục Rating
+                    const ratingSelects = document.querySelectorAll('select[name="rating"]');
+                    ratingSelects.forEach(sel => { if(state.rating) sel.value = state.rating; });
+
+                    // Khôi phục Amenities (Checkbox)
+                    if (state.amenities && Array.isArray(state.amenities)) {
+                        const checkboxes = document.querySelectorAll('input[name="amenities"]');
+                        checkboxes.forEach(cb => {
+                            if (state.amenities.includes(cb.value)) {
+                                cb.checked = true;
+                            }
+                        });
+                        // Cập nhật lại nhãn hiển thị nút bấm (nếu có hàm updateAmenityLabel)
+                        if (typeof updateAmenityLabel === "function") updateAmenityLabel();
+                        
+                        // Cập nhật cho Hero section (nếu có hàm updateHeroLabel)
+                        if (document.getElementById('amenityHeroBtn')) {
+                            const heroCheckboxes = document.querySelectorAll('#amenityHeroBtn + .dropdown-menu input[type="checkbox"]');
+                            const heroBtnText = document.getElementById('amenityHeroText');
+                            const checked = Array.from(heroCheckboxes).filter(cb => cb.checked);
+                            if(checked.length > 0) heroBtnText.textContent = `${checked.length} tiện nghi`;
+                        }
+                    }
+
+                } catch (e) { console.error("Error restoring state:", e); }
+            }
         });
     </script>
     {% block scripts %}{% endblock %}

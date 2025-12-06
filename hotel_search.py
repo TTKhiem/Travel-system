@@ -25,6 +25,7 @@ class HotelSearchAPI:
             "0-500000": {"min": 1, "max": 500000},
             "500000-1000000": {"min": 500000, "max": 1000000},
             "1000000-2000000": {"min": 1000000, "max": 2000000},
+            "500000-2000000": {"min": 500000, "max": 2000000},
             "2000000+": {"min": 2000000, "max": None}
         }
          
@@ -73,18 +74,19 @@ class HotelSearchAPI:
                 if a in amenities_mapping:
                     selected_ids.append(amenities_mapping[a])
             if selected_ids:
-                params['amenitites'] = ",".join(selected_ids)
+                params['amenities'] = ",".join(selected_ids)
         try:
             print(f"Fetching hotel list for: {location}...")
             response = requests.get(self.base_url, params=params)
             response.raise_for_status()
             data = response.json()
             properties = data.get('properties')
-            for hotel in properties:
-                images = hotel.get('images', [])
-                for img in images:
-                    thumbnail = img['thumbnail']
-                    img['original_image'] = enlarge_thumbnail(thumbnail, 1920, 1280)
+            if properties:
+                for hotel in properties:
+                    images = hotel.get('images', [])
+                    for img in images:
+                        thumbnail = img['thumbnail']
+                        img['original_image'] = enlarge_thumbnail(thumbnail, 1920, 1280)
             return data.get("properties", [])
 
         except requests.exceptions.RequestException as e:
@@ -108,10 +110,12 @@ class HotelSearchAPI:
             response = requests.get(self.base_url, params=params, timeout=15)
             response.raise_for_status()
             data = response.json()
-            images = data.get('images', [])
-            for img in images:
-                thumbnail = img['thumbnail']
-                img['original_image'] = enlarge_thumbnail(thumbnail, 1920, 1280)
+            if data:
+                images = data.get('images', [])
+                for img in images:
+                    thumbnail = img['thumbnail']
+                    img['original_image'] = enlarge_thumbnail(thumbnail, 1920, 1280)
+                return data
             return data
         except requests.exceptions.RequestException as e:
             print(f"Error fetching detail: {e}")

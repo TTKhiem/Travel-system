@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from datetime import datetime, timedelta
+from collections import Counter
 
 from hotel_search import HotelSearchAPI
 import database
@@ -23,26 +24,196 @@ app.config['DATABASE'] = database.DATABASE
 app.secret_key = os.getenv('APP_SECRET')
 database.init_app(app)
 
+def get_user_recent_city(user_id):
+    """Phân tích lịch sử xem phòng để tìm thành phố user quan tâm nhất"""
+    db = database.get_db()
+    
+    # 1. Lấy dữ liệu preview của 10 khách sạn xem gần nhất
+    rows = db.execute("""
+        SELECT preview_data 
+        FROM recently_viewed 
+        WHERE user_id = ? 
+        ORDER BY visited_at DESC 
+        LIMIT 10
+    """, (user_id,)).fetchall()
+    
+    if not rows:
+        return None
+        
+    cities_found = []
+    
+    # Danh sách từ khóa để map địa chỉ sang tên thành phố chuẩn
+    # Key: Từ khóa trong địa chỉ (viết thường) -> Value: Tên chuẩn trong DB/Select box
+    city_mapping = {
+        "hà nội": "Hà Nội", "hanoi": "Hà Nội", "ha noi": "Hà Nội",
+        "đà nẵng": "Đà Nẵng", "da nang": "Đà Nẵng",
+        "hồ chí minh": "TP. Hồ Chí Minh", "ho chi minh": "TP. Hồ Chí Minh", "sai gon": "TP. Hồ Chí Minh",
+        "đà lạt": "Đà Lạt", "da lat": "Đà Lạt",
+        "nha trang": "Nha Trang",
+        "huế": "Huế", "hue": "Huế",
+        "sa pa": "Sa Pa", "sapa": "Sa Pa",
+        "phú quốc": "Phú Quốc", "phu quoc": "Phú Quốc",
+        "vũng tàu": "Vũng Tàu", "vung tau": "Vũng Tàu"
+    }
+    
+    for row in rows:
+        try:
+            data = json.loads(row['preview_data'])
+            address = data.get('address', '').lower()
+            
+            # Kiểm tra xem địa chỉ chứa từ khóa thành phố nào
+            for key, val in city_mapping.items():
+                if key in address:
+                    cities_found.append(val)
+                    break # Tìm thấy 1 thành phố thì dừng, chuyển sang khách sạn tiếp theo
+        except:
+            continue
+            
+    if not cities_found:
+        return None
+        
+    # 2. Trả về thành phố xuất hiện nhiều nhất (Most Common)
+    # Counter(cities_found).most_common(1) trả về [('Đà Nẵng', 3)]
+    most_common = Counter(cities_found).most_common(1)
+    return most_common[0][0] if most_common else None
+
+def analyze_vibe_from_amenities(amenities_list):
+    # Định nghĩa từ khóa cho từng Vibe
+    vibe_keywords = {
+        'healing': ['spa', 'massage', 'yoga', 'garden', 'meditation', 'sauna', 'steam room', 'hot tub'],
+        'adventure': ['fitness', 'gym', 'hiking', 'diving', 'bike', 'canoe', 'windsurfing'],
+        'luxury': ['butler', 'limousine', 'infinity pool', 'wine', 'champagne', 'club'],
+        'business': ['meeting', 'conference', 'business centre', 'printer', 'fax']
+    }
+    
+    # Chuẩn hóa amenities đầu vào thành chữ thường
+    am_text = " ".join([str(a).lower() for a in amenities_list])
+    scores = {k: 0 for k in vibe_keywords}
+    
+    # Chấm điểm
+    for vibe, keywords in vibe_keywords.items():
+        for kw in keywords:
+            if kw in am_text:
+                scores[vibe] += 1
+                
+    # Tìm vibe có điểm cao nhất
+    best_vibe = max(scores, key=scores.get)
+    # Chỉ trả về nếu điểm >= 2 (tức là khách sạn này thể hiện rõ vibe đó)
+    if scores[best_vibe] >= 2:
+        return best_vibe
+    return None
+
 @app.context_processor
 def inject_user():
-    """
-    Hàm này chạy trước mỗi template render. 
-    Nó tự động lấy thông tin user nếu đã login và gửi xuống template (base.html).
-    """
     user_data = None
     if 'user_id' in session:
         db = database.get_db()
-        # Lấy thông tin user (username, avatar...) để hiển thị
-        user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+        row = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+        
+        if row:
+            user_data = dict(row)
+            if user_data.get('preferences'):
+                try:
+                    user_data['preferences_dict'] = json.loads(user_data['preferences'])
+                except:
+                    user_data['preferences_dict'] = {}
+            else:
+                user_data['preferences_dict'] = {}
+    
     return dict(user=user_data)
+
+def generate_ai_suggestion(user_prefs, history_city=None):
+    # Tạo gợi ý cá nhân hóa. Ưu tiên History City > Random theo Vibe
+    
+    if not user_prefs:
+        return None
+    
+    vibe = user_prefs.get('vibe', 'adventure')
+    budget = user_prefs.get('budget', 'mid')
+    
+    # Map vibe sang icon và lời chào
+    vibe_config = {
+        'healing': {
+            'icon': '🌿',
+            'greetings': [
+                'Không gian yên tĩnh để chữa lành tâm hồn',
+                'Tìm về thiên nhiên, bỏ lại âu lo',
+                'Nghỉ dưỡng thư thái, tái tạo năng lượng'
+            ]
+        },
+        'adventure': {
+            'icon': '🎒',
+            'greetings': [
+                'Sẵn sàng cho chuyến khám phá tiếp theo chưa?',
+                'Những trải nghiệm mới đang chờ đón bạn',
+                'Xách balo lên và đi thôi!'
+            ]
+        },
+        'luxury': {
+            'icon': '💎',
+            'greetings': [
+                'Trải nghiệm đẳng cấp thượng lưu',
+                'Kỳ nghỉ sang trọng xứng tầm với bạn',
+                'Tận hưởng dịch vụ 5 sao hoàn hảo'
+            ]
+        },
+        'business': {
+            'icon': '💼',
+            'greetings': [
+                'Tiện nghi tối ưu cho chuyến công tác',
+                'Kết nối thành công, nghỉ ngơi trọn vẹn',
+                'Không gian làm việc chuyên nghiệp'
+            ]
+        }
+    }
+    
+    # Fallback cities nếu không có history (Random theo Vibe cũ)
+    fallback_cities = {
+        'healing': ['Đà Lạt', 'Sa Pa', 'Huế'],
+        'adventure': ['Đà Nẵng', 'Nha Trang', 'Sa Pa'],
+        'luxury': ['Phú Quốc', 'Đà Nẵng', 'TP. Hồ Chí Minh'],
+        'business': ['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng']
+    }
+
+    config = vibe_config.get(vibe, vibe_config['adventure'])
+    
+    # --- LOGIC QUYẾT ĐỊNH THÀNH PHỐ ---
+    import random
+    
+    if history_city:
+        city = history_city
+        # Nếu có lịch sử, đổi lời chào cho phù hợp ngữ cảnh "Quay lại"
+        greeting = f"Tiếp tục kế hoạch vi vu tại {city} nhé?"
+    else:
+        # Nếu không có lịch sử, random theo vibe
+        city_list = fallback_cities.get(vibe, fallback_cities['adventure'])
+        city = random.choice(city_list)
+        greeting = random.choice(config['greetings'])
+    
+    # Map budget sang price_range
+    budget_map = {
+        'low': '0-500000',
+        'mid': '1000000-2000000',
+        'high': '2000000+'
+    }
+    price_range = budget_map.get(budget, '1000000-2000000')
+    
+    return {
+        'city': city,
+        'price_range': price_range,
+        'vibe_icon': config['icon'],
+        'greeting': greeting
+    }
 
 @app.route('/')
 def home():
     user_data = None
+    ai_suggestion = None
+    
     if 'user_id' in session:
         db = database.get_db()
         user_data = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
-    return render_template('index.html', user=user_data, form_type='login')
+    return render_template('index.html', user=user_data, form_type='login', ai_suggestion=None)
 
 @app.route('/register_page')
 def register_page():
@@ -56,14 +227,19 @@ def register():
     db = database.get_db()
     try:
         hashed_pw = generate_password_hash(password)
-        cursor = db.execute("INSERT INTO users (username, password) VALUES (?, ?)",
-                (username, hashed_pw))
+        # Thêm preferences mặc định là NULL (hoặc '{}' nếu muốn)
+        cursor = db.execute("INSERT INTO users (username, password, preferences) VALUES (?, ?, ?)",
+                (username, hashed_pw, None))
         user_id = cursor.lastrowid
         db.commit()
         flash("✅ Account created successfully! Please log in.")
         return redirect(url_for('home'))
     except sqlite3.IntegrityError:
         flash("❌ Username already exists.")
+        return redirect(url_for('register_page'))
+    except Exception as e:
+        print(f"Registration error: {e}")
+        flash(f"❌ Có lỗi xảy ra: {str(e)}")
         return redirect(url_for('register_page'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -193,24 +369,130 @@ def api_filter():
     if not city:
         flash("Hãy chọn địa điểm")
         return redirect(url_for('home'))
+        
+    # Dữ liệu từ forms
     price_range = request.form.get('price_range')
     rating_range = request.form.get('rating')
-    amenities = request.form.get('amenities')
+    amenities = request.form.getlist('amenities') 
+    # Track trường dữ liệu nào được filled bởi user_preferences - filled bởi AI cho vui :p
+    auto_filled_items = []
+    
+    if 'user_id' in session:
+        db = database.get_db()
+        user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+        
+        if user and user['preferences']:
+            try:
+                prefs = json.loads(user['preferences'])
+                vibe = prefs.get('vibe', '')
+                budget = prefs.get('budget', '')
+                companion = prefs.get('companion', '')
 
+                if not price_range:
+                    if budget == 'low':
+                        price_range = '0-500000'
+                        auto_filled_items.append('price')
+                    elif budget == 'mid':
+                        price_range = '500000-2000000'
+                        auto_filled_items.append('price')
+                    else:
+                        price_range = '2000000+'
+                        auto_filled_items.append('price')
+                
+                # A. Tự động điền Hạng sao (Map khớp với rating_mapping trong hotel_search.py)
+                if not rating_range:
+                    if vibe == 'luxury': 
+                        rating_range = '4-5'
+                        auto_filled_items.append('rating')
+                    else:
+                        rating_range = '3-5'
+                        auto_filled_items.append('rating')
+                
+                # B. Tự động điền Tiện nghi (Map khớp với amenities_mapping trong hotel_search.py)
+                # Chỉ thêm nếu user chưa chọn gì để tránh làm loãng kết quả
+                if not amenities:
+                    if vibe == 'healing': 
+                        amenities.append('Pool') # Map với ID '5'
+                        is_auto_filled = True
+                        auto_filled_items.append('Pool')
+                    elif vibe == 'adventure':
+                        amenities.append('Fitness centre') # Map với ID '7'
+                        auto_filled_items.append('Fitness centre')
+                    elif companion == 'family':
+                        amenities.append('Child-friendly') # Map với ID '12'
+                        auto_filled_items.append('Child-friendly')
+                    elif companion == 'couple':
+                        amenities.append('Bar') # Map với ID '15'
+                        auto_filled_items.append('Bar')
+                    else:
+                        amenities.append('Free Wi-Fi')
+                        auto_filled_items.append('Free Wi-Fi')
+
+            except Exception as e:
+                print(f"Auto-fill Error: {e}")
+
+    # --- 3. GỌI API (VỚI THAM SỐ ĐÃ ĐƯỢC AUTO-FILL) ---
     try:
         serp_api_key = os.getenv("SERPAPI_KEY")
         search_api = HotelSearchAPI(serp_api_key)
         search_results = search_api.search_hotels(city, price_range, rating_range, amenities)
         
-        return render_template('hotel_results.html', hotels=search_results,
+        # --- 4. HYBRID: SMART RANKING (SẮP XẾP LẠI KẾT QUẢ) ---
+        if search_results and user and user['preferences']:
+            try:
+                prefs = json.loads(user['preferences'])
+                vibe = prefs.get('vibe', '')
+                companion = prefs.get('companion', '')
+                
+                for hotel in search_results:
+                    score = 0
+                    
+                    # Chuẩn hóa tiện nghi của khách sạn trả về từ API để so sánh
+                    am_list = []
+                    raw_ams = hotel.get('amenities', [])
+                    for a in raw_ams:
+                        # API Google trả về có thể là string hoặc dict
+                        am_name = a if isinstance(a, str) else a.get('name', '')
+                        am_list.append(am_name.lower())
+                    am_str = " ".join(am_list)
+                    
+                    rating = hotel.get('overall_rating', 0)
+                    
+                    # --- LOGIC CHẤM ĐIỂM THEO VIBE---
+                    if vibe == 'luxury':
+                        if rating >= 4.5: score += 50
+                        if 'pool' in am_str or 'spa' in am_str: score += 20
+                    elif vibe == 'healing':
+                        if 'spa' in am_str or 'garden' in am_str or 'pool' in am_str: score += 40
+                        if 'beach' in am_str or 'view' in am_str: score += 20
+                    elif vibe == 'adventure':
+                        if 'fitness' in am_str or 'gym' in am_str: score += 30
+                    elif vibe == 'business':
+                        if 'wi-fi' in am_str or 'wifi' in am_str or 'desk' in am_str: score += 40
+                    # Lưu điểm
+                    hotel['match_score'] = score
+
+                # Sắp xếp: Điểm cao nhất lên đầu
+                search_results.sort(key=lambda x: x.get('match_score', 0), reverse=True)
+                if search_results and search_results[0].get('match_score', 0) > 0:
+                    search_results[0]['is_best_match'] = True
+                    
+            except Exception as e:
+                print(f"Ranking Error: {e}")
+
+        return render_template('hotel_results.html', 
+                               hotels=search_results,
                                search_params={
-                                   'city:': city,
+                                   'city': city,
                                    'price_range': price_range,
                                    'rating_range': rating_range,
-                                   'amenity': amenities
-                               })
+                                   'amenities': amenities
+                               },
+                               auto_filled_items=auto_filled_items) # Báo cho template biết
+                               
     except Exception as e:
-        return render_template('hotel_results.html', hotels=[], error=f"Error loading data: {str(e)}")
+        print(f"Search Process Error: {e}")
+        return render_template('hotel_results.html', hotels=[], error=f"Lỗi: {str(e)}")
     
 @app.route('/hotel/<property_token>')
 def hotel_detail(property_token):
@@ -256,16 +538,93 @@ def hotel_detail(property_token):
                 "address": hotel_data.get('address')
             }
             preview_json = json.dumps(preview_info, ensure_ascii=False)
-            db.execute(
-                "INSERT OR REPLACE INTO recently_viewed (user_id, property_token, preview_data, visited_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
-                (session['user_id'], property_token, preview_json)
-            )
+            
+            check_exist = db.execute("SELECT 1 FROM recently_viewed WHERE user_id=? AND property_token=?", (session['user_id'], property_token)).fetchone()
+            
+            if check_exist:
+                db.execute(
+                    "UPDATE recently_viewed SET visited_at = CURRENT_TIMESTAMP, preview_data = ? WHERE user_id = ? AND property_token = ?",
+                    (preview_json, session['user_id'], property_token)
+                )
+            else:
+                db.execute(
+                    "INSERT INTO recently_viewed (user_id, property_token, preview_data, visited_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+                    (session['user_id'], property_token, preview_json)
+                )
             db.commit()
         except Exception as e:
             print(f"Lỗi lưu lịch sử: {e}")
 
     if not hotel_data:
         return render_template('hotel_detail.html', error="Không tìm thấy khách sạn.")
+    
+    match_reason = None
+    if 'user_id' in session:
+        user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+        # Check xem đã cache lý do chưa (trong bảng recently_viewed)
+        recent_entry = db.execute("SELECT match_reason FROM recently_viewed WHERE user_id=? AND property_token=?", (session['user_id'], property_token)).fetchone()
+        
+        if recent_entry and recent_entry['match_reason']:
+            match_reason = recent_entry['match_reason'] # Dùng Cache
+    # Test khả năng học theo giá của người dùng - testing
+    if 'user_id' in session:
+        user_db = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+        current_prefs = json.loads(user_db['preferences']) if user_db and user_db['preferences'] else {}
+        
+        # Học về budget của người dùng
+        try:
+            price_str = hotel_data.get('rate_per_night', {}).get('lowest', '0')
+            price_num = int(re.sub(r'[^\d]', '', str(price_str)))
+            
+            if price_num > 1800000: 
+                # Tăng biến đếm trong session
+                session['expensive_view_count'] = session.get('expensive_view_count', 0) + 1
+                # Nếu xem 3 lần khách sạn đắt tiền thì sẽ nâng hạng Budget
+                if session['expensive_view_count'] >= 3:
+                    if current_prefs.get('budget') != 'high':
+                        current_prefs['budget'] = 'high'
+                        db.execute("UPDATE users SET preferences = ? WHERE id = ?", (json.dumps(current_prefs), session['user_id']))
+                        db.commit()
+                        print(f"✨ Passive Learning: Đã nâng cấp user lên HIGH budget.")
+                        session['expensive_view_count'] = 0 # Reset
+        except Exception as e:
+            print(f"Budget Learning Error: {e}")
+
+        # Học theo amenities của khách sạn => vibe của người dùng ?
+        try:
+            # Lấy danh sách tiện nghi khách sạn hiện tại
+            raw_amenities = []
+            if hotel_data.get('amenities'):
+                for a in hotel_data['amenities']:
+                    # Xử lý nếu API trả về dict hoặc string
+                    val = a.get('name') if isinstance(a, dict) else a
+                    raw_amenities.append(val)
+            
+            # Phân tích vibe của khách sạn này
+            detected_vibe = analyze_vibe_from_amenities(raw_amenities)
+            if detected_vibe:
+                # Lưu vào session dạng: session['vibe_tracker'] = {'healing': 1, 'adventure': 0, ...}
+                if 'vibe_tracker' not in session:
+                    session['vibe_tracker'] = {}
+                
+                current_score = session['vibe_tracker'].get(detected_vibe, 0) + 1
+                session['vibe_tracker'][detected_vibe] = current_score
+                session.modified = True # Báo cho Flask biết session đã thay đổi
+                print(f"👁 User viewing {detected_vibe} hotel. Score: {current_score}")
+                #: Nếu xem 4 khách sạn cùng vibe sẽ update lại 1 lần
+                if current_score >= 4:
+                    # Chỉ update nếu vibe hiện tại khác với cái đang học được
+                    if current_prefs.get('vibe') != detected_vibe:
+                        current_prefs['vibe'] = detected_vibe
+                        # Cập nhật DB
+                        db.execute("UPDATE users SET preferences = ? WHERE id = ?", (json.dumps(current_prefs), session['user_id']))
+                        db.commit()
+                        print(f"✨ Passive Learning: Đã đổi Vibe user sang {detected_vibe.upper()} dựa trên hành vi.")
+                        # Reset tracker để tránh update liên tục
+                        session['vibe_tracker'] = {} 
+
+        except Exception as e:
+            print(f"Vibe Learning Error: {e}")
     
     dynamic_price = request.args.get('price')
     if dynamic_price:
@@ -306,7 +665,7 @@ def hotel_detail(property_token):
         if fav_check:
             is_favorite = True
             
-    return render_template("hotel_detail.html", hotel=hotel_data, local_reviews=local_reviews, is_favorite=is_favorite)
+    return render_template("hotel_detail.html", match_reason = match_reason, hotel=hotel_data, local_reviews=local_reviews, is_favorite=is_favorite)
 
 @app.route('/hotel/review', methods=['POST'])
 def add_review():
@@ -328,6 +687,7 @@ def add_review():
             "INSERT INTO user_reviews (property_token, username, rating, comment) VALUES (?, ?, ?, ?)",
             (property_token, username, int(rating), comment)
         )
+        db.execute("DELETE FROM review_summaries WHERE property_token = ?", (property_token,))
         db.commit()
         flash("✅ Cảm ơn bạn đã đánh giá!")
     else:
@@ -344,6 +704,28 @@ def summarize_reviews():
             return jsonify({'error': 'Missing token'}), 400
 
         db = database.get_db()
+
+        # --- 1. KIỂM TRA CACHE TRONG DB ---
+        cached = db.execute(
+            "SELECT summary_content, updated_at FROM review_summaries WHERE property_token = ?",
+            (property_token,)
+        ).fetchone()
+
+        # Nếu có cache và chưa quá 24 giờ -> Dùng lại luôn
+        if cached and cached['summary_content']:
+            # Thêm try-catch để parse thời gian an toàn
+            try:
+                last_update = datetime.strptime(cached['updated_at'], '%Y-%m-%d %H:%M:%S')
+                # Dùng utcnow() để so khớp với SQLite CURRENT_TIMESTAMP (thường là UTC)
+                if datetime.utcnow() - last_update < timedelta(hours=24):
+                    print(f"Using cached summary for {property_token}")
+                    return jsonify({'summary': cached['summary_content']})
+            except Exception as e:
+                print(f"Date parse error: {e}")
+        # --- 2. NẾU KHÔNG CÓ HOẶC CŨ -> GỌI AI ---
+        print(f"Generating NEW summary for {property_token}")
+        
+        # Lấy review từ DB
         reviews = db.execute(
             "SELECT rating, comment FROM user_reviews WHERE property_token = ? AND comment IS NOT NULL ORDER BY created_at DESC LIMIT 20", 
             (property_token,)
@@ -370,9 +752,17 @@ def summarize_reviews():
             model='gemini-2.5-flash',
             contents=prompt
         )
-        return jsonify({'summary': response.text})
+        new_summary = response.text
+        db.execute(
+            "INSERT OR REPLACE INTO review_summaries (property_token, summary_content, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+            (property_token, new_summary)
+        )
+        db.commit()
+
+        return jsonify({'summary': new_summary})
 
     except Exception as e:
+        print(f"Summary Error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.post('/api/hotel_chat')
@@ -399,6 +789,29 @@ def hotel_chat():
         else:
             hotel_data = hotel_fallback
 
+        # --- LẤY PREFERENCES CỦA USER ---
+        user_prefs_context = ""
+        if 'user_id' in session:
+            db = database.get_db()
+            user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+            if user and user['preferences']:
+                prefs = json.loads(user['preferences'])
+                vibe_map = {
+                    'healing': '🌿 Chữa lành (yên tĩnh, spa)',
+                    'adventure': '🎒 Khám phá (hoạt động ngoài trời)',
+                    'luxury': '💎 Sang chảnh (5 sao)',
+                    'business': '💼 Công tác'
+                }
+                user_prefs_context = f"""
+                THÔNG TIN SỞ THÍCH CỦA USER:
+                - Phong cách: {vibe_map.get(prefs.get('vibe'), prefs.get('vibe', 'N/A'))}
+                - Đi cùng: {prefs.get('companion', 'N/A')}
+                - Ngân sách: {prefs.get('budget', 'N/A')}
+                
+                LƯU Ý: Khi tư vấn, hãy nhấn mạnh các điểm phù hợp với sở thích của user.
+                Ví dụ: Nếu user thích "healing" và khách sạn có Spa -> nhấn mạnh Spa.
+                """
+
         current_price = dynamic_context.get('price', 'N/A')
         check_in = dynamic_context.get('check_in', 'N/A')
         check_out = dynamic_context.get('check_out', 'N/A')
@@ -408,7 +821,8 @@ def hotel_chat():
             f"You are a helpful AI assistant for hotel booking. Answer user questions based on this hotel data:\n"
             f"Price: {current_price} (Dates: {check_in}-{check_out}).\n"
             f"{hotel_data_str}\n"
-            f"Reply in Vietnamese."
+            f"{user_prefs_context}"
+            f"Reply in Vietnamese, friendly and personalized based on user preferences if available."
         )
         prompt = f"{system_instruction}\n\nUser: {user_message}"
 
@@ -465,25 +879,21 @@ def history():
         
     return render_template('history.html', history_hotels=history_list)
 
-# --- START BIG UPDATE (SMART CHATBOT CONCIERGE) ---
-
 @app.route('/api/get_chat_history', methods=['GET'])
 def get_chat_history():
-    """Trả về lịch sử chat hiện tại trong session để hiển thị lại khi F5"""
     if 'chat_history' not in session:
         session['chat_history'] = []
     return jsonify(session['chat_history'])
 
 @app.route('/api/clear_chat', methods=['POST'])
 def clear_chat():
-    """Xóa lịch sử chat để bắt đầu lại"""
     session.pop('chat_history', None)
     return jsonify({"status": "cleared"})
 
 @app.route('/api/chat_search', methods=['POST'])
 def api_chat_search():
     """
-    API Chatbot thông minh (Tích hợp Code 1 & 2):
+    API Chatbot thông minh
     - Logic Prompt tối ưu: Phân loại Chat/Search, chuẩn hóa amenities, xử lý logic fallback City.
     - Tối ưu Session: Chỉ lưu danh sách khách sạn rút gọn (Lite) vào lịch sử để tránh lỗi tràn cookie.
     """
@@ -498,7 +908,6 @@ def api_chat_search():
     
     history = session['chat_history']
     
-    # --- XỬ LÝ LỊCH SỬ (Từ Code 1 & 2) ---
     # Lấy context lịch sử (6 tin gần nhất)
     recent_history = history[-6:] 
     history_text = ""
@@ -510,10 +919,53 @@ def api_chat_search():
             content = "[Đã hiển thị danh sách khách sạn]"
         history_text += f"{role}: {content}\n"
 
+    # --- LẤY PREFERENCES CỦA USER (NẾU CÓ) ---
+    user_prefs = None
+    if 'user_id' in session:
+        db = database.get_db()
+        user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+        if user and user['preferences']:
+            user_prefs = json.loads(user['preferences'])
+    
+    # Tạo context preferences cho prompt
+    prefs_context = ""
+    if user_prefs:
+        vibe_map = {
+            'healing': '🌿 Chữa lành (yên tĩnh, spa, thiên nhiên)',
+            'adventure': '🎒 Khám phá (hoạt động ngoài trời, thể thao)',
+            'luxury': '💎 Sang chảnh (5 sao, dịch vụ cao cấp)',
+            'business': '💼 Công tác (Wi-Fi tốt, vị trí trung tâm)'
+        }
+        companion_map = {
+            'solo': 'Một mình',
+            'couple': 'Cặp đôi',
+            'family': 'Gia đình',
+            'friends': 'Nhóm bạn'
+        }
+        budget_map = {
+            'low': '< 500k/đêm',
+            'mid': '500k - 2tr/đêm',
+            'high': '> 2tr/đêm'
+        }
+        
+        prefs_context = f"""
+    THÔNG TIN SỞ THÍCH CỦA USER (Ưu tiên sử dụng khi user không chỉ định rõ):
+    - Phong cách: {vibe_map.get(user_prefs.get('vibe'), user_prefs.get('vibe', 'N/A'))}
+    - Đi cùng: {companion_map.get(user_prefs.get('companion'), user_prefs.get('companion', 'N/A'))}
+    - Ngân sách: {budget_map.get(user_prefs.get('budget'), user_prefs.get('budget', 'N/A'))}
+    
+    LƯU Ý: Khi user tìm kiếm mà KHÔNG chỉ định amenities/price, hãy TỰ ĐỘNG thêm vào dựa trên preferences:
+    - Vibe "healing" -> amenities: ["Spa", "Mountain View"] hoặc tương tự
+    - Vibe "adventure" -> amenities: ["Fitness centre", "Pool"]
+    - Vibe "luxury" -> rating: "4-5", amenities: ["Pool", "Fitness centre"]
+    - Companion "family" -> amenities: ["Child-friendly", "Pool"]
+    - Budget "high" -> price_range: "2000000+"
+    - Budget "low" -> price_range: "0-500000"
+    """
+
     gemini_api_key = os.getenv('GEMINI_API_KEY')
     client = genai.Client(api_key=gemini_api_key)
 
-    # --- PROMPT (Sử dụng bản NÂNG CẤP từ Code 1) ---
     prompt = f"""
     Bạn là LigmaStay AI - Trợ lý đặt phòng khách sạn thông minh tại Việt Nam.
 
@@ -530,6 +982,8 @@ def api_chat_search():
       "amenities": ["Pool", "Free Wi-Fi", ...] (Mảng String, các từ khóa tiếng Anh: 'Pool', 'Fitness centre', 'Pet-friendly', 'Child-friendly', 'Free Wi-Fi', 'Air-conditioned') hoặc null,
       "reply_text": "Câu trả lời tiếng Việt"
     }}
+
+    {prefs_context}
 
     LỊCH SỬ HỘI THOẠI:
     {history_text}
@@ -601,15 +1055,59 @@ def api_chat_search():
                  session.modified = True
                  return jsonify({"type": "chat", "reply_text": reply})
 
+            # --- TỰ ĐỘNG THÊM PREFERENCES NẾU USER KHÔNG CHỈ ĐỊNH RÕ ---
+            price_range = parsed.get('price_range')
+            rating = parsed.get('rating')
+            amenities = parsed.get('amenities') or []
+            
+            # Nếu user có preferences và chưa chỉ định rõ, tự động thêm
+            if user_prefs:
+                # Thêm price_range từ preferences nếu chưa có
+                if not price_range:
+                    budget = user_prefs.get('budget')
+                    if budget == 'low':
+                        price_range = '0-500000'
+                    elif budget == 'mid':
+                        price_range = '1000000-2000000'
+                    elif budget == 'high':
+                        price_range = '2000000+'
+                
+                # Thêm rating từ vibe nếu chưa có
+                if not rating:
+                    vibe = user_prefs.get('vibe')
+                    if vibe == 'luxury':
+                        rating = '4-5'
+                
+                # Thêm amenities từ preferences nếu chưa có hoặc ít
+                if len(amenities) == 0:
+                    vibe = user_prefs.get('vibe')
+                    companion = user_prefs.get('companion')
+                    
+                    if vibe == 'healing':
+                        amenities.extend(['Pool'])  # Có thể thêm Spa nếu API hỗ trợ
+                    elif vibe == 'adventure':
+                        amenities.extend(['Fitness centre', 'Pool'])
+                    elif vibe == 'luxury':
+                        amenities.extend(['Pool', 'Fitness centre'])
+                    
+                    if companion == 'family':
+                        if 'Child-friendly' not in amenities:
+                            amenities.append('Child-friendly')
+                        if 'Pool' not in amenities:
+                            amenities.append('Pool')
+                    elif companion == 'couple':
+                        if 'Pool' not in amenities:
+                            amenities.append('Pool')
+
             # Gọi SerpAPI
             serp_api_key = os.getenv("SERPAPI_KEY")
             search_api = HotelSearchAPI(serp_api_key)
             
             hotels = search_api.search_hotels(
                 city, 
-                parsed.get('price_range'), 
-                parsed.get('rating'), 
-                parsed.get('amenities')
+                price_range, 
+                rating, 
+                amenities if len(amenities) > 0 else None
             )
             
             # --- TỐI ƯU SESSION (Quan trọng từ Code 2) ---
@@ -667,7 +1165,112 @@ def api_chat_search():
             "type": "chat",
             "reply_text": "Xin lỗi, server đang bận xíu. Bạn thử lại sau nhé!"
         })
+    
+# API Lưu sở thích từ Modal (Ngay trang Home - index.html)
+@app.route('/api/update_preferences', methods=['POST'])
+def update_preferences():
+    # 1. Kiểm tra đăng nhập
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        # 2. Lấy dữ liệu từ Frontend gửi lên (companion, vibe, budget)
+        data = request.get_json()
+        
+        # 3. Chuyển thành chuỗi JSON để lưu vào cột 'preferences' trong DB
+        prefs_json = json.dumps(data)
+        
+        db = database.get_db()
+        db.execute(
+            "UPDATE users SET preferences = ? WHERE id = ?", 
+            (prefs_json, session['user_id'])
+        )
+        db.commit()
+        
+        return jsonify({'message': 'Success'}), 200
+        
+    except Exception as e:
+        print(f"Update Prefs Error: {e}")
+        return jsonify({'error': str(e)}), 500
 
+# 2. Lấy Match Reason cho Hotel Detail (Async)
+@app.route('/api/get_match_reason', methods=['POST'])
+def get_match_reason_api():
+    if 'user_id' not in session:
+        return jsonify({'match': None})
+        
+    data = request.get_json()
+    property_token = data.get('property_token')
+    hotel_name = data.get('hotel_name')
+    amenities = data.get('amenities', []) # List string
+    
+    db = database.get_db()
+    
+    # Check Cache trong DB trước
+    recent = db.execute("SELECT match_reason FROM recently_viewed WHERE user_id=? AND property_token=?", 
+                       (session['user_id'], property_token)).fetchone()
+    
+    if recent and recent['match_reason']:
+        return jsonify({'match': recent['match_reason']})
+        
+    # Nếu chưa có cache -> Gọi Gemini
+    user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+    if user and user['preferences']:
+        prefs = json.loads(user['preferences'])
+        
+        prompt = f"""
+        User Prefer: {json.dumps(prefs)}. 
+        Hotel: {hotel_name}, Amenities: {str(amenities[:10])}.
+        Task: 
+        1. Calculate match score (0-100%).
+        2. Write ONE short sentence explaining WHY in Vietnamese.
+        Format: "Score|Sentence"
+        """
+        try:
+            gemini_api_key = os.getenv('GEMINI_API_KEY')
+            client = genai.Client(api_key=gemini_api_key)           
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            match_reason = response.text.strip()
+            
+            # Lưu cache để lần sau không phải gọi lại
+            db.execute("UPDATE recently_viewed SET match_reason = ? WHERE user_id=? AND property_token=?", 
+                      (match_reason, session['user_id'], property_token))
+            db.commit()
+            
+            return jsonify({'match': match_reason})
+        except Exception as e:
+            print(f"Match API Error: {e}")
+            return jsonify({'match': None})
+            
+    return jsonify({'match': None})
+
+@app.route('/api/get_home_suggestion', methods=['GET'])
+def get_home_suggestion_api():
+    # 1. Nếu chưa đăng nhập
+    if 'user_id' not in session:
+        return jsonify({'suggestion': None, 'is_logged_in': False})
+    
+    # 2. Nếu đã đăng nhập
+    db = database.get_db()
+    user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+    
+    suggestion = None
+    if user and user['preferences']:
+        try:
+            prefs = json.loads(user['preferences'])
+            recent_city = get_user_recent_city(session['user_id'])
+            suggestion = generate_ai_suggestion(prefs, history_city=recent_city)
+            
+        except Exception as e:
+            print(f"Error generating suggestion: {e}")
+            # Fallback nếu lỗi
+            suggestion = generate_ai_suggestion(prefs)
+            
+    return jsonify({'suggestion': suggestion, 'is_logged_in': True})
+    
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATABASE']):
         with app.app_context():

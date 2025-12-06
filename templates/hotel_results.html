@@ -82,21 +82,48 @@
         <div class="header-section">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div class="mb-3 mb-md-0">
-                    <h4 class="fw-bold mb-1 text-dark">
-                        Kết quả cho: <span class="text-dark">{{ search_params.city if search_params.city else '...' }}</span>
+                    <h4 class="fw-bold mb-2 text-dark">
+                        Kết quả cho: <span class="text-dark">{{ search_params.city }}</span>
                     </h4>
-                    <div class="text-muted small mt-1">
-                        {% if search_params.price_range %}Giá: {{ search_params.price_range }} •{% endif %}
-                        {% if search_params.rating_range %}{{ search_params.rating_range }} Sao •{% endif %}
-                        {% if search_params.amenity %}Tiện nghi: {{ search_params.amenity }} •{% endif %}
-                        <span class="fw-bold text-dark">{{ hotels|length }} khách sạn được tìm thấy</span>
+                    
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        
+                        {% if search_params.price_range %}
+                        <span class="badge {{ 'bg-dark text-white border-0' if 'price' in auto_filled_items else 'bg-light text-dark border' }} fw-normal">
+                            <i class="fas fa-tag me-1 {{ 'text-warning' if 'price' in auto_filled_items else 'text-muted' }}"></i> 
+                            {{ search_params.price_range }} VND
+                            {% if 'price' in auto_filled_items %}<i class="fas fa-magic ms-1 text-warning" title="AI tự chọn cho bạn"></i>{% endif %}
+                        </span>
+                        {% endif %}
+
+                        {% if search_params.rating_range %}
+                        <span class="badge {{ 'bg-dark text-white border-0' if 'rating' in auto_filled_items else 'bg-light text-dark border' }} fw-normal">
+                            <i class="fas fa-star me-1 {{ 'text-warning' if 'rating' in auto_filled_items else 'text-muted' }}"></i> 
+                            {{ search_params.rating_range }} Sao
+                            {% if 'rating' in auto_filled_items %}<i class="fas fa-magic ms-1 text-warning" title="AI tự chọn cho bạn"></i>{% endif %}
+                        </span>
+                        {% endif %}
+
+                        {% if search_params.amenities %}
+                            {% for am in search_params.amenities %}
+                            <span class="badge {{ 'bg-dark text-white border-0' if am in auto_filled_items else 'bg-light text-dark border' }} fw-normal">
+                                {{ am }}
+                                {% if am in auto_filled_items %}
+                                    <i class="fas fa-magic ms-1 text-warning" title="AI tự chọn dựa trên sở thích"></i>
+                                {% endif %}
+                            </span>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <span class="text-muted small ms-2 align-self-center">{{ hotels|length }} kết quả</span>
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 mt-3 mt-md-0">
                     <div class="d-flex align-items-center">
                         <label class="me-2 fw-bold text-muted small text-uppercase">Sắp xếp:</label>
                         <select id="sortSelect" class="form-select form-select-sm shadow-none border-secondary" style="width: 180px;" onchange="sortHotels()">
+                            <option value="ai_match" {% if auto_filled_items or (hotels and hotels[0].is_best_match) %}selected{% endif %}>✨ Gợi ý từ AI</option>
                             <option value="price_asc">Giá: Thấp đến Cao</option>
                             <option value="price_desc">Giá: Cao đến Thấp</option>
                             <option value="rating_desc">Đánh giá cao nhất</option>
@@ -117,17 +144,24 @@
             <p class="text-muted">{{ error }}</p>
             <a href="{{ url_for('home') }}" class="btn btn-dark px-4 rounded-pill">Thử lại</a>
         </div>
-        
+
         {% elif hotels %}
         <div class="row g-4" id="hotelGrid">
             {% for hotel in hotels %}
             <div class="col-lg-4 col-md-6 hotel-item"
-                 data-price="{{ hotel.rate_per_night.extracted_lowest if hotel.rate_per_night and hotel.rate_per_night.extracted_lowest else 99999999 }}" 
-                 data-rating="{{ hotel.overall_rating if hotel.overall_rating else 0 }}"
-                 data-reviews="{{ hotel.reviews if hotel.reviews else 0 }}">
-                 
+                data-price="{{ hotel.rate_per_night.extracted_lowest if hotel.rate_per_night and hotel.rate_per_night.extracted_lowest else 99999999 }}" 
+                data-rating="{{ hotel.overall_rating if hotel.overall_rating else 0 }}"
+                data-reviews="{{ hotel.reviews if hotel.reviews else 0 }}"
+                data-match-score="{{ hotel.match_score if hotel.match_score else 0 }}"> 
+                
                 <div class="hotel-card">
                     <div class="hotel-image" style="background-image: url('{{ hotel.images[0].original_image if hotel.images else 'https://via.placeholder.com/400x300' }}')">
+                        {% if hotel.is_best_match %}
+                        <div class="position-absolute top-0 start-0 bg-dark text-white px-3 py-2 fw-bold shadow-sm" 
+                            style="z-index: 10; border-bottom-right-radius: 16px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2);">
+                            <i class="fas fa-crown text-warning me-1"></i> Top Pick
+                        </div>
+                        {% endif %}
                         <div class="rating-badge">
                             {{ hotel.overall_rating | round(1) if hotel.overall_rating else 'N/A' }} <i class="fas fa-star ms-1"></i>
                         </div>
@@ -135,7 +169,6 @@
                     
                     <div class="hotel-info">
                         <h5 class="hotel-name" title="{{ hotel.name }}">{{ hotel.name }}</h5>
-                        
                         <div class="hotel-stars">
                             {% set stars = hotel.extracted_hotel_class if hotel.extracted_hotel_class else 0 %}
                             {% for i in range(stars) %}<i class="fas fa-star"></i>{% endfor %}
@@ -158,27 +191,15 @@
                                         {{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}
                                     </span>
                                 </div>
-
-                                <button class="btn-favorite" onclick="addToFavorites(this)" 
-                                        data-hotel-info='{{ hotel | tojson | safe }}'>
-                                    <i class="far fa-heart"></i>
-                                </button>
+                                <button class="btn-favorite" onclick="addToFavorites(this)" data-hotel-info='{{ hotel | tojson | safe }}'><i class="far fa-heart"></i></button>
                             </div>
 
                             <div class="form-check mb-2">
-                                <input class="form-check-input compare-checkbox" type="checkbox" 
-                                    id="compare-{{ loop.index }}" 
-                                    value="{{ hotel.property_token }}"
-                                    onchange="handleCompare(this)"
-                                    data-hotel='{{ hotel | tojson | safe }}'> 
-                                <label class="form-check-label small text-muted fw-bold" for="compare-{{ loop.index }}">
-                                    So sánh nơi này
-                                </label>
+                                <input class="form-check-input compare-checkbox" type="checkbox" id="compare-{{ loop.index }}" value="{{ hotel.property_token }}" onchange="handleCompare(this)" data-hotel='{{ hotel | tojson | safe }}'> 
+                                <label class="form-check-label small text-muted fw-bold" for="compare-{{ loop.index }}">So sánh nơi này</label>
                             </div>
 
-                            <a href="{{ url_for('hotel_detail', property_token=hotel.property_token) }}" class="btn btn-view w-100">
-                                Xem chi tiết
-                            </a>
+                            <a href="{{ url_for('hotel_detail', property_token=hotel.property_token) }}" class="btn btn-view w-100">Xem chi tiết</a>
                         </div>
                     </div>
                 </div>
@@ -247,20 +268,39 @@
     <script>
         // --- 1. SORT FUNCTION ---
         function sortHotels() {
-            const sortBy = document.getElementById('sortSelect').value;
+            const select = document.getElementById('sortSelect');
+            if(!select) return;
+            
+            const sortBy = select.value;
             const grid = document.getElementById('hotelGrid');
             if(!grid) return;
+            
+            // Chuyển HTMLCollection sang Array để sort
             const items = Array.from(grid.getElementsByClassName('hotel-item'));
             
             items.sort((a, b) => {
-                const priceA = parseFloat(a.getAttribute('data-price'));
-                const priceB = parseFloat(b.getAttribute('data-price'));
-                const ratingA = parseFloat(a.getAttribute('data-rating'));
-                const ratingB = parseFloat(b.getAttribute('data-rating'));
-                const reviewA = parseFloat(a.getAttribute('data-reviews'));
-                const reviewB = parseFloat(b.getAttribute('data-reviews'));
+                // Helper lấy giá trị an toàn, mặc định là 0 nếu lỗi
+                const getVal = (el, attr) => {
+                    const val = parseFloat(el.getAttribute(attr));
+                    return isNaN(val) ? 0 : val;
+                };
+
+                const priceA = getVal(a, 'data-price');
+                const priceB = getVal(b, 'data-price');
+                const ratingA = getVal(a, 'data-rating');
+                const ratingB = getVal(b, 'data-rating');
+                const reviewA = getVal(a, 'data-reviews');
+                const reviewB = getVal(b, 'data-reviews');
+                const matchA = getVal(a, 'data-match-score'); // Điểm AI
+                const matchB = getVal(b, 'data-match-score');
 
                 switch(sortBy) {
+                    case 'ai_match': 
+                        // Ưu tiên điểm Match cao nhất
+                        if (matchB !== matchA) return matchB - matchA;
+                        // Nếu điểm Match bằng nhau (vd đều là 0), fallback sang Rating cao nhất
+                        return ratingB - ratingA;
+                        
                     case 'price_asc': return priceA - priceB;
                     case 'price_desc': return priceB - priceA;
                     case 'rating_desc': return ratingB - ratingA;
@@ -268,8 +308,19 @@
                     default: return 0;
                 }
             });
-            items.forEach(item => grid.appendChild(item));
+            
+            // Xóa rỗng grid và thêm lại các item đã sắp xếp
+            // (Cách này nhanh hơn là append từng cái vì nó giảm reflow)
+            const fragment = document.createDocumentFragment();
+            items.forEach(item => fragment.appendChild(item));
+            grid.innerHTML = ""; 
+            grid.appendChild(fragment);
         }
+
+        // Tự động gọi sort khi load trang để đảm bảo đúng thứ tự ban đầu
+        document.addEventListener('DOMContentLoaded', () => {
+            sortHotels();
+        });
 
         // --- 2. COMPARE LOGIC ---
         let compareList = [];
@@ -277,10 +328,10 @@
         function handleCompare(checkbox) {
             const hotelData = JSON.parse(checkbox.getAttribute('data-hotel'));
             if (checkbox.checked) {
-                if (compareList.length >= 2) {
+                if (compareList.length >= 3) {
                     // Dùng Toast tiếng Việt nếu có hàm showToast
-                    if(window.showToast) window.showToast("Chỉ so sánh tối đa 2 khách sạn.", "error");
-                    else alert("Chỉ so sánh tối đa 2 khách sạn.");
+                    if(window.showToast) window.showToast("Chỉ so sánh tối đa 3 khách sạn.", "error");
+                    else alert("Chỉ so sánh tối đa 3 khách sạn.");
                     
                     checkbox.checked = false;
                     return;
@@ -296,7 +347,7 @@
             const bar = document.getElementById('compareBar');
             const countSpan = document.getElementById('compareCount');
             const previewArea = document.getElementById('comparePreviewArea');
-            countSpan.innerText = `${compareList.length}/2 đã chọn`;
+            countSpan.innerText = `${compareList.length}/3 đã chọn`;
             
             let htmlContent = '';
             compareList.forEach((hotel, index) => {
@@ -319,67 +370,131 @@
         }
 
         function showCompareModal() {
+            // 1. Validate: Cần ít nhất 2 khách sạn
             if (compareList.length < 2) { 
-                if(window.showToast) window.showToast("Vui lòng chọn 2 khách sạn để so sánh.", "error");
-                else alert("Vui lòng chọn 2 khách sạn để so sánh.");
+                if(window.showToast) window.showToast("Vui lòng chọn ít nhất 2 khách sạn để so sánh.", "error");
+                else alert("Vui lòng chọn ít nhất 2 khách sạn.");
                 return; 
             }
             
             const table = document.getElementById('compareTable');
             const area = document.getElementById('aiAnalysisArea');
-            area.innerHTML = ''; // Reset AI area
+            area.innerHTML = ''; // Reset vùng AI suggestion
 
+            // 2. Lấy dữ liệu an toàn
             const h1 = compareList[0]; 
             const h2 = compareList[1];
+            const h3 = compareList[2] || null; // Nếu không có h3 thì là null
             
+            // 3. Helper Functions (Hàm hỗ trợ hiển thị)
             const renderCheck = (cond) => cond ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-muted opacity-25"></i>';
+            
+            // Hàm check tiện nghi an toàn (xử lý cả String lẫn Object)
             const hasAmenity = (hotel, key) => {
-                if (!hotel.amenities) return false;
-                return hotel.amenities.some(a => (typeof a === 'string' ? a : a.name).toLowerCase().includes(key.toLowerCase()));
+                if (!hotel || !hotel.amenities) return false;
+                return hotel.amenities.some(a => {
+                    // Amenities có thể là String ("Pool") hoặc Object ({name: "Pool"})
+                    const name = (typeof a === 'string') ? a : (a.name || '');
+                    return name.toLowerCase().includes(key.toLowerCase());
+                });
             };
 
-            table.innerHTML = `
+            // Hàm lấy ảnh an toàn
+            const getImg = (h) => (h.images && h.images.length > 0) ? h.images[0].original_image : 'https://via.placeholder.com/400x300';
+            
+            // Hàm lấy giá an toàn
+            const getPrice = (h) => (h.rate_per_night && h.rate_per_night.lowest) ? h.rate_per_night.lowest : 'Liên hệ';
+
+            // 4. Xây dựng HTML
+            // Lưu ý: Các đoạn ${h3 ? ... : ''} sẽ chỉ render cột thứ 3 nếu h3 tồn tại
+            
+            let html = `
                 <thead>
                     <tr>
-                        <th class="bg-light-header" style="width: 20%">Tiêu chí</th>
-                        <th style="width:40%">${h1.name}</th>
-                        <th style="width:40%">${h2.name}</th>
+                        <th class="bg-light-header" style="width: 15%">Tiêu chí</th>
+                        <th style="width: ${h3 ? '28%' : '42%'}">${h1.name}</th>
+                        <th style="width: ${h3 ? '28%' : '42%'}">${h2.name}</th>
+                        ${h3 ? `<th style="width: 28%">${h3.name}</th>` : ''}
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Hình ảnh</td>
-                        <td><img src="${h1.images[0].original_image}" class="cmp-img"></td>
-                        <td><img src="${h2.images[0].original_image}" class="cmp-img"></td>
+                        <td><img src="${getImg(h1)}" class="cmp-img"></td>
+                        <td><img src="${getImg(h2)}" class="cmp-img"></td>
+                        ${h3 ? `<td><img src="${getImg(h3)}" class="cmp-img"></td>` : ''}
                     </tr>
+                    
                     <tr>
-                        <td class="fw-bold">Giá</td>
-                        <td class="cmp-price">${h1.rate_per_night.lowest}</td>
-                        <td class="cmp-price">${h2.rate_per_night.lowest}</td>
+                        <td class="fw-bold">Giá/đêm</td>
+                        <td class="cmp-price">${getPrice(h1)}</td>
+                        <td class="cmp-price">${getPrice(h2)}</td>
+                        ${h3 ? `<td class="cmp-price">${getPrice(h3)}</td>` : ''}
                     </tr>
+                    
                     <tr>
                         <td>Đánh giá</td>
-                        <td><span class="badge bg-dark">${h1.overall_rating}/5</span> <br><small class="text-muted">${h1.reviews || 0} reviews</small></td>
-                        <td><span class="badge bg-dark">${h2.overall_rating}/5</span> <br><small class="text-muted">${h2.reviews || 0} reviews</small></td>
+                        <td>
+                            <span class="badge bg-dark">${h1.overall_rating || 'N/A'}/5</span>
+                            <div class="small text-muted mt-1">${h1.reviews || 0} reviews</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-dark">${h2.overall_rating || 'N/A'}/5</span>
+                            <div class="small text-muted mt-1">${h2.reviews || 0} reviews</div>
+                        </td>
+                        ${h3 ? `
+                        <td>
+                            <span class="badge bg-dark">${h3.overall_rating || 'N/A'}/5</span>
+                            <div class="small text-muted mt-1">${h3.reviews || 0} reviews</div>
+                        </td>` : ''}
                     </tr>
+                    
                     <tr>
                         <td>Hạng sao</td>
                         <td class="text-warning">${'<i class="fas fa-star"></i>'.repeat(h1.extracted_hotel_class || 0)}</td>
                         <td class="text-warning">${'<i class="fas fa-star"></i>'.repeat(h2.extracted_hotel_class || 0)}</td>
+                        ${h3 ? `<td class="text-warning">${'<i class="fas fa-star"></i>'.repeat(h3.extracted_hotel_class || 0)}</td>` : ''}
                     </tr>
-                    <tr class="bg-light"><td colspan="3" class="fw-bold text-start ps-3 text-uppercase small text-muted">Tiện nghi</td></tr>
-                    <tr><td>Bể bơi</td><td>${renderCheck(hasAmenity(h1, 'Pool'))}</td><td>${renderCheck(hasAmenity(h2, 'Pool'))}</td></tr>
-                    <tr><td>Bữa sáng</td><td>${renderCheck(hasAmenity(h1, 'Breakfast'))}</td><td>${renderCheck(hasAmenity(h2, 'Breakfast'))}</td></tr>
-                    <tr><td>Wi-Fi Free</td><td>${renderCheck(hasAmenity(h1, 'Wi-Fi') || hasAmenity(h1, 'Wifi'))}</td><td>${renderCheck(hasAmenity(h2, 'Wi-Fi') || hasAmenity(h2, 'Wifi'))}</td></tr>
-                    <tr><td>Gym/Fitness</td><td>${renderCheck(hasAmenity(h1, 'Gym') || hasAmenity(h1, 'Fitness'))}</td><td>${renderCheck(hasAmenity(h2, 'Gym') || hasAmenity(h2, 'Fitness'))}</td></tr>
                     
+                    <tr class="bg-light">
+                        <td colspan="${h3 ? 4 : 3}" class="fw-bold text-start ps-3 text-uppercase small text-muted">Tiện nghi nổi bật</td>
+                    </tr>
+            `;
+
+            // Danh sách tiện nghi cần check
+            const amenitiesList = [
+                { key: 'Pool', label: 'Bể bơi' },
+                { key: 'Breakfast', label: 'Bữa sáng' },
+                { key: 'Wi-Fi', label: 'Wi-Fi' },
+                { key: 'Gym', label: 'Gym/Fitness' },
+                { key: 'Spa', label: 'Spa & Massage' },
+                { key: 'Bar', label: 'Bar/Lounge' }
+            ];
+
+            // Loop qua từng tiện nghi để tạo dòng
+            amenitiesList.forEach(am => {
+                html += `
+                    <tr>
+                        <td>${am.label}</td>
+                        <td>${renderCheck(hasAmenity(h1, am.key) || hasAmenity(h1, am.key.replace(' ', '-')))}</td>
+                        <td>${renderCheck(hasAmenity(h2, am.key) || hasAmenity(h2, am.key.replace(' ', '-')))}</td>
+                        ${h3 ? `<td>${renderCheck(hasAmenity(h3, am.key) || hasAmenity(h3, am.key.replace(' ', '-')))}</td>` : ''}
+                    </tr>
+                `;
+            });
+
+            // Nút xem chi tiết cuối cùng
+            html += `
                     <tr>
                         <td></td>
                         <td><a href="/hotel/${h1.property_token}" class="btn btn-dark w-100 btn-sm">Xem chi tiết</a></td>
                         <td><a href="/hotel/${h2.property_token}" class="btn btn-dark w-100 btn-sm">Xem chi tiết</a></td>
+                        ${h3 ? `<td><a href="/hotel/${h3.property_token}" class="btn btn-dark w-100 btn-sm">Xem chi tiết</a></td>` : ''}
                     </tr>
                 </tbody>
             `;
+
+            table.innerHTML = html;
             new bootstrap.Modal(document.getElementById('compareModal')).show();
         }
 

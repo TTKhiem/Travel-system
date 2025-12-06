@@ -89,6 +89,149 @@
             color: #dc3545;
             font-size: 0.9rem;
         }
+        
+        /* --- LIGMASTAY PREMIUM CHATBOT (MAX SIZE & CENTER FIX) --- */
+    
+        /* Nút tròn mở chat */
+        #chatToggleBtn {
+            position: fixed; bottom: 30px; right: 30px; 
+            width: 65px; height: 65px;
+            border-radius: 50%; 
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: white; border: none;
+            z-index: 1040; /* Cao hơn navbar mặc định của BS5 */
+            font-size: 26px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        #chatToggleBtn:hover { transform: scale(1.1) rotate(15deg); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+
+        /* Khung Chat Mặc Định */
+        #aiChatBox {
+            display: none; 
+            position: fixed; 
+            bottom: 110px; right: 30px;
+            width: 380px; height: 600px; 
+            background: #fff; 
+            border-radius: 24px;
+            z-index: 1050; /* Cực cao để đè mọi thứ */
+            flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* === TRẠNG THÁI MỞ RỘNG (MAX SIZE & CENTERED) === */
+        #aiChatBox.expanded {
+            /* Kích thước "Khổng lồ" */
+            width: 90vw;  /* 90% chiều ngang màn hình */
+            height: 85vh; /* 85% chiều cao màn hình */
+            
+            /* Căn giữa màn hình tuyệt đối */
+            bottom: 50% !important; 
+            right: 50% !important;
+            transform: translate(50%, 50%) !important;
+            
+            border-radius: 24px;
+            
+            /* Hiệu ứng làm tối nền (Backdrop) bằng Box Shadow khổng lồ */
+            box-shadow: 0 10px 50px rgba(0,0,0,0.2), 0 0 0 100vmax rgba(0, 0, 0, 0.6);
+            z-index: 9999; /* Đè lên tất cả, kể cả modal hay navbar */
+        }
+
+        /* Header Chat */
+        .chat-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 18px 25px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            display: flex; justify-content: space-between; align-items: center;
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 20;
+        }
+
+        /* Nội dung tin nhắn */
+        #chatContent {
+            flex: 1; 
+            padding: 90px 25px 100px 25px; /* Padding để nội dung không bị che bởi header/input */
+            overflow-y: auto; 
+            display: flex; flex-direction: column;
+            background: #f8f9fc;
+            scroll-behavior: smooth;
+        }
+
+        /* Bong bóng Chat User */
+        .msg-user { 
+            align-self: flex-end; 
+            background: #000; color: white; 
+            padding: 14px 20px; 
+            border-radius: 20px 20px 4px 20px; 
+            max-width: 75%; margin-bottom: 20px; font-size: 1rem; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: slideInRight 0.3s ease-out;
+            line-height: 1.5;
+        }
+
+        /* Bong bóng Chat Bot */
+        .msg-bot { 
+            align-self: flex-start; 
+            background: #fff; color: #1e293b; 
+            padding: 18px; 
+            border-radius: 20px 20px 20px 4px; 
+            max-width: 85%; margin-bottom: 20px; font-size: 1rem; 
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            animation: slideInLeft 0.3s ease-out;
+            line-height: 1.6;
+        }
+
+        /* Vùng nhập liệu (Floating) */
+        .chat-input-area {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 25px;
+            background: linear-gradient(to top, rgba(255,255,255,1) 85%, rgba(255,255,255,0));
+            z-index: 20;
+            display: flex; justify-content: center; /* Căn giữa input khi mở rộng */
+        }
+        
+        .input-wrapper {
+            background: white; border-radius: 50px;
+            display: flex; align-items: center;
+            padding: 6px 6px 6px 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            transition: 0.3s;
+            width: 100%; max-width: 900px; /* Giới hạn chiều rộng input khi full screen cho đẹp */
+        }
+        .input-wrapper:focus-within { border-color: #000; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+        
+        #chatInput { border: none; background: transparent; flex: 1; outline: none; font-size: 1rem; padding: 12px 0; }
+        #sendChatBtn {
+            width: 50px; height: 50px; border-radius: 50%; background: #000; color: white; border: none;
+            transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        #sendChatBtn:hover { transform: scale(1.1); background: #333; }
+
+        /* Thẻ khách sạn nhỏ */
+        .mini-hotel-card {
+            display: flex; background: white; border-radius: 16px; overflow: hidden;
+            border: 1px solid #f1f5f9; margin-top: 15px; transition: 0.2s; text-decoration: none; color: inherit;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .mini-hotel-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: #000; }
+        .mini-img { width: 120px; height: 120px; object-fit: cover; } /* Ảnh to hơn */
+        .mini-info { padding: 15px 20px; display: flex; flex-direction: column; justify-content: center; width: calc(100% - 120px); }
+        .mini-name { font-size: 1rem; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
+
+        /* Animations */
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: #adb5bd; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; margin: 0 2px; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        
     </style>
 {% endblock %}
 
@@ -144,15 +287,39 @@
         {% endif %}
 
         <div class="row">
+            <div id="matchReasonBox" class="alert d-flex align-items-center border-0 mt-2 py-2 
+                {{ 'bg-success bg-opacity-10' if match_reason else 'bg-light' }}" 
+                style="{{ 'display: block;' if match_reason else 'display: none;' }}">
+                
+                <div id="matchLoading" class="w-100" style="{{ 'display: none;' if match_reason else 'display: block;' }}">
+                    <small class="text-muted fw-bold">
+                        <i class="fas fa-circle-notch fa-spin text-primary"></i> AI đang phân tích độ phù hợp...
+                    </small>
+                </div>
+
+                <div id="matchContent" class="d-flex align-items-center w-100" 
+                    style="{{ 'display: flex;' if match_reason else 'display: none;' }}">
+                    
+                    {% if match_reason %}
+                        {% set parts = match_reason.split('|') %}
+                        <span class="badge bg-success me-2 fs-6" id="matchScore">
+                            {{ parts[0] if parts|length > 0 else '??' }}% MATCH
+                        </span>
+                        <small class="fw-bold text-success-emphasis" id="matchText">
+                            {{ parts[1] if parts|length > 1 else match_reason }}
+                        </small>
+                    {% else %}
+                        <span class="badge bg-success me-2 fs-6" id="matchScore"></span>
+                        <small class="fw-bold text-success-emphasis" id="matchText"></small>
+                    {% endif %}
+                </div>
+            </div>  
+
             <div class="col-lg-8">
                 
                 <div class="content-card position-relative">
                     <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2">
                         <h3 class="section-title mb-0 border-0 p-0">Giới thiệu</h3>
-                        
-                        <button id="openChatBtn" class="btn btn-primary rounded-pill shadow-sm px-4">
-                            <i class="fas fa-sparkles text-warning me-2"></i> Hỏi AI về nơi này
-                        </button>
                     </div>
 
                     <div class="description-content">
@@ -442,156 +609,244 @@
                 </div>
             </div>
         </div>
-        
-        <div id="chatWidget" class="card shadow" style="display:none; position: fixed; bottom: 80px; right: 20px; width: 350px; z-index: 1000; border-radius: 15px;">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 15px 15px 0 0;">
-                <strong><i class="fas fa-robot"></i> Trợ lý ảo</strong>
-                <button id="closeChatBtn" class="btn btn-sm text-white"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="chatMessages" class="card-body bg-light" style="height: 300px; overflow-y: auto;">
-                <div class="text-center text-muted small mt-4">
-                    Bạn có thể hỏi về:<br>
-                    "Khách sạn có bể bơi không?"<br>
-                    "Giờ check-in là mấy giờ?"<br>
-                    "Cách Hồ Gươm bao xa?"
+
+        {% endif %} 
+    </div>
+
+    <button id="chatToggleBtn">
+        <i class="fas fa-comment-dots"></i>
+    </button>
+
+    <div id="aiChatBox">
+        <div class="chat-header">
+            <div class="d-flex align-items-center">
+                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div style="line-height: 1.2;">
+                    <h6 class="mb-0 fw-bold text-dark">AI Concierge</h6>
+                    <small class="text-success" style="font-size: 0.75rem;">● Đang hỗ trợ bạn</small>
                 </div>
             </div>
-            <div class="card-footer bg-white">
-                <div class="input-group">
-                    <input id="chatInput" type="text" class="form-control" placeholder="Nhập câu hỏi...">
-                    <button id="sendChatBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
-                </div>
+            <div>
+                <button id="expandChatBtn" class="btn btn-sm btn-light rounded-circle me-1 text-muted" title="Mở rộng/Thu nhỏ" style="width: 32px; height: 32px;">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+                <button id="clearChatBtn" class="btn btn-sm btn-light rounded-circle me-1 text-muted" title="Xóa lịch sử" style="width: 32px; height: 32px;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <button id="closeChatBtn" class="btn btn-sm btn-light rounded-circle text-muted" style="width: 32px; height: 32px;">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
 
-        {% endif %} 
+        <div id="chatContent">
+            </div>
+
+        <div class="chat-input-area">
+            <div class="input-wrapper" style="box-shadow: none; border: 1px solid #e2e8f0;">
+                <input type="text" id="chatInput" placeholder="Hỏi về khách sạn này..." autocomplete="off">
+                <button id="sendChatBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
 {% block scripts %}
     <script>
         (function(){
-            const chatWidget = document.getElementById('chatWidget');
-            const openBtn = document.getElementById('openChatBtn');
-            const closeBtn = document.getElementById('closeChatBtn');
-            const sendBtn = document.getElementById('sendChatBtn');
+            const chatBtn = document.getElementById('chatToggleBtn');
+            const chatBox = document.getElementById('aiChatBox');
+            const closeChat = document.getElementById('closeChatBtn');
+            const clearChat = document.getElementById('clearChatBtn');   // Mới
+            const expandChat = document.getElementById('expandChatBtn'); // Mới
             const input = document.getElementById('chatInput');
-            const messages = document.getElementById('chatMessages');
+            const sendBtn = document.getElementById('sendChatBtn');
+            const content = document.getElementById('chatContent');
 
-            // Hàm hiển thị tin nhắn lên màn hình
-            function appendMessage(text, role){
-                const wrapper = document.createElement('div');
-                wrapper.className = role === 'user' ? 'text-end mb-3' : 'text-start mb-3';
+            let isExpanded = false; // Trạng thái mở rộng
+
+            // --- HIỆU ỨNG UI MỞ/ĐÓNG ---
+            chatBtn.onclick = () => {
+                chatBox.style.display = 'flex';
+                // Animation
+                setTimeout(() => {
+                    chatBox.style.opacity = '1';
+                    chatBox.style.transform = 'translateY(0) scale(1)';
+                }, 10);
+                chatBtn.style.transform = 'scale(0) rotate(180deg)'; // Hiệu ứng nút biến mất
+                input.focus();
+            };
+
+            function closeChatBox() {
+                chatBox.style.display = 'none';
+                chatBtn.style.transform = 'scale(1) rotate(0deg)';
+                if(isExpanded) toggleExpand(); // Thu nhỏ lại nếu đang phóng to
+            }
+            closeChat.onclick = closeChatBox;
+
+            // --- LOGIC MỞ RỘNG (MỚI) ---
+            function toggleExpand() {
+                isExpanded = !isExpanded;
+                chatBox.classList.toggle('expanded');
                 
-                const bubble = document.createElement('div');
-                // Style khác nhau cho user (xanh) và bot (trắng xám)
-                bubble.className = role === 'user' 
-                    ? 'd-inline-block p-2 px-3 bg-primary text-white rounded-3' 
-                    : 'd-inline-block p-2 px-3 bg-light border text-dark rounded-3 shadow-sm';
-                
-                bubble.style.maxWidth = '85%';
-                bubble.style.textAlign = 'left';
-                
-                // Xử lý xuống dòng cho đẹp nếu AI trả về văn bản dài
-                bubble.style.whiteSpace = 'pre-wrap'; 
-                bubble.textContent = text;
-                
-                wrapper.appendChild(bubble);
-                messages.appendChild(wrapper);
-                
-                // Tự động cuộn xuống tin nhắn mới nhất
-                messages.scrollTop = messages.scrollHeight;
+                const icon = expandChat.querySelector('i');
+                if (isExpanded) {
+                    icon.classList.remove('fa-expand-alt');
+                    icon.classList.add('fa-compress-alt');
+                } else {
+                    icon.classList.remove('fa-compress-alt');
+                    icon.classList.add('fa-expand-alt');
+                }
+            }
+            expandChat.onclick = toggleExpand;
+
+            // --- LOGIC XÓA CHAT (MỚI) ---
+            clearChat.onclick = () => {
+                if(confirm("Xóa cuộc hội thoại hiện tại?")) {
+                    content.innerHTML = '';
+                    // Reset lại lời chào
+                    triggerProactiveGreeting();
+                }
+            };
+
+            // --- HÀM RENDER TIN NHẮN ---
+            function appendMsg(text, role) {
+                const div = document.createElement('div');
+                div.className = role === 'user' ? 'msg-user' : 'msg-bot';
+                div.innerHTML = text; 
+                content.appendChild(div);
+                content.scrollTop = content.scrollHeight;
             }
 
-            // Hàm gửi tin nhắn (Xử lý chính)
-            async function sendMessage(){
-                const text = (input.value || '').trim();
+            // --- LOGIC CHÀO CHỦ ĐỘNG ---
+            function triggerProactiveGreeting() {
+                const userVibe = "{{ user.preferences_dict.vibe if user and user.preferences_dict else '' }}";
+                let greeting = "👋 Chào bạn! Bạn thấy khách sạn {{ hotel.name }} thế nào?";
+
+                if(userVibe.includes('healing')) greeting = "🌿 Không gian ở đây rất yên tĩnh, bạn có muốn xem thêm ảnh Spa không?";
+                else if(userVibe.includes('family')) greeting = "👨‍👩‍👧‍👦 Chỗ này có phòng gia đình rộng lắm, bạn cần mình check giá giường phụ không?";
+                else if(userVibe.includes('luxury')) greeting = "💎 Dịch vụ ở đây chuẩn 5 sao. Bạn cần hỗ trợ đặt phòng VIP chứ?";
+
+                appendMsg(`<strong>AI Concierge:</strong><br>${greeting}`, 'bot');
+            }
+
+            // Gọi lời chào khi load trang (delay nhẹ)
+            setTimeout(() => {
+                if(content.innerHTML.trim() === '') triggerProactiveGreeting();
+                // Tự động mở chat sau 5s nếu chưa mở (như cũ)
+                if(chatBox.style.display === 'none' || chatBox.style.display === '') {
+                    chatBox.style.display = 'flex';
+                    chatBtn.style.transform = 'scale(0)';
+                }
+            }, 5000);
+
+            // --- GỬI TIN NHẮN ---
+            async function sendMessage() {
+                const text = input.value.trim();
                 if(!text) return;
 
-                // 1. Hiện tin nhắn của User ngay lập tức
-                appendMessage(text, 'user');
+                appendMsg(text, 'user');
                 input.value = '';
-                sendBtn.disabled = true; // Khóa nút gửi để tránh spam
-                
-                // Hiển thị trạng thái "Đang gõ..." (Optional - cho mượt)
+
+                // Loading
                 const loadingId = 'loading-' + Date.now();
-                const loadingWrapper = document.createElement('div');
-                loadingWrapper.className = 'text-start mb-2 small text-muted fst-italic';
-                loadingWrapper.id = loadingId;
-                loadingWrapper.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> AI đang trả lời...';
-                messages.appendChild(loadingWrapper);
-                messages.scrollTop = messages.scrollHeight;
+                const loader = document.createElement('div');
+                loader.className = 'msg-bot text-muted fst-italic';
+                loader.id = loadingId;
+                loader.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang liên hệ lễ tân AI...';
+                content.appendChild(loader);
+                content.scrollTop = content.scrollHeight;
 
                 try {
-                    // Lấy dữ liệu từ Template Jinja2 để gửi kèm request
-                    const hotelToken = "{{ hotel.property_token }}";
-                    const currentPrice = "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}";
-
-                    // 2. Gọi API Backend (Real-time)
                     const resp = await fetch('/api/hotel_chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            message: text, 
-                            property_token: hotelToken,
-                            // Gửi kèm ngữ cảnh động (Dynamic Context)
-                            dynamic_context: { 
-                                price: currentPrice,
+                        body: JSON.stringify({
+                            message: text,
+                            property_token: "{{ hotel.property_token }}",
+                            hotel_fallback: { name: "{{ hotel.name }}", address: "{{ hotel.address }}" },
+                            dynamic_context: {
+                                price: "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}",
                                 check_in: "{{ hotel.search_context.check_in if hotel.search_context else '' }}",
                                 check_out: "{{ hotel.search_context.check_out if hotel.search_context else '' }}"
-                            },
-                            // Fallback phòng khi Database chưa kịp cache
-                            hotel_fallback: { 
-                                name: "{{ hotel.name }}", 
-                                address: "{{ hotel.address }}" 
                             }
                         })
                     });
 
                     const data = await resp.json();
-                    
-                    // Xóa trạng thái "Đang gõ..."
-                    const loader = document.getElementById(loadingId);
-                    if(loader) loader.remove();
+                    document.getElementById(loadingId).remove();
 
-                    // 3. Hiện phản hồi từ Gemini
-                    if(data.reply){
-                        appendMessage(data.reply, 'bot');
+                    if (data.reply) {
+                        appendMsg(data.reply, 'bot');
                     } else {
-                        appendMessage("Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.", 'bot');
+                        appendMsg("Xin lỗi, mình đang gặp chút trục trặc.", 'bot');
                     }
 
-                } catch(err){
-                    console.error("Chat Error:", err);
-                    // Xóa loader nếu lỗi
-                    const loader = document.getElementById(loadingId);
-                    if(loader) loader.remove();
-                    
-                    appendMessage('Lỗi kết nối mạng. Vui lòng kiểm tra lại.', 'bot');
-                } finally {
-                    sendBtn.disabled = false;
-                    input.focus();
+                } catch (e) {
+                    console.error(e);
+                    if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+                    appendMsg("Lỗi kết nối mạng.", 'bot');
                 }
             }
 
-            // Các sự kiện click/enter
-            if(openBtn) openBtn.onclick = () => { 
-                chatWidget.style.display = 'block'; 
-                // Scroll xuống cuối khi mở box
-                messages.scrollTop = messages.scrollHeight;
-                input.focus(); 
-            };
-            
-            if(closeBtn) closeBtn.onclick = () => chatWidget.style.display = 'none';
-            
-            if(sendBtn) sendBtn.onclick = sendMessage;
-            
-            if(input) input.onkeydown = (e) => { 
-                if(e.key === 'Enter') sendMessage(); 
-            };
+            sendBtn.onclick = sendMessage;
+            input.onkeydown = (e) => { if(e.key === 'Enter') sendMessage(); };
         })();
 
         document.addEventListener("DOMContentLoaded", async function() {
+        {% if session.get('user_id') %}
+        
+        // KIỂM TRA: Nếu Server đã gửi match_reason xuống rồi thì KHÔNG làm gì cả
+        // Biến 'hasCachedReason' sẽ là true nếu match_reason không rỗng
+        const hasCachedReason = {{ 'true' if match_reason else 'false' }};
+        
+        if (!hasCachedReason) {
+            // === CHỈ GỌI API KHI CHƯA CÓ CACHE ===
+            const matchBox = document.getElementById('matchReasonBox');
+            matchBox.style.display = 'block'; // Hiện khung loading
+            
+            try {
+                const resp = await fetch('/api/get_match_reason', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        property_token: "{{ hotel.property_token }}",
+                        hotel_name: "{{ hotel.name }}",
+                        amenities: [] 
+                    })
+                });
+                
+                const data = await resp.json();
+                
+                if (data.match) {
+                    const parts = data.match.split('|');
+                    const score = parts[0] || '??';
+                    const text = parts[1] || data.match;
+                    
+                    document.getElementById('matchScore').innerText = `${score}% MATCH`;
+                    document.getElementById('matchText').innerText = text;
+                    
+                    // Đổi style từ Loading sang Success
+                    matchBox.classList.remove('bg-light');
+                    matchBox.classList.add('bg-success', 'bg-opacity-10');
+                    
+                    document.getElementById('matchLoading').style.display = 'none';
+                    document.getElementById('matchContent').style.display = 'flex';
+                } else {
+                    matchBox.style.display = 'none';
+                }
+            } catch (e) {
+                console.error(e);
+                matchBox.style.display = 'none';
+            }
+        } else {
+            console.log("Using cached AI match result from server.");
+        }
+    {% endif %}
             const summaryBox = document.getElementById('aiSummaryBox');
             const summaryContent = document.getElementById('aiSummaryContent');
             const propertyToken = "{{ hotel.property_token }}";

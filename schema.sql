@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT,       
     email TEXT,           
     phone TEXT,           
-    address TEXT,         
+    address TEXT,
+    preferences TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -27,7 +28,8 @@ CREATE TABLE IF NOT EXISTS hotel_cache (
 
 CREATE TABLE IF NOT EXISTS user_reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    property_token TEXT NOT NULL,       
+    property_token TEXT NOT NULL,
+    review_summaries TEXT,       
     username TEXT NOT NULL,            
     rating INTEGER NOT NULL,            
     comment TEXT,                      
@@ -39,7 +41,14 @@ CREATE TABLE IF NOT EXISTS recently_viewed (
     user_id INTEGER NOT NULL,
     property_token TEXT NOT NULL,
     preview_data TEXT NOT NULL,
+    match_reason TEXT,
     visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, property_token),
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS review_summaries (
+    property_token TEXT PRIMARY KEY,
+    summary_content TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
