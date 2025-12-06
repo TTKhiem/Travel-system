@@ -52,3 +52,12 @@ CREATE TABLE IF NOT EXISTS review_summaries (
     summary_content TEXT,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE TABLE IF NOT EXISTS hotel_itineraries (
+    property_token TEXT,
+    vibe TEXT,
+    itinerary_json TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (property_token, vibe)
+);
