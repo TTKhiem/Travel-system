@@ -1270,9 +1270,105 @@ def get_home_suggestion_api():
             suggestion = generate_ai_suggestion(prefs)
             
     return jsonify({'suggestion': suggestion, 'is_logged_in': True})
+
+def clean_json_text(text):
+    """Làm sạch chuỗi JSON trả về từ AI (xóa markdown ```json)"""
+    text = text.strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```json|^```|```$", "", text, flags=re.MULTILINE)
+    return text.strip()
+
+@app.route('/api/generate_itinerary', methods=['POST'])
+def generate_itinerary():
+    try:
+        data = request.get_json()
+        token = data.get('property_token')
+        hotel_name = data.get('hotel_name')
+        address = data.get('address')
+        
+        # 1. Xác định Vibe của user (Nếu chưa login thì mặc định là 'adventure')
+        vibe = 'adventure' 
+        if 'user_id' in session:
+            db = database.get_db()
+            user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+            if user and user['preferences']:
+                prefs = json.loads(user['preferences'])
+                vibe = prefs.get('vibe', 'adventure')
+        
+        # 2. Kiểm tra Cache (Tiết kiệm tiền API & Tăng tốc độ)
+        db = database.get_db()
+        cached = db.execute(
+            "SELECT itinerary_json FROM hotel_itineraries WHERE property_token=? AND vibe=?", 
+            (token, vibe)
+        ).fetchone()
+        
+        if cached:
+            print(f"🎯 Trip Genie: Hit Cache for {token} - {vibe}")
+            return jsonify(json.loads(cached['itinerary_json']))
+
+        # 3. Nếu chưa có Cache -> Gọi Gemini AI
+        print(f"🤖 Trip Genie: Calling AI for {token} - {vibe}")
+        
+        vibe_desc = {
+            'healing': 'thư giãn, yên tĩnh, spa, thiên nhiên, không xô bồ',
+            'adventure': 'khám phá, vận động, trải nghiệm địa phương độc lạ',
+            'luxury': 'sang trọng, check-in đẳng cấp, fine dining, dịch vụ 5 sao',
+            'business': 'tiện lợi, cafe làm việc, thư giãn nhẹ nhàng buổi tối'
+        }
+        user_vibe_detail = vibe_desc.get(vibe, 'cân bằng')
+
+        prompt = f"""
+        Đóng vai một hướng dẫn viên du lịch địa phương sành sỏi (Trip Genie).
+        
+        THÔNG TIN:
+        - Khách sạn xuất phát: {hotel_name}
+        - Địa chỉ: {address}
+        - Phong cách khách du lịch (Vibe): "{vibe}" (Ưu tiên: {user_vibe_detail}).
+        
+        NHIỆM VỤ:
+        Hãy lập một lịch trình tham quan **1 ngày** (Sáng, Trưa, Chiều, Tối) bắt đầu từ khách sạn này.
+        Các địa điểm gợi ý phải **GẦN** khách sạn đó và phù hợp chặt chẽ với Vibe của khách.
+        
+        YÊU CẦU OUTPUT JSON (Không viết thêm gì ngoài JSON):
+        {{
+            "morning": {{ "time": "08:00 - 11:00", "activity": "Tên hoạt động/Địa điểm", "desc": "Mô tả ngắn tại sao nơi này hợp vibe", "icon": "fa-coffee" }},
+            "noon": {{ "time": "11:30 - 13:00", "activity": "Ăn trưa tại...", "desc": "Mô tả món ăn/không gian", "icon": "fa-utensils" }},
+            "afternoon": {{ "time": "14:00 - 17:00", "activity": "...", "desc": "...", "icon": "fa-camera" }},
+            "evening": {{ "time": "18:00 - 21:00", "activity": "...", "desc": "...", "icon": "fa-glass-cheers" }}
+        }}
+        Lưu ý: Icon là class của FontAwesome (ví dụ: fa-coffee, fa-tree). Ngôn ngữ: Tiếng Việt.
+        """
+
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        client = genai.Client(api_key=gemini_api_key)
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+        
+        json_str = clean_json_text(response.text)
+        result_json = json.loads(json_str)
+        
+        # 4. Lưu vào Cache
+        db.execute(
+            "INSERT OR REPLACE INTO hotel_itineraries (property_token, vibe, itinerary_json) VALUES (?, ?, ?)", 
+            (token, vibe, json_str)
+        )
+        db.commit()
+        
+        return jsonify(result_json)
+
+    except Exception as e:
+        print(f"Trip Genie Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# --- END ADDITION FOR TRIP GENIE ---
+
     
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATABASE']):
         with app.app_context():
             database.init_db()
     app.run(debug=True)
+
