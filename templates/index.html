@@ -291,6 +291,23 @@
     .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
     @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
+    /* --- MOOD SEARCH STYLES (NEW) --- */
+    .btn-mood {
+        background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+        color: #fff; border: none; font-weight: 700;
+        box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4);
+        transition: all 0.3s;
+    }
+    .btn-mood:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 154, 158, 0.6); color: white; }
+
+    .upload-area {
+        border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px;
+        text-align: center; cursor: pointer; transition: 0.2s; background: #f8fafc;
+    }
+    .upload-area:hover { border-color: #ff9a9e; background: #fff5f5; }
+    .upload-area.active { border-color: #ff9a9e; background: #fff; }
+    .preview-img { max-height: 200px; width: 100%; object-fit: contain; border-radius: 12px; display: none; margin-top: 15px; }
+
 </style>
 {% endblock %}
 
@@ -312,7 +329,7 @@
                                 <div class="d-flex align-items-center mb-1">
                                     <h6 class="fw-bold mb-0 text-dark me-2" id="aiTitle"></h6>
                                     
-                                    <!-- NÚT CHỈNH SỬA (MỚI THÊM) -->
+                                    <!-- NÚT CHỈNH SỬA -->
                                     <button class="btn btn-sm btn-light border rounded-circle text-muted" 
                                             style="width: 24px; height: 24px; padding: 0;" 
                                             onclick="reopenSurvey()" 
@@ -429,9 +446,15 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-12">
-                                <button type="submit" class="btn-search-hero w-100">Tìm kiếm</button>
+                            
+                            <!-- CỤM NÚT SEARCH MỚI (BAO GỒM MOOD SEARCH) -->
+                            <div class="col-lg-2 col-md-12 d-flex gap-2">
+                                <button type="submit" class="btn-search-hero flex-grow-1">Tìm</button>
+                                <button type="button" class="btn btn-search-hero btn-mood" style="width: 55px; padding: 0;" onclick="openMoodModal()" title="Tìm theo tâm trạng/ảnh">
+                                    <i class="fas fa-camera"></i>
+                                </button>
                             </div>
+                            
                         </div>
                     </form>
                 </div>
@@ -440,7 +463,7 @@
     </section>
 
     {% if user %}
-    <!-- ĐÃ SỬA: Modal luôn tồn tại trong DOM nếu đã đăng nhập, chỉ ẩn đi -->
+    <!-- SURVEY MODAL -->
     <div class="modal fade" id="surveyModal" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -448,7 +471,6 @@
                     <div>
                          <div class="d-flex justify-content-between w-100">
                             <h4 class="fw-bold mb-1">✨ Cập nhật sở thích</h4>
-                            <!-- Thêm nút đóng để dùng khi mở lại -->
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <p class="text-muted small mb-0">AI sẽ gợi ý lại dựa trên lựa chọn mới của bạn.</p>
@@ -693,6 +715,54 @@
         </div>
     </div>
     <!-- ================== AI CHAT UI END ================== -->
+
+    <!-- MOOD SEARCH MODAL (MỚI) -->
+    <div class="modal fade" id="moodModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold"><i class="fas fa-magic text-warning me-2"></i>Mood Search</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">Bạn đang cảm thấy thế nào? Hoặc tải lên một bức ảnh "vibe" bạn muốn, AI sẽ tìm nơi phù hợp.</p>
+                    
+                    <form id="moodForm">
+                        <div class="mb-3">
+                            <textarea class="form-control bg-light border-0 rounded-3 p-3" id="moodText" name="mood_text" rows="2" placeholder="Ví dụ: Tôi muốn đi trốn, nơi nào đó yên tĩnh và có mưa..."></textarea>
+                        </div>
+                        
+                        <div class="upload-area" id="dropZone">
+                            <input type="file" name="mood_image" id="moodImage" accept="image/*" hidden>
+                            <div id="uploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                <div class="small fw-bold text-muted">Chạm để tải ảnh lên (Optional)</div>
+                            </div>
+                            <img id="imagePreview" class="preview-img">
+                        </div>
+
+                        <div id="moodLoading" class="text-center mt-3" style="display: none;">
+                            <div class="spinner-border text-warning" role="status"></div>
+                            <div class="small text-muted mt-2 fst-italic">AI đang cảm nhận "vibe" của bạn...</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-dark w-100 rounded-pill py-2 fw-bold" onclick="submitMoodSearch()">
+                        Phân tích & Tìm phòng 🔮
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORM ẨN ĐỂ REDIRECT -->
+    <form id="hiddenSearchForm" action="{{ url_for('api_filter') }}" method="POST" style="display: none;">
+        <input type="hidden" name="city" id="h_city">
+        <input type="hidden" name="price_range" id="h_price">
+        <input type="hidden" name="rating" value="4-5">
+    </form>
+
 {% endblock %}
 
 {% block scripts %}
@@ -709,7 +779,7 @@
         }
     }
 
-    // --- LOGIC MỚI: Mở lại Survey & Auto Open ---
+    // --- LOGIC: Mở lại Survey & Auto Open ---
     function reopenSurvey() {
         const modalEl = document.getElementById('surveyModal');
         if(modalEl) {
@@ -720,7 +790,6 @@
         }
     }
 
-    // Chỉ tự động bật Modal khi người dùng CHƯA CÓ preferences
     {% if user and not user.preferences %}
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
@@ -995,5 +1064,130 @@
 
     sendBtn.onclick = handleChat;
     input.onkeydown = (e) => { if(e.key === 'Enter') handleChat(); }
+
+    // --- MOOD SEARCH LOGIC (NEW) ---
+    function openMoodModal() {
+        new bootstrap.Modal(document.getElementById('moodModal')).show();
+    }
+
+    // Xử lý Upload ảnh preview
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('moodImage');
+    const preview = document.getElementById('imagePreview');
+    const placeholder = document.getElementById('uploadPlaceholder');
+
+    dropZone.onclick = () => fileInput.click();
+
+    fileInput.onchange = function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    
+
+    async function submitMoodSearch() {
+        const text = document.getElementById('moodText').value;
+        const file = fileInput.files[0];
+        const modalBody = document.querySelector('#moodModal .modal-body');
+        const modalFooter = document.querySelector('#moodModal .modal-footer');
+
+        if (!text && !file) {
+            // Thay alert bằng hiệu ứng rung lắc input hoặc thông báo nhỏ (ở đây dùng alert tạm cho validation)
+            alert("Hãy nhập tâm trạng hoặc chọn một bức ảnh nhé!"); 
+            return;
+        }
+
+        // 1. UI Loading: Ẩn nút, hiện loading
+        document.getElementById('moodLoading').style.display = 'block';
+        if(modalFooter) modalFooter.style.display = 'none'; // Ẩn nút submit cũ đi
+        
+        const formData = new FormData();
+        formData.append('mood_text', text);
+        if (file) formData.append('mood_image', file);
+
+        try {
+            const resp = await fetch('/api/mood_search', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+
+            if (data.error) {
+                alert(data.error);
+                document.getElementById('moodLoading').style.display = 'none';
+                if(modalFooter) modalFooter.style.display = 'block'; // Hiện lại nút nếu lỗi
+                return;
+            }
+
+            // --- 2. HIỂN THỊ KẾT QUẢ ĐẸP (Thay thế nội dung Modal) ---
+            // Lấy ảnh user up lên hoặc ảnh mặc định nếu chỉ dùng text
+            const displayImg = preview.src && preview.style.display !== 'none' 
+                ? preview.src 
+                : 'https://cdn-icons-png.flaticon.com/512/2953/2953363.png'; // Icon vali du lịch cute
+
+            modalBody.innerHTML = `
+                <div class="text-center py-3 animate__animated animate__fadeIn">
+                    <div class="mb-4 position-relative d-inline-block">
+                        <img src="${displayImg}" 
+                             style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 4px solid white;">
+                        <div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 35px; height: 35px; border: 3px solid white;">
+                            <i class="fas fa-check small"></i>
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-muted small text-uppercase fw-bold ls-1 mb-2">AI Gợi ý điểm đến</h5>
+                    <h2 class="fw-bold text-dark mb-3">${data.city}</h2>
+                    
+                    <div class="bg-light p-3 rounded-4 mb-4 mx-2">
+                        <p class="mb-0 text-secondary fst-italic">
+                            <i class="fas fa-quote-left text-muted opacity-25 me-2"></i>
+                            ${data.explanation}
+                            <i class="fas fa-quote-right text-muted opacity-25 ms-2"></i>
+                        </p>
+                    </div>
+
+                    <button id="btnGoMoodResult" class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow-lg transform-scale">
+                        Khám phá ${data.city} ngay 🚀
+                    </button>
+                </div>
+            `;
+
+            // 3. Gắn sự kiện click cho nút mới để chuyển trang
+            document.getElementById('btnGoMoodResult').onclick = function() {
+                // Hiệu ứng loading trên nút
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang chuyển hướng...';
+                
+                const hiddenForm = document.getElementById('hiddenSearchForm');
+                document.getElementById('h_city').value = data.city;
+                if(data.price_range) document.getElementById('h_price').value = data.price_range;
+
+                if (data.amenities && Array.isArray(data.amenities)) {
+                    data.amenities.forEach(am => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'amenities';
+                        input.value = am;
+                        hiddenForm.appendChild(input);
+                    });
+                }
+                hiddenForm.submit();
+            };
+
+        } catch (e) {
+            console.error(e);
+            alert("Lỗi kết nối. Thử lại sau nhé.");
+            document.getElementById('moodLoading').style.display = 'none';
+            if(modalFooter) modalFooter.style.display = 'block';
+        }
+    }
 </script>
 {% endblock %}
