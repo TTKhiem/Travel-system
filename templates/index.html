@@ -309,7 +309,18 @@
                                 <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-spinner fa-spin text-primary"></i> AI đang tìm điểm đến phù hợp...</h6>
                             </div>
                             <div id="aiContent" style="display: none;">
-                                <h6 class="fw-bold mb-0 text-dark" id="aiTitle"></h6>
+                                <div class="d-flex align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0 text-dark me-2" id="aiTitle"></h6>
+                                    
+                                    <!-- NÚT CHỈNH SỬA (MỚI THÊM) -->
+                                    <button class="btn btn-sm btn-light border rounded-circle text-muted" 
+                                            style="width: 24px; height: 24px; padding: 0;" 
+                                            onclick="reopenSurvey()" 
+                                            title="Đổi sở thích">
+                                        <i class="fas fa-pencil-alt" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                    
+                                </div>
                                 <p class="mb-0 text-muted small fst-italic" id="aiGreeting"></p>
                             </div>
                             <!-- Banner mời đăng nhập (nếu chưa login) -->
@@ -428,14 +439,19 @@
         </div>
     </section>
 
-    {% if user and not user.preferences %}
+    {% if user %}
+    <!-- ĐÃ SỬA: Modal luôn tồn tại trong DOM nếu đã đăng nhập, chỉ ẩn đi -->
     <div class="modal fade" id="surveyModal" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-0 bg-light p-4 pb-0">
                     <div>
-                        <h4 class="fw-bold mb-1">✨ Chào {{ user.username }},</h4>
-                        <p class="text-muted small mb-0">Giúp LigmaStay hiểu gu của bạn trong 30 giây nhé!</p>
+                         <div class="d-flex justify-content-between w-100">
+                            <h4 class="fw-bold mb-1">✨ Cập nhật sở thích</h4>
+                            <!-- Thêm nút đóng để dùng khi mở lại -->
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <p class="text-muted small mb-0">AI sẽ gợi ý lại dựa trên lựa chọn mới của bạn.</p>
                     </div>
                 </div>
                 <div class="modal-body p-4">
@@ -479,7 +495,7 @@
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" onclick="submitSurvey()" class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow">
-                        Hoàn tất & Tìm phòng ngay 🚀
+                        Lưu thay đổi & Cập nhật gợi ý 🚀
                     </button>
                 </div>
             </div>
@@ -693,12 +709,26 @@
         }
     }
 
+    // --- LOGIC MỚI: Mở lại Survey & Auto Open ---
+    function reopenSurvey() {
+        const modalEl = document.getElementById('surveyModal');
+        if(modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } else {
+            alert("Vui lòng đăng nhập để sử dụng tính năng này!");
+        }
+    }
+
+    // Chỉ tự động bật Modal khi người dùng CHƯA CÓ preferences
     {% if user and not user.preferences %}
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
-            new bootstrap.Modal(document.getElementById('surveyModal')).show();
+            const modalEl = document.getElementById('surveyModal');
+            if(modalEl) new bootstrap.Modal(modalEl).show();
         }, 1000);
     });
+    {% endif %}
 
     async function submitSurvey() {
         const form = document.getElementById('surveyForm');
@@ -716,7 +746,8 @@
             });
             if(resp.ok) {
                 // Đóng modal trước
-                const modal = bootstrap.Modal.getInstance(document.getElementById('surveyModal'));
+                const modalEl = document.getElementById('surveyModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
                 if(modal) modal.hide();
                 
                 // Đợi một chút để modal đóng xong rồi mới reload
@@ -725,15 +756,14 @@
                 }, 300);
             } else {
                 alert('Có lỗi xảy ra, vui lòng thử lại');
-                btn.innerHTML = 'Hoàn tất & Tìm phòng ngay 🚀';
+                btn.innerHTML = 'Lưu thay đổi & Cập nhật gợi ý 🚀';
             }
         } catch(e) { 
             console.error(e);
             alert('Có lỗi xảy ra, vui lòng thử lại');
-            btn.innerHTML = 'Hoàn tất & Tìm phòng ngay 🚀';
+            btn.innerHTML = 'Lưu thay đổi & Cập nhật gợi ý 🚀';
         }
     }
-    {% endif %}
 
     // --- JS CHO CHATBOT (PREMIUM VERSION) ---
     const chatBtn = document.getElementById('chatToggleBtn');
