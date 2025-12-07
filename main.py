@@ -15,6 +15,8 @@ from collections import Counter
 
 from hotel_search import HotelSearchAPI
 import database
+from PIL import Image
+import io
 
 # Load API key lưu trong .env
 load_dotenv()
@@ -1365,10 +1367,71 @@ def generate_itinerary():
 
 # --- END ADDITION FOR TRIP GENIE ---
 
+@app.route('/api/mood_search', methods=['POST'])
+def mood_search():
+    try:
+        # 1. Lấy dữ liệu từ Client
+        mood_text = request.form.get('mood_text', '')
+        image_file = request.files.get('mood_image')
+        
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        client = genai.Client(api_key=gemini_api_key)
+        
+        inputs = []
+        
+        # Prompt định hướng cho AI
+        system_prompt = """
+        Bạn là chuyên gia tâm lý du lịch (Travel Therapist). 
+        Nhiệm vụ: Phân tích tâm trạng/hình ảnh của user để gợi ý điểm đến tại Việt Nam.
+        
+        Logic mapping:
+        - Buồn/Cô đơn/Mưa -> Đà Lạt, Sapa (Vibe: Healing)
+        - Sôi động/Party/Nắng -> Đà Nẵng, Nha Trang, Vũng Tàu (Vibe: Adventure/Luxury)
+        - Yên bình/Biển vắng -> Phú Quốc, Huế (Vibe: Healing/Luxury)
+        
+        Output JSON FORMAT ONLY:
+        {
+            "city": "Tên thành phố (Hà Nội, Đà Nẵng, TP. Hồ Chí Minh, Nha Trang, Đà Lạt, Huế, Sa Pa, Phú Quốc, Vũng Tàu)",
+            "explanation": "Một câu ngắn (tiếng Việt) giải thích tại sao nơi này hợp với mood/ảnh này.",
+            "amenities": ["Pool", "Spa", "Bar"] (Chọn 2-3 tiện nghi tiếng Anh phù hợp mood),
+            "price_range": "..." (Gợi ý mức giá phù hợp mood, ví dụ mood sang chảnh thì giá cao)
+        }
+        """
+        inputs.append(system_prompt)
+        
+        # Nếu có text
+        if mood_text:
+            inputs.append(f"User Mood: {mood_text}")
+            
+        # Nếu có ảnh (Dùng Pillow để đọc ảnh)
+        if image_file:
+            img = Image.open(image_file)
+            inputs.append(img)
+            inputs.append("Analyze the atmosphere and scenery in this image to suggest a destination.")
+
+        # Gọi Gemini Vision (Flash model hỗ trợ cả ảnh và text)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=inputs
+        )
+        
+        json_str = clean_json_text(response.text)
+        result = json.loads(json_str)
+        
+        return jsonify(result)
+
+    except Exception as e:
+        print(f"Mood Search Error: {e}")
+        return jsonify({"error": "AI đang bận suy nghĩ, thử lại nhé!"}), 500
+
+# --- END MOOD SEARCH FEATURE ---
+
     
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATABASE']):
         with app.app_context():
             database.init_db()
     app.run(debug=True)
+
+
 
