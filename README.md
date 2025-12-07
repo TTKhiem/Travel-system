@@ -1,4 +1,4 @@
-# Hotel (Release 1.2) - Personalization Update
+# Hotel (Release 1.3) - Personalization Update + Smart AI
 
 ## IMPORTANT: CHANGELOG (Version 1.2)
 1. Làm khảo sát nhỏ khi người dùng đăng nhập lần đầu (Vibe, Companion, Budget) - **CÓ THỂ SẼ SỬA COMPANION**.
@@ -10,18 +10,23 @@
 7. So sánh **2 hoặc 3** khách sạn
 8. Fixed bugs trong **hotel_search.py**
 
+## 1.3 updates
+1. Thêm **Genie AI** đề xuất lịch trình du lịch tại khách sạn cụ thể (hotel_detail)
+2. Chatbot ở **hotel_ressults** nắm thông tin cơ bản của khách sạn gồm có rating và amenities
+3. Thêm search theo mood của người dùng và **phân tích ảnh** 
+
 ## Cơ chế "Học" của AI
 ### Cơ chế sort theo preferences trong trang kết quả (Có thể improve)
 1. Nếu user thích Luxury và khách sạn >= 4.5 sao: +50 điểm.
 2. Nếu user đi Family và khách sạn có "Child-friendly" hoặc "Pool": +40 điểm.
-3. Nếu user thích Healing và có "Spa/Garden": +40 điểm.
+3. Nếu user thích Healing và có "Spa/Garden": +40 điểm.  
 => Danh sách được sắp xếp lại theo điểm số giảm dần. Khách sạn điểm cao nhất: **is_best_match**.
 ### Cơ chế Passive learning (Có thể improve)
 1. Nếu giá xem khách sạn **3 lần** liên tiếp lớn hơn **1tr8** thì sẽ up vibe lên **luxury**
 2. Học theo **Amenties**:
 - Example: 
 + Tìm từ khóa: spa, yoga, meditation -> Cộng điểm Healing.
-+ Tìm từ khóa: gym, hiking, fitness -> Cộng điểm Adventure.
++ Tìm từ khóa: gym, hiking, fitness -> Cộng điểm Adventure.  
 Điểm của **vibe** nào mà lỡn hơn **4**  thì tự động update vibe của user trong Database.
 ### Cách Chatbot hiểu ngữ cảnh
 - Tự động chèn một đoạn văn bản ẩn (System Prompt) chứa toàn bộ hồ sơ user vào trước câu hỏi: "User này thích Healing, đi Cặp đôi, ngân sách Cao. Hãy tư vấn dựa trên đó".
@@ -76,5 +81,5 @@
 # Notes: Chưa có file .env
 - Tự tạo file ".env" và nhập theo format (Copy paste 2 dòng dưới là đc - tự thay {key}): 
 SERPAPI_KEY = {key}  
-GEMINI_API_KEY = {key}
+GEMINI_API_KEY = {key}  
 APP_SECRET=ligma

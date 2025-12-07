@@ -901,6 +901,7 @@ def api_chat_search():
     """
     data = request.get_json()
     user_msg = data.get('message', '').strip()
+    page_context = data.get('page_context', {}) # Danh sách khách sạn đang xem
     
     if not user_msg:
         return jsonify({"error": "Empty message"}), 400
@@ -928,6 +929,24 @@ def api_chat_search():
         user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
         if user and user['preferences']:
             user_prefs = json.loads(user['preferences'])
+
+    # Lấy dữ liệu khách sạn đang xem và tạo context cho prompt 
+    current_view_context = ""
+    if page_context and page_context.get('hotels'):
+        hotel_list_str = "\n".join([
+            f"- {h['name']}:\n   + Giá: {h['price']}\n   + Đánh giá: {h['rating']}/5\n   + Tiện nghi: {h.get('amenities', 'Không rõ')}"
+            for h in page_context['hotels']
+        ])
+        current_view_context = f"""
+        THÔNG TIN TRANG HIỆN TẠI NGƯỜI DÙNG ĐANG XEM:
+        Người dùng đang đứng ở trang kết quả tìm kiếm. Dưới đây là danh sách các khách sạn đang hiển thị trên màn hình:
+        {hotel_list_str}
+        
+        NHIỆM VỤ:
+        1. So sánh: Nếu user hỏi "cái nào có hồ bơi", "cái nào tiện nghi nhất", hãy DÙNG DỮ LIỆU "Tiện nghi" ở trên để trả lời chính xác.
+        2. Tư vấn giá: Dùng dữ liệu "Giá" để so sánh đắt/rẻ.
+        3. Tuyệt đối không bịa đặt tiện nghi nếu trong danh sách không ghi (hãy nói là "thông tin chưa đề cập").
+        """
     
     # Tạo context preferences cho prompt
     prefs_context = ""
@@ -986,6 +1005,8 @@ def api_chat_search():
     }}
 
     {prefs_context}
+
+    {current_view_context}
 
     LỊCH SỬ HỘI THOẠI:
     {history_text}
@@ -1307,6 +1328,22 @@ def generate_itinerary():
         if cached:
             print(f"🎯 Trip Genie: Hit Cache for {token} - {vibe}")
             return jsonify(json.loads(cached['itinerary_json']))
+        
+        hotel_cache_row = db.execute("SELECT data FROM hotel_cache WHERE token = ?", (token,)).fetchone()
+        
+        # Bổ sung thông tin về nearby_places => Tránh bịa thông tin không có thật
+        real_places_context = ""
+        if hotel_cache_row:
+            hotel_data = json.loads(hotel_cache_row['data'])
+            nearby_list = hotel_data.get('nearby_places', [])
+            
+            # Chỉ lấy khoảng 15 địa điểm đầu tiên để đưa vào prompt (tránh quá dài)
+            if nearby_list:
+                places_str = "\n".join([f"- {p['name']} ({p.get('transportations', [{'duration': 'Gần'}])[0]['duration']})" for p in nearby_list[:15]])
+                real_places_context = f"""
+                DANH SÁCH ĐỊA ĐIỂM CÓ THẬT XUNG QUANH KHÁCH SẠN (Ưu tiên tuyệt đối sử dụng các địa điểm này):
+                {places_str}
+                """
 
         # 3. Nếu chưa có Cache -> Gọi Gemini AI
         print(f"🤖 Trip Genie: Calling AI for {token} - {vibe}")
@@ -1326,6 +1363,13 @@ def generate_itinerary():
         - Khách sạn xuất phát: {hotel_name}
         - Địa chỉ: {address}
         - Phong cách khách du lịch (Vibe): "{vibe}" (Ưu tiên: {user_vibe_detail}).
+
+        {real_places_context}
+        
+        YÊU CẦU QUAN TRỌNG:
+        1. **Độ chính xác**: Ưu tiên chọn các địa điểm từ "DANH SÁCH ĐỊA ĐIỂM CÓ THẬT" ở trên để đảm bảo tính xác thực.
+        2. Nếu danh sách trên không đủ cho lịch trình 1 ngày, bạn có thể gợi ý thêm các địa điểm nổi tiếng khác nhưng PHẢI CHẮC CHẮN nó nằm trong bán kính 5km từ địa chỉ khách sạn.
+        3. Sắp xếp lịch trình hợp lý theo thời gian và khoảng cách di chuyển.
         
         NHIỆM VỤ:
         Hãy lập một lịch trình tham quan **1 ngày** (Sáng, Trưa, Chiều, Tối) bắt đầu từ khách sạn này.
