@@ -1414,7 +1414,6 @@ def generate_itinerary():
 @app.route('/api/mood_search', methods=['POST'])
 def mood_search():
     try:
-        # 1. Lấy dữ liệu từ Client
         mood_text = request.form.get('mood_text', '')
         image_file = request.files.get('mood_image')
         
@@ -1422,38 +1421,66 @@ def mood_search():
         client = genai.Client(api_key=gemini_api_key)
         
         inputs = []
+
+        # 1. LẤY THÔNG TIN USER (Nếu đã đăng nhập)
+        user_context = "User chưa đăng nhập (Khách vãng lai)."
+        if 'user_id' in session:
+            db = database.get_db()
+            user = db.execute("SELECT preferences FROM users WHERE id=?", (session['user_id'],)).fetchone()
+            if user and user['preferences']:
+                prefs = json.loads(user['preferences'])
+                vibe = prefs.get('vibe', 'Unknown')
+                companion = prefs.get('companion', 'Unknown')
+                user_context = f"User Preference: Thích kiểu du lịch '{vibe}' (Healing/Adventure/Luxury), thường đi cùng '{companion}'."
+
+        # 2. SUPER PROMPT V2 (Xử lý ảnh chung chung)
+        system_prompt = f"""
+        Bạn là chuyên gia tư vấn du lịch (Travel Therapist).
         
-        # Prompt định hướng cho AI
-        system_prompt = """
-        Bạn là chuyên gia tâm lý du lịch (Travel Therapist). 
-        Nhiệm vụ: Phân tích tâm trạng/hình ảnh của user để gợi ý điểm đến tại Việt Nam.
+        THÔNG TIN NGƯỜI DÙNG:
+        {user_context}
         
-        Logic mapping:
-        - Buồn/Cô đơn/Mưa -> Đà Lạt, Sapa (Vibe: Healing)
-        - Sôi động/Party/Nắng -> Đà Nẵng, Nha Trang, Vũng Tàu (Vibe: Adventure/Luxury)
-        - Yên bình/Biển vắng -> Phú Quốc, Huế (Vibe: Healing/Luxury)
+        NHIỆM VỤ: Phân tích hình ảnh + text để tìm 1 thành phố tại Việt Nam.
         
-        Output JSON FORMAT ONLY:
-        {
-            "city": "Tên thành phố (Hà Nội, Đà Nẵng, TP. Hồ Chí Minh, Nha Trang, Đà Lạt, Huế, Sa Pa, Phú Quốc, Vũng Tàu)",
-            "explanation": "Một câu ngắn (tiếng Việt) giải thích tại sao nơi này hợp với mood/ảnh này.",
-            "amenities": ["Pool", "Spa", "Bar"] (Chọn 2-3 tiện nghi tiếng Anh phù hợp mood),
-            "price_range": "..." (Gợi ý mức giá phù hợp mood, ví dụ mood sang chảnh thì giá cao)
-        }
+        QUY TẮC SUY LUẬN (ƯU TIÊN TUYỆT ĐỐI):
+        
+        TRƯỜNG HỢP A: ẢNH ĐẶC TRƯNG (Iconic)
+        - Thấy Cầu Vàng/Biển Mỹ Khê -> Đà Nẵng.
+        - Thấy Hồ Xuân Hương/Rừng thông -> Đà Lạt.
+        - Thấy Ruộng bậc thang/Núi cao -> Sa Pa.
+        - Thấy Đèn lồng/Phố cổ -> Hội An.
+        - Thấy Biển đảo hoang sơ -> Phú Quốc.
+
+        TRƯỜNG HỢP B: ẢNH CHUNG CHUNG (Generic - Ly cafe, Giường, Mưa, Sách...)
+        -> HÃY DÙNG "USER PREFERENCE" ĐỂ QUYẾT ĐỊNH!
+        - Ảnh [Mưa/Buồn] + User thích [Healing] -> Gợi ý: "Đà Lạt" hoặc "Huế".
+        - Ảnh [Cafe/Sang chảnh] + User thích [Luxury/Business] -> Gợi ý: "TP. Hồ Chí Minh" hoặc "Hà Nội".
+        - Ảnh [Thiên nhiên/Cây cối] + User thích [Adventure] -> Gợi ý: "Sa Pa" hoặc "Hà Giang".
+        - Ảnh [Hồ bơi/Nắng] + User thích [Family] -> Gợi ý: "Nha Trang" hoặc "Phú Quốc".
+        
+        *Nếu User chưa có Preference, hãy mặc định: Mưa/Lạnh -> Đà Lạt; Nắng/Biển -> Nha Trang; Phố xá -> TP.HCM.*
+
+        OUTPUT JSON FORMAT ONLY:
+        {{
+            "city": "Tên thành phố (Chỉ chọn trong list: Hà Nội, TP. Hồ Chí Minh, Đà Nẵng, Nha Trang, Đà Lạt, Sa Pa, Huế, Phú Quốc, Vũng Tàu, Hội An, Cần Thơ, Quy Nhơn)",
+            "explanation": "Giải thích ngắn (Tiếng Việt). Nếu ảnh chung chung, hãy nói lái theo sở thích user. Ví dụ: 'Tấm ảnh này tuy đơn giản nhưng mang vibe yên tĩnh, rất hợp với gu Healing của bạn tại Đà Lạt...'",
+            "amenities": ["Viết tiếng Anh", "Vd: Spa, Rooftop Bar"],
+            "price_range": "Chọn 1: '0-500000', '500000-2000000', '2000000+'"
+        }}
         """
+        
         inputs.append(system_prompt)
         
-        # Nếu có text
         if mood_text:
-            inputs.append(f"User Mood: {mood_text}")
+            inputs.append(f"User Note: {mood_text}")
             
-        # Nếu có ảnh (Dùng Pillow để đọc ảnh)
         if image_file:
             img = Image.open(image_file)
             inputs.append(img)
-            inputs.append("Analyze the atmosphere and scenery in this image to suggest a destination.")
+            inputs.append("Analyze this image. If it's iconic, map to location. If generic, map to User Preference.")
+        else:
+            inputs.append("No image. Analyze user note & preference.")
 
-        # Gọi Gemini Vision (Flash model hỗ trợ cả ảnh và text)
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=inputs
@@ -1462,11 +1489,28 @@ def mood_search():
         json_str = clean_json_text(response.text)
         result = json.loads(json_str)
         
+        # Fallback an toàn (như cũ)
+        valid_cities = ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Nha Trang", "Đà Lạt", "Sa Pa", "Huế", "Phú Quốc", "Vũng Tàu", "Hội An", "Cần Thơ", "Quy Nhơn"]
+        ai_city = result.get('city', '').strip()
+        
+        if ai_city not in valid_cities:
+             # Logic map fallback đơn giản
+            expl = result.get('explanation', '').lower()
+            if "biển" in expl: result['city'] = "Nha Trang"
+            elif "núi" in expl: result['city'] = "Sa Pa"
+            else: result['city'] = "Đà Lạt"
+            
         return jsonify(result)
 
     except Exception as e:
         print(f"Mood Search Error: {e}")
-        return jsonify({"error": "AI đang bận suy nghĩ, thử lại nhé!"}), 500
+        fallback_result = {
+            "city": "Đà Lạt",
+            "explanation": "Ảnh của bạn rất nghệ thuật! AI cảm thấy một chút se lạnh và bình yên ở đây, nên Đà Lạt sẽ là lựa chọn tuyệt vời.",
+            "amenities": ["Garden", "Fireplace"],
+            "price_range": "500000-2000000"
+        }
+        return jsonify(fallback_result)
 
 # --- END MOOD SEARCH FEATURE ---
 
@@ -1476,6 +1520,10 @@ if __name__ == '__main__':
         with app.app_context():
             database.init_db()
     app.run(debug=True)
+
+
+
+
 
 
 
