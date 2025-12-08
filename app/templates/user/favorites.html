@@ -164,7 +164,7 @@
             <h2 class="page-title mb-0">
                 <i class="fas fa-heart text-danger me-2"></i> Khách sạn đã lưu
             </h2>
-            <a href="{{ url_for('home') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+            <a href="{{ url_for('main.home') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
                 <i class="fas fa-search me-2"></i> Khám phá thêm
             </a>
         </div>
@@ -198,7 +198,7 @@
                                 <div class="price-label">Mỗi đêm</div>
                                 <div class="price-val">{{ fav.price if fav.price else 'Liên hệ' }}</div>
                             </div>
-                            <a href="{{ url_for('hotel_detail', property_token=fav.property_token) }}" class="btn-view">
+                            <a href="{{ url_for('hotel.hotel_detail', property_token=fav.property_token) }}" class="btn-view">
                                 Xem ngay
                             </a>
                         </div>
@@ -218,7 +218,7 @@
                     </div>
                     <h3 class="fw-bold text-dark">Danh sách trống</h3>
                     <p class="text-muted mb-4">Bạn chưa lưu khách sạn nào. Hãy tìm kiếm và thả tim nhé!</p>
-                    <a href="{{ url_for('home') }}" class="btn btn-dark rounded-pill px-5 py-3 fw-bold shadow-lg">
+                    <a href="{{ url_for('main.home') }}" class="btn btn-dark rounded-pill px-5 py-3 fw-bold shadow-lg">
                         Bắt đầu tìm kiếm
                     </a>
                 </div>

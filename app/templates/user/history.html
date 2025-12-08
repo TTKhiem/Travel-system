@@ -42,7 +42,7 @@
             <h2 class="page-title mb-0">
                 <i class="fas fa-history text-primary me-2"></i> Đã xem gần đây
             </h2>
-            <a href="{{ url_for('home') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+            <a href="{{ url_for('main.home') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
                 <i class="fas fa-search me-2"></i> Khám phá thêm
             </a>
         </div>
@@ -64,7 +64,7 @@
 
                         <div class="price-section">
                             <div class="price-val">{{ hotel.price }}</div>
-                            <a href="{{ url_for('hotel_detail', property_token=hotel.property_token) }}" class="btn-view">
+                            <a href="{{ url_for('hotel.hotel_detail', property_token=hotel.property_token) }}" class="btn-view">
                                 Xem lại
                             </a>
                         </div>
@@ -83,7 +83,7 @@
                     </div>
                     <h3 class="fw-bold text-dark">Lịch sử trống</h3>
                     <p class="text-muted mb-4">Bạn chưa xem khách sạn nào. Hãy dạo một vòng nhé!</p>
-                    <a href="{{ url_for('home') }}" class="btn btn-dark rounded-pill px-5 py-3 fw-bold shadow-lg">
+                    <a href="{{ url_for('main.home') }}" class="btn btn-dark rounded-pill px-5 py-3 fw-bold shadow-lg">
                         Bắt đầu tìm kiếm
                     </a>
                 </div>
