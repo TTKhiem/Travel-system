@@ -1,5 +1,6 @@
 # Hotel (Release 1.4): Refactored System Structure
 ## Structure (Version 1.4)
+```
 │   .env
 │   .gitignore
 │   README.md
@@ -36,6 +37,7 @@
         └───user
                 favorites.html
                 history.html
+```
 
 ## IMPORTANT: CHANGELOG (Version 1.2)
 1. Làm khảo sát nhỏ khi người dùng đăng nhập lần đầu (Vibe, Companion, Budget) - **CÓ THỂ SẼ SỬA COMPANION**.
