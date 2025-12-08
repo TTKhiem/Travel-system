@@ -1,4 +1,41 @@
-# Hotel (Release 1.3) - Personalization Update + Smart AI
+# Hotel (Release 1.4): Refactored System Structure
+## Structure (Version 1.4)
+│   .env
+│   .gitignore
+│   README.md
+│   requirements.txt
+│   run.py
+└───app
+    │   database.py
+    │   schema.sql
+    │   utils.py
+    │   __init__.py
+    │
+    ├───blueprints
+    │       api.py
+    │       auth.py
+    │       hotel.py
+    │       main.py
+    │       __init__.py
+    │
+    ├───services
+    │       search_service.py
+    │       __init__.py
+    │
+    └───templates
+        │   base.html
+        │   index.html
+        │
+        ├───auth
+        │       profile.html
+        │
+        ├───hotel
+        │       hotel_detail.html
+        │       hotel_results.html
+        │
+        └───user
+                favorites.html
+                history.html
 
 ## IMPORTANT: CHANGELOG (Version 1.2)
 1. Làm khảo sát nhỏ khi người dùng đăng nhập lần đầu (Vibe, Companion, Budget) - **CÓ THỂ SẼ SỬA COMPANION**.
