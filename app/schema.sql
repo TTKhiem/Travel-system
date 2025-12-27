@@ -20,6 +20,15 @@ CREATE TABLE IF NOT EXISTS favorite_places (
     UNIQUE(user_id, property_token) -- 1 user 1 favorite khach san
 );
 
+CREATE TABLE IF NOT EXISTS search_cache (
+    search_hash TEXT PRIMARY KEY,
+    city TEXT,
+    params_json TEXT,
+    results_json TEXT,      
+    result_count INTEGER,   
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS hotel_cache (
     token TEXT PRIMARY KEY,
     data TEXT NOT NULL,

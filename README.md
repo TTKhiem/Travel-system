@@ -1,124 +1,275 @@
-# Hotel (Release 1.4): Refactored System Structure
-## Structure (Version 1.4)
+# Accomodation Project (Computational Thinking)
+## 📋 Mục Lục
+
+- [Tính Năng Nổi Bật](#-tính-năng-nổi-bật)
+- [Hướng Dẫn Sử Dụng](#-hướng-dẫn-sử-dụng)
+- [Cấu Trúc File](#-cấu-trúc-file)
+- [Công Nghệ Sử Dụng](#-công-nghệ-sử-dụng)
+- [API Keys Cần Thiết](#-api-keys-cần-thiết)
+
+---
+
+## Tính Năng Nổi Bật
+
+### AI-Powered Features
+
+#### 1. **Smart Ranking Engine**
+- Tự động chấm điểm và sắp xếp kết quả tìm kiếm dựa trên độ phù hợp với hồ sơ người dùng
+- Không chỉ sắp xếp theo giá hay đánh giá, mà còn dựa trên sở thích cá nhân
+- Hiển thị lý do cụ thể "Tại sao khách sạn này hợp với bạn" (ví dụ: "90% Match - Vì có Spa yên tĩnh")
+
+#### 2. **AI Chatbot Thông Minh**
+- Chatbot ghi nhớ lịch sử trò chuyện và hiểu rõ sở thích người dùng
+- Tư vấn cá nhân hóa dựa trên hồ sơ người dùng (Vibe, Companion, Budget)
+- Hỗ trợ tìm kiếm bằng ngôn ngữ tự nhiên
+- Phân tích và trích xuất thông tin từ cuộc hội thoại để tìm kiếm chính xác
+
+#### 3. **Auto-Fill Thông Minh**
+- Tự động điền bộ lọc (Price, Stars, Amenities) dựa trên preferences của người dùng
+- Gợi ý địa điểm dựa trên lịch sử xem khách sạn
+- Tự động đề xuất khách sạn phù hợp khi người dùng chưa có lịch sử
+
+#### 4. **Passive Learning System**
+- Tự động học và cập nhật Budget và Vibe của người dùng dựa trên lịch sử xem phòng (sau 3-4 lần xem)
+- Phân tích amenities để cập nhật preferences (ví dụ: spa/yoga → Healing, gym/hiking → Adventure)
+- Cập nhật tự động vibe khi phát hiện pattern trong hành vi người dùng
+
+#### 5. **Genie AI - Đề Xuất Lịch Trình**
+- Tạo lịch trình du lịch cá nhân hóa tại khách sạn cụ thể
+- Dựa trên vibe và sở thích của người dùng
+- Tích hợp trong trang chi tiết khách sạn
+
+#### 6. **AI Tóm Tắt Reviews**
+- Tự động tóm tắt tối đa 20 reviews gần nhất của khách sạn
+- Giúp người dùng nhanh chóng nắm bắt ý kiến của cộng đồng
+
+#### 7. **So Sánh Khách Sạn với AI**
+- So sánh 2-3 khách sạn cùng lúc
+- AI tóm tắt và phân tích điểm mạnh/yếu của từng khách sạn
+
+#### 8. **Phân Tích Ảnh & Search Theo Mood**
+- Tìm kiếm khách sạn dựa trên mood và phân tích hình ảnh
+- Gợi ý khách sạn phù hợp với cảm xúc và mong muốn của người dùng
+
+### Core Features
+
+- **Tìm Kiếm Nâng Cao**: Filter theo địa điểm, mức giá, mức sao, tiện nghi
+- **Hệ Thống Đánh Giá**: Người dùng có thể để lại reviews và ratings
+- **Yêu Thích**: Lưu danh sách khách sạn yêu thích
+- **Lịch Sử Xem**: Theo dõi các khách sạn đã xem
+- **Cache Thông Minh**: Cache kết quả tìm kiếm và thông tin khách sạn (tự động reload sau 5 ngày)
+- **UI/UX Hiện Đại**: Giao diện trực quan, dễ sử dụng
+
+---
+
+
+## Cấu Hình Environment Variables
+
+Tạo file `.env` trong thư mục gốc của project với nội dung:
+
+```env
+SERPAPI_KEY=your_serpapi_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+APP_SECRET=your_secret_key_here
 ```
-│   .env
-│   .gitignore
-│   README.md
-│   requirements.txt
-│   run.py
-└───app
-    │   database.py
-    │   schema.sql
-    │   utils.py
-    │   __init__.py
+
+**Lưu ý**: 
+- Lấy `SERPAPI_KEY` từ [SerpAPI](https://serpapi.com/)
+- Lấy `GEMINI_API_KEY` từ [Google AI Studio](https://makersuite.google.com/app/apikey)
+- `APP_SECRET` có thể là bất kỳ chuỗi ngẫu nhiên nào (dùng để mã hóa session)
+
+---
+
+## 📖 Hướng Dẫn Sử Dụng
+
+### Đăng Ký & Đăng Nhập
+
+1. Truy cập trang chủ và đăng ký tài khoản mới
+2. Đăng nhập lần đầu, bạn sẽ được yêu cầu điền khảo sát nhỏ:
+   - **Vibe**: Phong cách du lịch (Luxury, Adventure, Healing, v.v.)
+   - **Companion**: Đi cùng ai (Cặp đôi, Gia đình, Bạn bè, v.v.)
+   - **Budget**: Ngân sách (Thấp, Trung bình, Cao)
+
+### Tìm Kiếm Khách Sạn
+
+#### Cách 1: Sử Dụng Filter Truyền Thống
+
+1. Chọn **Địa điểm** (bắt buộc)
+2. Tùy chọn: Chọn **Mức giá**, **Mức sao**, **Tiện nghi**
+3. Bật **AI Auto-fill** để hệ thống tự động điền dựa trên preferences
+4. Nhấn "Tìm kiếm"
+
+#### Cách 2: Sử Dụng AI Chatbot
+
+1. Mở chatbot trên trang chủ hoặc trang kết quả
+2. Trò chuyện tự nhiên, ví dụ:
+   - "Tìm khách sạn ở Đà Lạt có bể bơi"
+   - "Khách sạn 4 sao ở Hà Nội giá dưới 2 triệu"
+3. Chatbot sẽ tự động phân tích và tìm kiếm
+
+### Xem Chi Tiết Khách Sạn
+
+- Click vào khách sạn để xem thông tin chi tiết
+- Xem lý do "Tại sao khách sạn này hợp với bạn"
+- Xem AI tóm tắt reviews
+- Sử dụng Genie AI để tạo lịch trình du lịch
+- Thêm vào yêu thích hoặc để lại review
+
+### So Sánh Khách Sạn
+
+1. Trong trang kết quả, chọn 2-3 khách sạn để so sánh
+2. Xem bảng so sánh chi tiết
+3. Đọc AI tóm tắt so sánh để đưa ra quyết định
+
+### Quản Lý Yêu Thích & Lịch Sử
+
+- Xem danh sách yêu thích: Menu → My Favorites
+- Xem lịch sử: Menu → History
+
+---
+
+## Cấu Trúc File
+
+```
+Project/
+│
+├── .env                          # Environment variables (API keys)
+├── .gitignore                    # Git ignore file
+├── README.md                     # File này
+├── requirements.txt              # Python dependencies
+├── run.py                        # Entry point của ứng dụng
+├── user_db.db                    # SQLite database (tự động tạo)
+│
+└── app/                          # Thư mục chính của ứng dụng
     │
-    ├───blueprints
-    │       api.py
-    │       auth.py
-    │       hotel.py
-    │       main.py
-    │       __init__.py
+    ├── __init__.py               # Flask app factory
+    ├── database.py               # Database connection & utilities
+    ├── schema.sql                # Database schema
+    ├── utils.py                  # Utility functions (AI helpers, scoring)
     │
-    ├───services
-    │       search_service.py
-    │       __init__.py
+    ├── blueprints/               # Flask blueprints (routes)
+    │   ├── __init__.py
+    │   ├── api.py                # API endpoints (chatbot, AI features)
+    │   ├── auth.py               # Authentication routes (login, register)
+    │   ├── hotel.py              # Hotel search & detail routes
+    │   └── main.py               # Main routes (home, profile)
     │
-    └───templates
-        │   base.html
-        │   index.html
+    ├── services/                 # Business logic services
+    │   ├── __init__.py
+    │   └── search_service.py     # Hotel search service (SerpAPI integration)
+    │
+    ├── static/                   # Static files (CSS, JS, images)
+    │   ├── css/
+    │   │   ├── base.css          # Base styles
+    │   │   ├── hotel.css         # Hotel page styles
+    │   │   └── index.css         # Home page styles
+    │   │
+    │   └── js/
+    │       ├── base.js           # Base JavaScript utilities
+    │       ├── hotel.js          # Hotel page JavaScript
+    │       └── index.js          # Home page JavaScript
+    │
+    └── templates/                # Jinja2 templates
+        ├── base.html             # Base template
+        ├── index.html            # Home page
         │
-        ├───auth
-        │       profile.html
+        ├── auth/
+        │   └── profile.html      # User profile page
         │
-        ├───hotel
-        │       hotel_detail.html
-        │       hotel_results.html
+        ├── hotel/
+        │   ├── hotel_detail.html # Hotel detail page
+        │   └── hotel_results.html # Search results page
         │
-        └───user
-                favorites.html
-                history.html
+        └── user/
+            ├── favorites.html    # Favorites page
+            └── history.html      # View history page
 ```
 
-## IMPORTANT: CHANGELOG (Version 1.2)
-1. Làm khảo sát nhỏ khi người dùng đăng nhập lần đầu (Vibe, Companion, Budget) - **CÓ THỂ SẼ SỬA COMPANION**.
-2. Smart Ranking Engine: Thêm Filter tự động chấm điểm và sắp xếp lại kết quả tìm kiếm khách sạn dựa trên độ phù hợp với hồ sơ người dùng (thay vì chỉ sắp xếp theo Giá hay Reviews).
-3. Auto-fill bộ lọc **(Price, Stars, Amenities)** khi người dùng để trống (based on **preferences**).
-4. Passive: Tự động học và cập nhật lại Budget và Vibe của người dùng dựa trên lịch sử xem phòng (Khoảng 3-4 lần xem).
-5. Hiển thị lý do cụ thể "Tại sao khách sạn này hợp với bạn" (Ví dụ: "90% Match - Vì có Spa yên tĩnh") trong trang chi tiết.
-6. Chatbot ghi nhớ được lịch sử trò chuyện và biết rõ sở thích người dùng để tư vấn cá nhân hóa.
-7. So sánh **2 hoặc 3** khách sạn
-8. Fixed bugs trong **hotel_search.py**
+### Mô Tả Các Thành Phần Chính
 
-## 1.3 updates
-1. Thêm **Genie AI** đề xuất lịch trình du lịch tại khách sạn cụ thể (hotel_detail)
-2. Chatbot ở **hotel_ressults** nắm thông tin cơ bản của khách sạn gồm có rating và amenities
-3. Thêm search theo mood của người dùng và **phân tích ảnh** 
+#### `app/__init__.py`
+- Khởi tạo Flask application
+- Đăng ký blueprints
+- Cấu hình database và session
 
-## Cơ chế "Học" của AI
-### Cơ chế sort theo preferences trong trang kết quả (Có thể improve)
-1. Nếu user thích Luxury và khách sạn >= 4.5 sao: +50 điểm.
-2. Nếu user đi Family và khách sạn có "Child-friendly" hoặc "Pool": +40 điểm.
-3. Nếu user thích Healing và có "Spa/Garden": +40 điểm.  
-=> Danh sách được sắp xếp lại theo điểm số giảm dần. Khách sạn điểm cao nhất: **is_best_match**.
-### Cơ chế Passive learning (Có thể improve)
-1. Nếu giá xem khách sạn **3 lần** liên tiếp lớn hơn **1tr8** thì sẽ up vibe lên **luxury**
-2. Học theo **Amenties**:
-- Example: 
-+ Tìm từ khóa: spa, yoga, meditation -> Cộng điểm Healing.
-+ Tìm từ khóa: gym, hiking, fitness -> Cộng điểm Adventure.  
-Điểm của **vibe** nào mà lỡn hơn **4**  thì tự động update vibe của user trong Database.
-### Cách Chatbot hiểu ngữ cảnh
-- Tự động chèn một đoạn văn bản ẩn (System Prompt) chứa toàn bộ hồ sơ user vào trước câu hỏi: "User này thích Healing, đi Cặp đôi, ngân sách Cao. Hãy tư vấn dựa trên đó".
-- Lưu lại lịch sử chat (Session) để user có thể hỏi nối tiếp ("Tìm ở Đà Lạt" -> "Có bể bơi không?" -> Chatbot hiểu đang nói về Đà Lạt).
-### Cách mà AI gợi ý trên Filter hoạt động
-1. Lấy 10 khách sạn gần nhất từ **recently_viewed**.
-2. Đếm thành phố nào xuất hiện nhiều nhất trong địa chỉ của các khách sạn đó.
-3. Ưu tiên đưa thành phố đó ra trang chủ
-**Notes: Nếu chưa có thành phố nào được xem trước đó thì sẽ tự gợi ý khách sạn dựa trên preferences của user**
-## Base features
-- API được lưu trong .env (Source tìm hiểu: https://chatgpt.com/share/68fdb9c9-2620-800d-a488-5fe4db254087)
-- Display khách sạn
-- Tất cả chạy theo nhu cầu trong filter gồm: Địa điểm, Mức giá, Mức sao, Tiện nghi
-- AI implemented (**Hỗ trợ trang khách sạn**, **Hỗ trợ so sánh khách sạn**)
-- So sánh khách sạn
-- Reviews của User
+#### `app/database.py`
+- Quản lý kết nối SQLite
+- Các hàm tiện ích cho database operations
 
-## Known issues:
-1. I have skill issue
+#### `app/utils.py`
+- Các hàm AI helper: `calculate_match_score()`, `get_ai_preferences()`, `generate_ai_suggestion()`
+- Xử lý preferences và scoring logic
 
-## Refactored Notes:
-1. Tối ưu lại hệ thống search: 
-- Chỉ sử dụng SerpAPI hoàn toàn, không còn **GeoApify**
-- Không còn xuất file thô local, nạp trực tiếp vào **hotel_results** đối với list khách sạn
-- Vào chi tiết khách sạn sẽ tón thêm request fetch **property_token** để lấy thông tin đầy đủ và nạp vào **database** với field **hotel_cache**
-- Cache khách sạn sẽ được reload nếu được vào lại sau **5 ngày**
-2. Thêm tính năng reviews cho Users và tính năng AI tóm tắt các reviews của Users (Tóm tắt tối đa 20 reviews gần nhất)
-3. Trang details của từng khách sạn đã được sửa lại trực quan hơn
-4. Fixed My Favorites
-5. Remade full UI 
-6. Đã thêm tính năng so sánh ~~2~~ 3 khách sạn (+AI tóm tắt so sánh)
-7. Thêm một trường filter theo **Amenities** và chỉ bắt buộc chọn Location còn lại **Optional** 
-8. Đã fixed được hình ảnh (finally)
+#### `app/blueprints/api.py`
+- API endpoints cho chatbot
+- AI features: tóm tắt reviews, so sánh khách sạn, tạo lịch trình
 
+#### `app/blueprints/hotel.py`
+- Routes cho tìm kiếm và xem chi tiết khách sạn
+- Xử lý filter và ranking
 
-# To be updated: (All finished)
+#### `app/services/search_service.py`
+- Tích hợp với SerpAPI
+- Xử lý tìm kiếm và cache kết quả
 
-# Source tham khảo:
-- SerpAPI: https://serpapi.com/google-hotels-api
-- GeminiAPI (Google Gen AI SDK): https://pypi.org/project/google-genai/
-- Geoapify: https://apidocs.geoapify.com/docs/
-- Track Datetime bằng python: https://www.geeksforgeeks.org/python/python-datetime-module/
-- Thao tác với JSON bằng python: https://docs.python.org/3/library/json.html
-- Misc GPT chat: 
-+ Cách pass value của filter từ map(python): https://chatgpt.com/c/68fc9ac9-6928-8322-906b-6612428a8906
-+ Convert dữ liệu GPS: https://gemini.google.com/share/8c3e3fb26cf6
-+ Chọn API cho phần AI: https://gemini.google.com/share/c6ef28eb4d1a
-+ Tạo .env: https://chatgpt.com/share/68fdb9c9-2620-800d-a488-5fe4db254087
-+ HTML with Flask: https://chatgpt.com/share/68fdb57c-6310-800d-a189-b73775d45a5f
-+ Viết JSON file: https://gemini.google.com/share/b1a2abbedf9a
+#### Database Schema
+- `users`: Thông tin người dùng và preferences
+- `favorite_places`: Khách sạn yêu thích
+- `search_cache`: Cache kết quả tìm kiếm
+- `hotel_cache`: Cache thông tin chi tiết khách sạn
+- `user_reviews`: Reviews của người dùng
+- `recently_viewed`: Lịch sử xem khách sạn
+- `review_summaries`: AI tóm tắt reviews
+- `hotel_itineraries`: Lịch trình du lịch được tạo bởi AI
 
-# Notes: Chưa có file .env
-- Tự tạo file ".env" và nhập theo format (Copy paste 2 dòng dưới là đc - tự thay {key}): 
-SERPAPI_KEY = {key}  
-GEMINI_API_KEY = {key}  
-APP_SECRET=ligma
+## 🛠 Công Nghệ Sử Dụng
+
+### Backend
+- **Flask**: Web framework
+- **SQLite**: Database
+- **Werkzeug**: Security utilities (password hashing)
+
+### AI & APIs
+- **Google Gemini API**: AI chatbot, tóm tắt, so sánh
+- **SerpAPI**: Tìm kiếm khách sạn từ Google Hotels
+
+### Frontend
+- **HTML5/CSS3**: Giao diện người dùng
+- **JavaScript**: Tương tác phía client
+- **Jinja2**: Template engine
+
+### Utilities
+- **python-dotenv**: Quản lý environment variables
+- **Pillow**: Xử lý hình ảnh
+- **pandas**: Xử lý dữ liệu (nếu cần)
+- **requests**: HTTP requests
+
+---
+
+## API Keys Cần Thiết
+
+### 1. SerpAPI Key
+- **Mục đích**: Tìm kiếm khách sạn từ Google Hotels
+- **Lấy key**: [https://serpapi.com/](https://serpapi.com/)
+- **Documentation**: [https://serpapi.com/google-hotels-api](https://serpapi.com/google-hotels-api)
+
+### 2. Gemini API Key
+- **Mục đích**: AI features (chatbot, tóm tắt, so sánh)
+- **Lấy key**: [https://makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey)
+- **Documentation**: [https://pypi.org/project/google-genai/](https://pypi.org/project/google-genai/)
+
+---
+
+## Notes
+
+- Database sẽ tự động được tạo khi chạy ứng dụng lần đầu
+- Cache được tự động reload sau 5 ngày
+- Ứng dụng chạy ở chế độ debug mặc định (có thể tắt trong `run.py`)
+
+---
+
+## Tài Liệu Tham Khảo
+
+- [SerpAPI Documentation](https://serpapi.com/google-hotels-api)
+- [Google Gemini API](https://pypi.org/project/google-genai/)
+- [Flask Documentation](https://flask.palletsprojects.com/)

@@ -6,13 +6,13 @@
 
 {% block head %}
     <style>
-        /* --- CẤU HÌNH GIAO DIỆN (LUXURY THEME) --- */
+        
         body {
-            background-color: #f8f9fa !important; /* Nền xám nhạt hiện đại */
+            background-color: #f8f9fa !important; 
             padding-top: 100px !important;
         }
 
-        /* Ẩn thanh tìm kiếm trên trang này */
+        
         .sticky-search-bar { display: none !important; }
 
         .page-header {
@@ -25,10 +25,10 @@
             font-size: 2rem;
         }
 
-        /* --- CARD STYLE (Đồng bộ với Hotel Results) --- */
+        
         .hotel-card {
             background: #fff;
-            border: 1px solid #f1f5f9; /* Viền siêu mỏng */
+            border: 1px solid #f1f5f9; 
             border-radius: 16px;
             overflow: hidden;
             height: 100%;
@@ -52,7 +52,7 @@
             position: relative;
         }
 
-        /* Nút Xóa Tròn (Góc trên phải) */
+        
         .btn-remove-circle {
             position: absolute;
             top: 15px;
@@ -124,7 +124,7 @@
             color: #94a3b8;
         }
 
-        /* Nút Xem chi tiết (Đen) */
+        
         .btn-view {
             background: #000;
             color: white;
@@ -141,7 +141,7 @@
             transform: translateY(-2px);
         }
 
-        /* Empty State */
+        
         .empty-state {
             background: white;
             border-radius: 24px;
@@ -153,13 +153,11 @@
     </style>
 {% endblock %}
 
-{# --- Block search_bar rỗng --- #}
 {% block search_bar %}{% endblock %}
 
 {% block content %}
     <div class="container pb-5">
         
-        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center page-header">
             <h2 class="page-title mb-0">
                 <i class="fas fa-heart text-danger me-2"></i> Khách sạn đã lưu
@@ -174,14 +172,11 @@
             {% for fav in favorites %}
             <div class="col-lg-3 col-md-6" id="fav-card-{{ fav.property_token }}">
                 <div class="hotel-card animate__animated animate__fadeInUp">
-                    <!-- Nút Xóa -->
                     <button onclick="removeFavItem('{{ fav.property_token }}')" class="btn-remove-circle" title="Xóa khỏi danh sách">
                         <i class="fas fa-times"></i>
                     </button>
 
-                    <!-- Ảnh nền -->
                     <div class="hotel-image" style="background-image: url('{{ fav.image if fav.image else 'https://via.placeholder.com/400x300' }}')">
-                        <!-- Hiệu ứng bóng mờ bên dưới ảnh -->
                         <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);"></div>
                     </div>
                     
@@ -209,7 +204,6 @@
         </div>
         {% else %}
         
-        <!-- Trạng thái trống -->
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="empty-state animate__animated animate__fadeIn">
@@ -241,23 +235,22 @@
             });
 
             if (resp.ok) {
-                // Tìm thẻ Card HTML tương ứng
+
                 const cardCol = document.getElementById('fav-card-' + token);
                 if(cardCol) {
-                    // Hiệu ứng animate.css: bay xuống và mờ đi
+
                     cardCol.classList.add('animate__animated', 'animate__fadeOutDown');
                     
-                    // Đợi hiệu ứng chạy xong mới xóa khỏi DOM
+
                     setTimeout(() => {
                         cardCol.remove();
-                        // Kiểm tra nếu xóa hết thì reload để hiện màn hình Empty State
+
                         const remaining = document.querySelectorAll('[id^="fav-card-"]');
                         if (remaining.length === 0) {
                             location.reload(); 
                         }
-                    }, 500); // 500ms khớp với thời gian animation mặc định
+                    }, 500);
 
-                    // Dùng Toast từ base.html (nếu có)
                     if(window.showToast) {
                         window.showToast("Đã xóa khách sạn khỏi danh sách.", "success");
                     }

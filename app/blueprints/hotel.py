@@ -15,149 +15,145 @@ from flask import (
 
 from .. import database
 from ..services.search_service import HotelSearchAPI
-from ..utils import analyze_vibe_from_amenities
+from ..utils import analyze_vibe_from_amenities, get_ai_preferences, calculate_match_score, generate_search_hash
 
 hotel_bp = Blueprint("hotel", __name__)
 
-
-@hotel_bp.route("/hotel_results", methods=["POST"])
+@hotel_bp.route("/search_handler", methods=["POST"])
 def api_filter():
     if "user_id" not in session:
-        flash("❌ Vui lòng đăng nhập để sử dụng tính năng tìm kiếm!")
+        flash("❌ Vui lòng đăng nhập!")
         return redirect(url_for("main.home"))
 
     city = request.form.get("city")
     if not city:
         flash("Hãy chọn địa điểm")
         return redirect(url_for("main.home"))
-
-    price_range = request.form.get("price_range")
-    rating_range = request.form.get("rating")
+    price = request.form.get("price_range", "")
+    rating = request.form.get("rating", "")
     amenities = request.form.getlist("amenities")
-    auto_filled_items = []
-
+    ai_autofill_raw = request.form.get("ai_autofill", "off")
+    allow_ai_autofill = str(ai_autofill_raw).lower() in ("on", "true", "1", "yes")
+            
+    db = database.get_db()
     user = None
     if "user_id" in session:
-        db = database.get_db()
         user = db.execute(
             "SELECT preferences FROM users WHERE id=?", (session["user_id"],)
         ).fetchone()
 
-        if user and user["preferences"]:
+        if allow_ai_autofill and user and user["preferences"]:
             try:
                 prefs = json.loads(user["preferences"])
                 vibe = prefs.get("vibe", "")
                 budget = prefs.get("budget", "")
                 companion = prefs.get("companion", "")
 
-                if not price_range:
-                    if budget == "low":
-                        price_range = "0-500000"
-                        auto_filled_items.append("price")
-                    elif budget == "mid":
-                        price_range = "500000-2000000"
-                        auto_filled_items.append("price")
-                    else:
-                        price_range = "2000000+"
-                        auto_filled_items.append("price")
-
-                if not rating_range:
-                    if vibe == "luxury":
-                        rating_range = "4-5"
-                        auto_filled_items.append("rating")
-                    else:
-                        rating_range = "3-5"
-                        auto_filled_items.append("rating")
-
+                ai_suggestion = get_ai_preferences(vibe, companion, budget)
+                if not price:
+                    price = ai_suggestion["price_range"]
+                if not rating:
+                    rating = ai_suggestion["rating"]
                 if not amenities:
-                    if vibe == "healing":
-                        amenities.append("Pool")
-                        auto_filled_items.append("Pool")
-                    elif vibe == "adventure":
-                        amenities.append("Fitness centre")
-                        auto_filled_items.append("Fitness centre")
-                    elif companion == "family":
-                        amenities.append("Child-friendly")
-                        auto_filled_items.append("Child-friendly")
-                    elif companion == "couple":
-                        amenities.append("Bar")
-                        auto_filled_items.append("Bar")
-                    else:
-                        amenities.append("Free Wi-Fi")
-                        auto_filled_items.append("Free Wi-Fi")
+                    amenities = ai_suggestion["amenities"]
 
-            except Exception as exc:  # pragma: no cover - defensive logging
+            except Exception as exc: 
                 print(f"Auto-fill Error: {exc}")
 
+    search_hash = generate_search_hash(city, price, rating, amenities)
+
+    cached = db.execute(
+        "SELECT created_at FROM search_cache WHERE search_hash = ?", 
+        (search_hash,)
+    ).fetchone()
+    
+    need_fetch = True
+    if cached:
+        created_at = datetime.strptime(cached["created_at"], "%Y-%m-%d %H:%M:%S")
+        if datetime.now() - created_at < timedelta(hours=24):
+            need_fetch = False 
+
+    if need_fetch:
+        try:
+            serp_api_key = os.getenv("SERPAPI_KEY")
+            search_api = HotelSearchAPI(serp_api_key)
+            results = search_api.search_hotels(city, price, rating, amenities)
+            
+            if results:
+                db.execute(
+                    """INSERT OR REPLACE INTO search_cache 
+                       (search_hash, city, params_json, results_json, created_at) 
+                       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)""",
+                    (
+                        search_hash, 
+                        city,
+                        json.dumps({"city": city, "price": price, "rating": rating, "amenities": amenities}),
+                        json.dumps(results, ensure_ascii=False)
+                    )
+                )
+                db.commit()
+        except Exception as e:
+            print(f"Error fetching new data: {e}")
+            flash("Có lỗi khi tìm kiếm, vui lòng thử lại.")
+            return redirect(url_for("main.home"))
+
+    return redirect(url_for("hotel.display_results", search_hash=search_hash))
+
+@hotel_bp.route("/results/<search_hash>", methods=["GET"])
+def display_results(search_hash):
+    db = database.get_db()
+    row = db.execute(
+        "SELECT results_json, params_json FROM search_cache WHERE search_hash = ?", 
+        (search_hash,)
+    ).fetchone()
+
+    if not row:
+        flash("Kết quả tìm kiếm đã hết hạn hoặc không tồn tại.")
+        return redirect(url_for("main.home"))
+
     try:
-        serp_api_key = os.getenv("SERPAPI_KEY")
-        search_api = HotelSearchAPI(serp_api_key)
-        search_results = search_api.search_hotels(
-            city, price_range, rating_range, amenities
-        )
+        hotels = json.loads(row["results_json"])
+        search_params = json.loads(row["params_json"]) 
+    except:
+        hotels = []
+        search_params = {}
 
-        if search_results and user and user["preferences"]:
-            try:
-                prefs = json.loads(user["preferences"])
-                vibe = prefs.get("vibe", "")
-                companion = prefs.get("companion", "")
+    user = None
+    if "user_id" in session:
+        user = db.execute("SELECT preferences FROM users WHERE id=?", (session["user_id"],)).fetchone()
 
-                for hotel in search_results:
-                    score = 0
-                    am_list = []
-                    raw_ams = hotel.get("amenities", [])
-                    for amenity in raw_ams:
-                        am_name = amenity if isinstance(amenity, str) else amenity.get("name", "")
-                        am_list.append(am_name.lower())
-                    am_str = " ".join(am_list)
+    if hotels and user and user["preferences"]:
+        try:
+            prefs = json.loads(user["preferences"])
+            for hotel in hotels:
+                match_result = calculate_match_score(prefs, hotel)
+                hotel["match_score"] = match_result.get("score", 0)
+            hotels.sort(key=lambda x: x.get("match_score", 0), reverse=True)
+            
+            if hotels and hotels[0].get("match_score", 0) > 0:
+                hotels[0]["is_best_match"] = True
+        except Exception as e:
+            print(f"Ranking error: {e}")
 
-                    rating = hotel.get("overall_rating", 0)
+    favorite_tokens = []
+    if "user_id" in session:
+        fav_rows = db.execute(
+            "SELECT property_token FROM favorite_places WHERE user_id=?", 
+            (session["user_id"],)
+        ).fetchall()
+        favorite_tokens = [row["property_token"] for row in fav_rows]
 
-                    if vibe == "luxury":
-                        if rating >= 4.5:
-                            score += 50
-                        if "pool" in am_str or "spa" in am_str:
-                            score += 20
-                    elif vibe == "healing":
-                        if "spa" in am_str or "garden" in am_str or "pool" in am_str:
-                            score += 40
-                        if "beach" in am_str or "view" in am_str:
-                            score += 20
-                    elif vibe == "adventure":
-                        if "fitness" in am_str or "gym" in am_str:
-                            score += 30
-                    elif vibe == "business":
-                        if "wi-fi" in am_str or "wifi" in am_str or "desk" in am_str:
-                            score += 40
-                    hotel["match_score"] = score
-
-                search_results.sort(key=lambda x: x.get("match_score", 0), reverse=True)
-                if search_results and search_results[0].get("match_score", 0) > 0:
-                    search_results[0]["is_best_match"] = True
-
-            except Exception as exc:  # pragma: no cover - defensive logging
-                print(f"Ranking Error: {exc}")
-
-        return render_template(
-            "hotel/hotel_results.html",
-            hotels=search_results,
-            search_params={
-                "city": city,
-                "price_range": price_range,
-                "rating_range": rating_range,
-                "amenities": amenities,
-            },
-            auto_filled_items=auto_filled_items,
-        )
-
-    except Exception as exc:  # pragma: no cover - defensive logging
-        print(f"Search Process Error: {exc}")
-        return render_template(
-            "hotel/hotel_results.html",
-            hotels=[],
-            error=f"Lỗi: {str(exc)}",
-        )
-
+    return render_template(
+        "hotel/hotel_results.html",
+        hotels=hotels,
+        favorite_tokens=favorite_tokens,
+        search_params={
+            "city": search_params.get("city"),
+            "price_range": search_params.get("price"),
+            "rating_range": search_params.get("rating"),
+            "amenities": search_params.get("amenities")
+        }
+    )
 
 @hotel_bp.route("/hotel/<property_token>")
 def hotel_detail(property_token):
@@ -194,7 +190,7 @@ def hotel_detail(property_token):
                     (property_token, json_string),
                 )
                 db.commit()
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc:
             print(f"Error fetching details: {exc}")
             if cached_row:
                 hotel_data = json.loads(cached_row["data"])
@@ -231,7 +227,7 @@ def hotel_detail(property_token):
                     (session["user_id"], property_token, preview_json),
                 )
             db.commit()
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc: 
             print(f"Lỗi lưu lịch sử: {exc}")
 
     if not hotel_data:
@@ -274,7 +270,7 @@ def hotel_detail(property_token):
                         db.commit()
                         print("✨ Passive Learning: Đã nâng cấp user lên HIGH budget.")
                         session["expensive_view_count"] = 0
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc:  
             print(f"Budget Learning Error: {exc}")
 
         try:
@@ -306,7 +302,7 @@ def hotel_detail(property_token):
                         )
                         session["vibe_tracker"] = {}
 
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc:  
             print(f"Vibe Learning Error: {exc}")
 
     dynamic_price = request.args.get("price")

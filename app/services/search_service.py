@@ -35,13 +35,22 @@ class HotelSearchAPI:
         }
 
         amenities_mapping = {
-            "Pet-friendly": "19",
-            "Pool": "5",
-            "Fitness centre": "7",
+            "Free parking": "1",
+            "Parking": "3",
+            "Indoor pool": "4",
+            "Outdoor pool": "5",
+            "Pool": "6",
+            "Fitness center": "7",
+            "Restaurant": "8",
+            "Free breakfast": "9",
+            "Spa": "10",
+            "Beach access": "11",
+            "Child-friendly": "12",
             "Bar": "15",
+            "Pet-friendly": "19",
+            "Room service": "22",
             "Free Wi-Fi": "35",
             "Air-conditioned": "40",
-            "Child-friendly": "12"
         }
         
         params = {
@@ -64,10 +73,8 @@ class HotelSearchAPI:
             params["hotel_class"] = rating_mapping[rating_range]
         
         if amenities:
-            # Single amenity is passed only
             if isinstance(amenities, str):
                 amenities = [amenities]
-            # Map names to IDs
             selected_ids = []
             for a in amenities:
                 if a in amenities_mapping:
@@ -95,7 +102,7 @@ class HotelSearchAPI:
     def get_hotel_details(self, property_token):
         params = {
             "engine": "google_hotels",
-            "q": "hotel detail", # Query giả, quan trọng là property_token
+            "q": "hotel detail",
             "check_in_date": date.today(),
             "check_out_date": date.today() + timedelta(days=1),
             "gl": "vn",  

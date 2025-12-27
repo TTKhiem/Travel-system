@@ -5,151 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LigmaStay - Đặt phòng đẳng cấp{% endblock %}</title>
     
-    <!-- Bootstrap 5 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <!-- FontAwes% if request.endpoint != 'homeome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     
-    <!-- Font: Plus Jakarta Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            /* --- BLACK & WHITE LUXURY THEME --- */
-            --primary-color: #000000;
-            --primary-hover: #333333;
-            --bg-body: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-radius: 12px;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-body);
-            padding-top: 80px; 
-            color: var(--text-main);
-        }
-
-        /* --- NAVBAR --- */
-        .navbar-custom {
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #f1f5f9;
-            height: 80px;
-        }
-        
-        .navbar-brand {
-            font-weight: 800;
-            font-size: 1.5rem;
-            color: var(--primary-color) !important;
-            letter-spacing: -0.5px;
-            display: flex; align-items: center;
-        }
-        
-        .logo-icon {
-            background: var(--primary-color);
-            color: white;
-            width: 36px; height: 36px;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            margin-right: 12px;
-            font-size: 1.1rem;
-        }
-
-        .nav-link {
-            font-weight: 600;
-            color: #475569 !important;
-            margin: 0 10px;
-            font-size: 0.95rem;
-            transition: color 0.2s;
-        }
-        .nav-link:hover { color: var(--primary-color) !important; }
-
-        .btn-login-nav {
-            background: var(--primary-color);
-            color: white;
-            border: 1px solid var(--primary-color);
-            font-weight: 600;
-            padding: 8px 24px;
-            border-radius: 50px;
-            transition: all 0.3s;
-        }
-        .btn-login-nav:hover {
-            background: #333;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        /* --- STICKY SEARCH BAR --- */
-        .sticky-search-bar {
-            position: fixed; top: 80px; left: 0; width: 100%;
-            background: white; z-index: 99;
-            padding: 15px 0;
-            border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        .compact-search-form label {
-            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-            color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 4px; display: block;
-        }
-        .compact-search-form .form-select {
-            -webkit-appearance: none; appearance: none;
-            background-color: #f8fafc; 
-            border: 1px solid #e2e8f0;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-            font-weight: 600; color: #334155; border-radius: 8px;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 10px 10px;
-            padding-right: 30px;
-        }
-
-        .btn-search-compact {
-            background-color: var(--primary-color);
-            color: white; border: none; font-weight: 700; border-radius: 8px;
-        }
-        .btn-search-compact:hover { background-color: var(--primary-hover); }
-
-        /* --- TOAST NOTIFICATIONS --- */
-        .toast-container { z-index: 1060; }
-        .custom-toast {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-radius: 12px;
-            overflow: hidden;
-            font-size: 0.95rem;
-        }
-        .toast-header { border-bottom: 1px solid #f1f5f9; background: white; }
-
-        /* --- FOOTER --- */
-        footer { background: #000; color: #94a3b8; padding: 80px 0 40px; margin-top: 80px; }
-        .footer-title { color: white; font-weight: 700; margin-bottom: 20px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; }
-        .footer-link { display: block; color: #64748b; margin-bottom: 12px; text-decoration: none; transition: 0.2s; }
-        .footer-link:hover { color: white; padding-left: 5px; }
-
-        /* --- AUTH MODAL --- */
-        .modal-auth .modal-content { border-radius: 20px; border: none; overflow: hidden; }
-        .auth-switch-wrapper { background: #f1f5f9; padding: 4px; border-radius: 12px; display: flex; margin-bottom: 25px; }
-        .auth-switch-btn { flex: 1; border: none; background: transparent; padding: 10px; border-radius: 10px; font-weight: 600; color: #64748b; }
-        .auth-switch-btn.active { background: white; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .form-control-custom { width: 100%; padding: 14px 15px 14px 45px; border: 2px solid #f1f5f9; border-radius: 12px; font-weight: 500; background: #f8fafc; }
-        .form-control-custom:focus { outline: none; background: white; border-color: black; }
-        .input-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .btn-black-block { width: 100%; background: black; color: white; padding: 14px; border: none; border-radius: 12px; font-weight: 700; margin-top: 10px; }
-        .social-btn { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     {% block head %}{% endblock %}
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.home') }}">
@@ -194,11 +59,10 @@
         </div>
     </nav>
 
-    <!-- STICKY SEARCH BAR (Ẩn ở home, register và detail) -->
     {% if request.endpoint != 'main.home' and request.endpoint != 'auth.register_page' and request.endpoint != 'hotel.hotel_detail' and request.endpoint != 'auth.login' %}
     <div class="sticky-search-bar">
         <div class="container">
-            <form action="/hotel_results" method="POST" class="compact-search-form">
+            <form action="/search_handler" method="POST" class="compact-search-form">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-3">
                         <label>Điểm đến</label>
@@ -210,6 +74,7 @@
                             <option value="Nha Trang">Nha Trang</option>
                             <option value="Đà Lạt">Đà Lạt</option>
                             <option value="Huế">Huế</option>
+                            <option value="Sapa">Sapa</option>
                             <option value="Phú Quốc">Phú Quốc</option>
                             <option value="Vũng Tàu">Vũng Tàu</option>
                         </select>
@@ -282,7 +147,6 @@
     <div style="height: 70px;"></div> 
     {% endif %}
 
-    <!-- AUTH MODAL -->
     <div class="modal fade modal-auth" id="authModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
             <div class="modal-content">
@@ -329,13 +193,10 @@
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     {% block content %}{% endblock %}
 
-    <!-- TOAST CONTAINER -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-    <!-- FOOTER -->
     <footer>
         <div class="container">
             <div class="row">
@@ -371,170 +232,21 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
     <script>
-        // Modal Logic
-        const loginForm = document.getElementById('login-form-wrapper');
-        const registerForm = document.getElementById('register-form-wrapper');
-        const btnLogin = document.getElementById('btn-tab-login');
-        const btnRegister = document.getElementById('btn-tab-register');
-        const authModal = new bootstrap.Modal(document.getElementById('authModal'));
-
-        function openAuthModal(tab) {
-            switchAuthTab(tab);
-            authModal.show();
-        }
-
-        function switchAuthTab(tab) {
-            if(tab === 'login') {
-                loginForm.style.display = 'block'; registerForm.style.display = 'none';
-                btnLogin.classList.add('active'); btnRegister.classList.remove('active');
-            } else {
-                loginForm.style.display = 'none'; registerForm.style.display = 'block';
-                btnLogin.classList.remove('active'); btnRegister.classList.add('active');
-            }
-        }
-
-        // Filter Persistence
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedCity = localStorage.getItem('hotel_filter_city');
-            const citySelect = document.getElementById('city_compact');
-            if(citySelect && savedCity) citySelect.value = savedCity;
-
-            // TOAST LOGIC
-            const toastContainer = document.querySelector('.toast-container');
-            window.showToast = function(message, type = 'info') {
-                const id = 'toast-' + Date.now();
-                const icon = type === 'error' ? 'fa-exclamation-circle text-danger' : 'fa-check-circle text-success';
-                const title = type === 'error' ? 'Lỗi' : 'Thông báo';
-                
-                const html = `
-                    <div id="${id}" class="toast custom-toast animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="toast-header">
-                            <i class="fas ${icon} me-2"></i>
-                            <strong class="me-auto text-dark">${title}</strong>
-                            <small class="text-muted">Vừa xong</small>
-                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                        </div>
-                        <div class="toast-body text-dark">
-                            ${message}
-                        </div>
-                    </div>
-                `;
-                toastContainer.insertAdjacentHTML('beforeend', html);
-                const toastEl = document.getElementById(id);
-                const bsToast = new bootstrap.Toast(toastEl, { delay: 5000 });
-                bsToast.show();
-                toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-            };
-            
-            // Override Flash Messages
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        let msgType = "{{ message }}".includes("❌") ? 'error' : 'success';
-                        showToast("{{ message }}", msgType);
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        });
-
-        // --- AMENITY DROPDOWN LOGIC ---
-        const amenityCheckboxes = document.querySelectorAll('input[name="amenities"]');
-        const amenityBtnText = document.getElementById('amenityBtnText');
-
-        function updateAmenityLabel() {
-            const checked = Array.from(amenityCheckboxes).filter(cb => cb.checked);
-            if (checked.length === 0) {
-                amenityBtnText.textContent = "Tùy chọn";
-            } else if (checked.length === 1) {
-                // Get the label text of the checked item
-                const label = document.querySelector(`label[for="${checked[0].id}"]`).textContent;
-                amenityBtnText.textContent = label;
-            } else {
-                amenityBtnText.textContent = `${checked.length} tiện nghi`;
-            }
-        }
-
-        amenityCheckboxes.forEach(cb => {
-            cb.addEventListener('change', updateAmenityLabel);
-        });
-
-        // Prevent dropdown from closing when clicking inside it
-        document.querySelector('.dropdown-menu').addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const searchForms = document.querySelectorAll('form[action="/hotel_results"]');
-            
-            // 1. KHÔI PHỤC STATE TỪ LOCAL STORAGE
-            restoreSearchState();
-
-            // 2. LƯU STATE KHI SUBMIT FORM
-            searchForms.forEach(form => {
-                form.addEventListener('submit', function() {
-                    saveSearchState(new FormData(form));
-                });
-            });
-
-            // Hàm lưu
-            function saveSearchState(formData) {
-                const state = {
-                    city: formData.get('city'),
-                    price: formData.get('price_range'),
-                    rating: formData.get('rating'),
-                    amenities: formData.getAll('amenities') // Lưu mảng các tiện nghi
-                };
-                localStorage.setItem('ligma_search_state', JSON.stringify(state));
-            }
-
-            // Hàm khôi phục
-            function restoreSearchState() {
-                const savedRaw = localStorage.getItem('ligma_search_state');
-                if (!savedRaw) return;
-
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
                 try {
-                    const state = JSON.parse(savedRaw);
-                    
-                    // Khôi phục City
-                    const citySelects = document.querySelectorAll('select[name="city"]');
-                    citySelects.forEach(sel => { if(state.city) sel.value = state.city; });
-
-                    // Khôi phục Price
-                    const priceSelects = document.querySelectorAll('select[name="price_range"]');
-                    priceSelects.forEach(sel => { if(state.price) sel.value = state.price; });
-
-                    // Khôi phục Rating
-                    const ratingSelects = document.querySelectorAll('select[name="rating"]');
-                    ratingSelects.forEach(sel => { if(state.rating) sel.value = state.rating; });
-
-                    // Khôi phục Amenities (Checkbox)
-                    if (state.amenities && Array.isArray(state.amenities)) {
-                        const checkboxes = document.querySelectorAll('input[name="amenities"]');
-                        checkboxes.forEach(cb => {
-                            if (state.amenities.includes(cb.value)) {
-                                cb.checked = true;
-                            }
-                        });
-                        // Cập nhật lại nhãn hiển thị nút bấm (nếu có hàm updateAmenityLabel)
-                        if (typeof updateAmenityLabel === "function") updateAmenityLabel();
-                        
-                        // Cập nhật cho Hero section (nếu có hàm updateHeroLabel)
-                        if (document.getElementById('amenityHeroBtn')) {
-                            const heroCheckboxes = document.querySelectorAll('#amenityHeroBtn + .dropdown-menu input[type="checkbox"]');
-                            const heroBtnText = document.getElementById('amenityHeroText');
-                            const checked = Array.from(heroCheckboxes).filter(cb => cb.checked);
-                            if(checked.length > 0) heroBtnText.textContent = `${checked.length} tiện nghi`;
-                        }
-                    }
-
-                } catch (e) { console.error("Error restoring state:", e); }
-            }
-        });
+                    let msgContent = "{{ message }}";
+                    let msgType = msgContent.includes("❌") ? 'error' : 'success';
+                    if (window.showToast) window.showToast(msgContent, msgType);
+                } catch(e) {}
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
-
-
 

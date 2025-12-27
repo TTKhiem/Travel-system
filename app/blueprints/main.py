@@ -51,7 +51,7 @@ def profile():
             )
             db.commit()
             flash("✅ Cập nhật hồ sơ thành công!")
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc: 
             print(exc)
             flash("❌ Có lỗi xảy ra, vui lòng thử lại.")
 
@@ -87,7 +87,7 @@ def save_favorites():
         )
         db.commit()
         return jsonify({"message": "Saved into Favorites:"}), 200
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc: 
         print(exc)
         return jsonify({"message": "Failed!"}), 500
 

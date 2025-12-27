@@ -4,275 +4,9 @@
 
 {% block head %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Ghi đè padding của Base vì trang này không có thanh Search Bar */
-        body {
-            background-color: #f0f2f5;
-            padding-top: 100px !important; /* Điều chỉnh lại khoảng cách với Header */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        /* Carousel Styles */
-        .hotel-carousel {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-bottom: 25px;
-        }
-        .carousel-item img {
-            height: 450px;
-            object-fit: cover;
-            width: 100%;
-        }
-
-        /* Section Styling */
-        .content-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            border-left: 4px solid #007bff;
-            padding-left: 10px;
-        }
-
-        /* Sidebar Sticky */
-        .sidebar-sticky {
-            position: sticky;
-            top: 100px; /* Điều chỉnh lại top khi cuộn vì header thấp hơn */
-            z-index: 90;
-        }
-
-        /* Nearby Places List */
-        .nearby-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .nearby-item:last-child { border-bottom: none; }
-        .nearby-thumb {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            object-fit: cover;
-            margin-right: 15px;
-        }
-        
-        /* Amenities Accordion */
-        .accordion-button:not(.collapsed) {
-            color: #007bff;
-            background-color: #e7f1ff;
-        }
-        .amenity-badge {
-            font-size: 0.75rem;
-            margin-left: 5px;
-        }
-
-        /* Rating & Price */
-        .price-box {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        /* Excluded Amenities */
-        .excluded-item {
-            color: #dc3545;
-            font-size: 0.9rem;
-        }
-        
-        /* --- LIGMASTAY PREMIUM CHATBOT (MAX SIZE & CENTER FIX) --- */
-    
-        /* Nút tròn mở chat */
-        #chatToggleBtn {
-            position: fixed; bottom: 30px; right: 30px; 
-            width: 65px; height: 65px;
-            border-radius: 50%; 
-            background: linear-gradient(135deg, #000000 0%, #333333 100%);
-            color: white; border: none;
-            z-index: 1040; /* Cao hơn navbar mặc định của BS5 */
-            font-size: 26px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        #chatToggleBtn:hover { transform: scale(1.1) rotate(15deg); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
-
-        /* Khung Chat Mặc Định */
-        #aiChatBox {
-            display: none; 
-            position: fixed; 
-            bottom: 110px; right: 30px;
-            width: 380px; height: 600px; 
-            background: #fff; 
-            border-radius: 24px;
-            z-index: 1050; /* Cực cao để đè mọi thứ */
-            flex-direction: column; overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* === TRẠNG THÁI MỞ RỘNG (MAX SIZE & CENTERED) === */
-        #aiChatBox.expanded {
-            /* Kích thước "Khổng lồ" */
-            width: 90vw;  /* 90% chiều ngang màn hình */
-            height: 85vh; /* 85% chiều cao màn hình */
-            
-            /* Căn giữa màn hình tuyệt đối */
-            bottom: 50% !important; 
-            right: 50% !important;
-            transform: translate(50%, 50%) !important;
-            
-            border-radius: 24px;
-            
-            /* Hiệu ứng làm tối nền (Backdrop) bằng Box Shadow khổng lồ */
-            box-shadow: 0 10px 50px rgba(0,0,0,0.2), 0 0 0 100vmax rgba(0, 0, 0, 0.6);
-            z-index: 9999; /* Đè lên tất cả, kể cả modal hay navbar */
-        }
-
-        /* Header Chat */
-        .chat-header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 18px 25px;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            display: flex; justify-content: space-between; align-items: center;
-            position: absolute; top: 0; left: 0; width: 100%; z-index: 20;
-        }
-
-        /* Nội dung tin nhắn */
-        #chatContent {
-            flex: 1; 
-            padding: 90px 25px 100px 25px; /* Padding để nội dung không bị che bởi header/input */
-            overflow-y: auto; 
-            display: flex; flex-direction: column;
-            background: #f8f9fc;
-            scroll-behavior: smooth;
-        }
-
-        /* Bong bóng Chat User */
-        .msg-user { 
-            align-self: flex-end; 
-            background: #000; color: white; 
-            padding: 14px 20px; 
-            border-radius: 20px 20px 4px 20px; 
-            max-width: 75%; margin-bottom: 20px; font-size: 1rem; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            animation: slideInRight 0.3s ease-out;
-            line-height: 1.5;
-        }
-
-        /* Bong bóng Chat Bot */
-        .msg-bot { 
-            align-self: flex-start; 
-            background: #fff; color: #1e293b; 
-            padding: 18px; 
-            border-radius: 20px 20px 20px 4px; 
-            max-width: 85%; margin-bottom: 20px; font-size: 1rem; 
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            animation: slideInLeft 0.3s ease-out;
-            line-height: 1.6;
-        }
-
-        /* Vùng nhập liệu (Floating) */
-        .chat-input-area {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            padding: 25px;
-            background: linear-gradient(to top, rgba(255,255,255,1) 85%, rgba(255,255,255,0));
-            z-index: 20;
-            display: flex; justify-content: center; /* Căn giữa input khi mở rộng */
-        }
-        
-        .input-wrapper {
-            background: white; border-radius: 50px;
-            display: flex; align-items: center;
-            padding: 6px 6px 6px 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            border: 1px solid #e2e8f0;
-            transition: 0.3s;
-            width: 100%; max-width: 900px; /* Giới hạn chiều rộng input khi full screen cho đẹp */
-        }
-        .input-wrapper:focus-within { border-color: #000; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        
-        #chatInput { border: none; background: transparent; flex: 1; outline: none; font-size: 1rem; padding: 12px 0; }
-        #sendChatBtn {
-            width: 50px; height: 50px; border-radius: 50%; background: #000; color: white; border: none;
-            transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        }
-        #sendChatBtn:hover { transform: scale(1.1); background: #333; }
-
-        /* Thẻ khách sạn nhỏ */
-        .mini-hotel-card {
-            display: flex; background: white; border-radius: 16px; overflow: hidden;
-            border: 1px solid #f1f5f9; margin-top: 15px; transition: 0.2s; text-decoration: none; color: inherit;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
-        .mini-hotel-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: #000; }
-        .mini-img { width: 120px; height: 120px; object-fit: cover; } /* Ảnh to hơn */
-        .mini-info { padding: 15px 20px; display: flex; flex-direction: column; justify-content: center; width: calc(100% - 120px); }
-        .mini-name { font-size: 1rem; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
-
-        /* Animations */
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: #adb5bd; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; margin: 0 2px; }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-
-        /* --- TRIP GENIE STYLES (NEW) --- */
-        .genie-card {
-            background: linear-gradient(135deg, #000 0%, #2c3e50 100%);
-            color: white;
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 25px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-        /* Hiệu ứng nền lấp lánh nhẹ */
-        .genie-card::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-            animation: rotate 20s linear infinite;
-        }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .genie-content { position: relative; z-index: 2; }
-        .btn-genie {
-            background: white; color: black; border: none; font-weight: 800;
-            padding: 12px 30px; border-radius: 50px; transition: all 0.3s;
-            box-shadow: 0 0 15px rgba(255,255,255,0.3);
-        }
-        .btn-genie:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(255,255,255,0.5); }
-
-        /* Timeline Design */
-        .itinerary-timeline { position: relative; padding-left: 30px; margin-top: 20px; border-left: 2px dashed rgba(255,255,255,0.3); }
-        .timeline-item { position: relative; margin-bottom: 25px; padding-left: 15px; animation: slideInUp 0.5s ease-out; }
-        .timeline-dot {
-            position: absolute; left: -36px; top: 0;
-            width: 14px; height: 14px; background: #fff; border-radius: 50%;
-            box-shadow: 0 0 0 4px rgba(255,255,255,0.2);
-        }
-        .time-badge { font-size: 0.75rem; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
-        .activity-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
-        .activity-desc { font-size: 0.9rem; opacity: 0.9; font-weight: 300; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hotel.css') }}">
 {% endblock %}
 
-{# --- QUAN TRỌNG: Ghi đè block search_bar bằng rỗng để ẩn form --- #}
 {% block search_bar %}{% endblock %}
 
 {% block content %}
@@ -385,7 +119,6 @@
                     {% endif %}
                 </div>
 
-                <!-- === TRIP GENIE SECTION (NEW FEATURE) === -->
                 <div class="genie-card" id="tripGenieSection">
                     <div class="genie-content text-center" id="genieIntro">
                         <div class="mb-3">
@@ -412,22 +145,20 @@
                         {% endif %}
                     </div>
 
-                    <!-- Loading State -->
                     <div id="genieLoading" class="text-center py-4" style="display: none; position: relative; z-index: 2;">
                         <div class="spinner-border text-light mb-3" role="status"></div>
                         <h5 class="fw-bold animate__animated animate__fadeIn">Đang triệu hồi Genie...</h5>
                         <p class="small opacity-75">Đang quét các địa điểm thú vị gần {{ hotel.name }}...</p>
                     </div>
 
-                    <!-- Result Area -->
                     <div id="genieResult" style="display: none; position: relative; z-index: 2;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="fw-bold mb-0"><i class="fas fa-map-signs me-2"></i> Lịch trình gợi ý</h5>
-                            <button onclick="resetGenie()" class="btn btn-sm btn-outline-light rounded-pill"><i class="fas fa-redo"></i> Tạo lại</button>
+                            <button onclick="activateGenie(true)" class="btn btn-sm btn-outline-light rounded-pill">
+                                <i class="fas fa-redo"></i> Tạo lại</button>
                         </div>
                         
                         <div class="itinerary-timeline" id="timelineContent">
-                            <!-- JS sẽ điền nội dung vào đây -->
                         </div>
                         
                         <div class="mt-3 text-center">
@@ -435,7 +166,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- === END TRIP GENIE SECTION === -->
 
                 {% if hotel.amenities_detailed and hotel.amenities_detailed.groups %}
                 <div class="content-card">
@@ -520,7 +250,6 @@
                 <div class="content-card mt-4">
                     <h3 class="section-title"><i class="fas fa-comments text-primary"></i> Đánh giá từ cộng đồng</h3>
                     
-                    <!-- Form viết đánh giá -->
                     <div class="card bg-light border-0 mb-4">
                         <div class="card-body">
                             <h5 class="card-title mb-3">Viết đánh giá của bạn</h5>
@@ -551,7 +280,6 @@
                         </div>
                     </div>
 
-                    <!-- BỘ LỌC REVIEW (Đã được thêm vào đây) -->
                     <div class="card bg-white border mb-3">
                         <div class="card-body p-3">
                             <form method="GET" action="{{ url_for('hotel.hotel_detail', property_token=hotel.property_token) }}" class="row g-2 align-items-center">
@@ -591,9 +319,7 @@
                             </form>
                         </div>
                     </div>
-                    <!-- KẾT THÚC BỘ LỌC REVIEW -->
 
-                    <!-- Danh sách Review -->
                     <div class="review-list">
                         {% if local_reviews %}
                             {% for review in local_reviews %}
@@ -745,165 +471,107 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="{{ url_for('static', filename='js/hotel.js') }}"></script>
     <script>
-        (function(){
-            const chatBtn = document.getElementById('chatToggleBtn');
-            const chatBox = document.getElementById('aiChatBox');
-            const closeChat = document.getElementById('closeChatBtn');
-            const clearChat = document.getElementById('clearChatBtn');   // Mới
-            const expandChat = document.getElementById('expandChatBtn'); // Mới
-            const input = document.getElementById('chatInput');
-            const sendBtn = document.getElementById('sendChatBtn');
+        function triggerProactiveGreeting() {
             const content = document.getElementById('chatContent');
+            if (!content) return;
+            
+            const userVibe = "{{ user.preferences_dict.vibe if user and user.preferences_dict else '' }}";
+            let greeting = "👋 Chào bạn! Bạn thấy khách sạn **{{ hotel.name }}** thế nào?";
 
-            let isExpanded = false; // Trạng thái mở rộng
+            if(userVibe.includes('healing')) greeting = "🌿 Không gian ở đây rất yên tĩnh, bạn có muốn hỏi gì không?";
+            else if(userVibe.includes('family')) greeting = "👨‍👩‍👧‍👦 Chỗ này có phòng gia đình rộng lắm, bạn cần mình check **giá giường phụ** không?";
+            else if(userVibe.includes('luxury')) greeting = "💎 Dịch vụ ở đây chuẩn 5 sao. Bạn cần hỗ trợ đặt **phòng VIP** chứ?";
 
-            // --- HIỆU ỨNG UI MỞ/ĐÓNG ---
-            chatBtn.onclick = () => {
-                chatBox.style.display = 'flex';
-                // Animation
-                setTimeout(() => {
-                    chatBox.style.opacity = '1';
-                    chatBox.style.transform = 'translateY(0) scale(1)';
-                }, 10);
-                chatBtn.style.transform = 'scale(0) rotate(180deg)'; // Hiệu ứng nút biến mất
-                input.focus();
-            };
-
-            function closeChatBox() {
-                chatBox.style.display = 'none';
-                chatBtn.style.transform = 'scale(1) rotate(0deg)';
-                if(isExpanded) toggleExpand(); // Thu nhỏ lại nếu đang phóng to
+            if (window.renderMessage) {
+                window.renderMessage({ role: 'ai', content: greeting });
             }
-            closeChat.onclick = closeChatBox;
+        }
 
-            // --- LOGIC MỞ RỘNG (MỚI) ---
-            function toggleExpand() {
-                isExpanded = !isExpanded;
-                chatBox.classList.toggle('expanded');
-                
-                const icon = expandChat.querySelector('i');
-                if (isExpanded) {
-                    icon.classList.remove('fa-expand-alt');
-                    icon.classList.add('fa-compress-alt');
-                } else {
-                    icon.classList.remove('fa-compress-alt');
-                    icon.classList.add('fa-expand-alt');
+        setTimeout(() => {
+            const content = document.getElementById('chatContent');
+            if(content && content.innerHTML.trim() === '') {
+                triggerProactiveGreeting();
+            }
+        }, 3000);
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const content = document.getElementById('chatContent');
+            if (!input || !content) return;
+            
+            const text = input.value.trim();
+            if(!text) return;
+
+            if (window.renderMessage) {
+                window.renderMessage({ role: 'user', content: text });
+            }
+            input.value = '';
+
+            const loadingId = 'loading-' + Date.now();
+            const loader = document.createElement('div');
+            loader.className = 'msg-bot text-muted fst-italic';
+            loader.id = loadingId;
+            loader.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang liên hệ lễ tân AI...';
+            content.appendChild(loader);
+            content.scrollTop = content.scrollHeight;
+
+            try {
+                const resp = await fetch('/api/hotel_chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: text,
+                        property_token: window.propertyToken || "{{ hotel.property_token }}",
+                        hotel_fallback: { name: "{{ hotel.name }}", address: "{{ hotel.address }}" },
+                        dynamic_context: {
+                            price: "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}",
+                            check_in: "{{ hotel.search_context.check_in if hotel.search_context else '' }}",
+                            check_out: "{{ hotel.search_context.check_out if hotel.search_context else '' }}"
+                        }
+                    })
+                });
+
+                const data = await resp.json();
+                document.getElementById(loadingId).remove();
+
+                if (data.reply && window.renderMessage) {
+                    window.renderMessage({ role: 'ai', content: data.reply });
+                } else if (window.renderMessage) {
+                    window.renderMessage({ role: 'ai', content: "Xin lỗi, mình đang gặp chút trục trặc." });
+                }
+
+            } catch (e) {
+                console.error(e);
+                if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+                if (window.renderMessage) {
+                    window.renderMessage({ role: 'ai', content: "Lỗi kết nối mạng." });
                 }
             }
-            expandChat.onclick = toggleExpand;
+        }
 
-            // --- LOGIC XÓA CHAT (MỚI) ---
-            clearChat.onclick = () => {
-                if(confirm("Xóa cuộc hội thoại hiện tại?")) {
-                    content.innerHTML = '';
-                    // Reset lại lời chào
-                    triggerProactiveGreeting();
-                }
-            };
-
-            // --- HÀM RENDER TIN NHẮN ---
-            function appendMsg(text, role) {
-                const div = document.createElement('div');
-                div.className = role === 'user' ? 'msg-user' : 'msg-bot';
-                div.innerHTML = text; 
-                content.appendChild(div);
-                content.scrollTop = content.scrollHeight;
-            }
-
-            // --- LOGIC CHÀO CHỦ ĐỘNG ---
-            function triggerProactiveGreeting() {
-                const userVibe = "{{ user.preferences_dict.vibe if user and user.preferences_dict else '' }}";
-                let greeting = "👋 Chào bạn! Bạn thấy khách sạn {{ hotel.name }} thế nào?";
-
-                if(userVibe.includes('healing')) greeting = "🌿 Không gian ở đây rất yên tĩnh, bạn có muốn xem thêm ảnh Spa không?";
-                else if(userVibe.includes('family')) greeting = "👨‍👩‍👧‍👦 Chỗ này có phòng gia đình rộng lắm, bạn cần mình check giá giường phụ không?";
-                else if(userVibe.includes('luxury')) greeting = "💎 Dịch vụ ở đây chuẩn 5 sao. Bạn cần hỗ trợ đặt phòng VIP chứ?";
-
-                appendMsg(`<strong>AI Concierge:</strong><br>${greeting}`, 'bot');
-            }
-
-            // Gọi lời chào khi load trang (delay nhẹ)
-            setTimeout(() => {
-                if(content.innerHTML.trim() === '') triggerProactiveGreeting();
-                // Tự động mở chat sau 5s nếu chưa mở (như cũ)
-                if(chatBox.style.display === 'none' || chatBox.style.display === '') {
-                    chatBox.style.display = 'flex';
-                    chatBtn.style.transform = 'scale(0)';
-                }
-            }, 5000);
-
-            // --- GỬI TIN NHẮN ---
-            async function sendMessage() {
-                const text = input.value.trim();
-                if(!text) return;
-
-                appendMsg(text, 'user');
-                input.value = '';
-
-                // Loading
-                const loadingId = 'loading-' + Date.now();
-                const loader = document.createElement('div');
-                loader.className = 'msg-bot text-muted fst-italic';
-                loader.id = loadingId;
-                loader.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang liên hệ lễ tân AI...';
-                content.appendChild(loader);
-                content.scrollTop = content.scrollHeight;
-
-                try {
-                    const resp = await fetch('/api/hotel_chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            message: text,
-                            property_token: "{{ hotel.property_token }}",
-                            hotel_fallback: { name: "{{ hotel.name }}", address: "{{ hotel.address }}" },
-                            dynamic_context: {
-                                price: "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}",
-                                check_in: "{{ hotel.search_context.check_in if hotel.search_context else '' }}",
-                                check_out: "{{ hotel.search_context.check_out if hotel.search_context else '' }}"
-                            }
-                        })
-                    });
-
-                    const data = await resp.json();
-                    document.getElementById(loadingId).remove();
-
-                    if (data.reply) {
-                        appendMsg(data.reply, 'bot');
-                    } else {
-                        appendMsg("Xin lỗi, mình đang gặp chút trục trặc.", 'bot');
-                    }
-
-                } catch (e) {
-                    console.error(e);
-                    if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-                    appendMsg("Lỗi kết nối mạng.", 'bot');
-                }
-            }
-
-            sendBtn.onclick = sendMessage;
-            input.onkeydown = (e) => { if(e.key === 'Enter') sendMessage(); };
-        })();
+        window.sendMessage = sendMessage;
+        window.triggerProactiveGreeting = triggerProactiveGreeting;
 
         document.addEventListener("DOMContentLoaded", async function() {
         {% if session.get('user_id') %}
         
-        // KIỂM TRA: Nếu Server đã gửi match_reason xuống rồi thì KHÔNG làm gì cả
-        // Biến 'hasCachedReason' sẽ là true nếu match_reason không rỗng
+
         const hasCachedReason = {{ 'true' if match_reason else 'false' }};
         
         if (!hasCachedReason) {
-            // === CHỈ GỌI API KHI CHƯA CÓ CACHE ===
+
             const matchBox = document.getElementById('matchReasonBox');
-            matchBox.style.display = 'block'; // Hiện khung loading
+            matchBox.style.display = 'block';
             
             try {
                 const resp = await fetch('/api/get_match_reason', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        property_token: "{{ hotel.property_token }}",
+                        property_token: window.propertyToken || "{{ hotel.property_token }}",
                         hotel_name: "{{ hotel.name }}",
                         amenities: [] 
                     })
@@ -919,7 +587,7 @@
                     document.getElementById('matchScore').innerText = `${score}% MATCH`;
                     document.getElementById('matchText').innerText = text;
                     
-                    // Đổi style từ Loading sang Success
+
                     matchBox.classList.remove('bg-light');
                     matchBox.classList.add('bg-success', 'bg-opacity-10');
                     
@@ -942,7 +610,6 @@
 
             if (!summaryBox) return;
 
-            // Hiển thị box và trạng thái loading
             summaryBox.style.display = 'block';
 
             try {
@@ -955,32 +622,32 @@
                 const data = await resp.json();
 
                 if (data.summary) {
-                    // Hiệu ứng gõ chữ hoặc hiện thẳng
+
                     summaryContent.innerHTML = data.summary;
                 } else {
-                    // Nếu không có review nào
+
                     summaryContent.innerHTML = '<span class="text-muted fst-italic">Chưa có đánh giá nào từ cộng đồng để tóm tắt.</span>';
                 }
             } catch (err) {
                 console.error("Summary error:", err);
-                summaryBox.style.display = 'none'; // Ẩn luôn nếu lỗi
+                summaryBox.style.display = 'none';
             }
         });
 
-        let isFav = {{ 'true' if is_favorite else 'false' }};
-        const propertyToken = "{{ hotel.property_token }}";
+        window.isFav = {{ 'true' if is_favorite else 'false' }};
+        window.propertyToken = "{{ hotel.property_token }}";
 
         async function toggleFavorite() {
             const btn = document.getElementById('btnFavorite');
             const icon = btn.querySelector('i');
             const text = document.getElementById('favText');
             
-            // 1. Xác định hành động dựa trên trạng thái hiện tại
-            const url = isFav ? '/favorites/remove' : '/favorites';
+
+            const url = window.isFav ? '/favorites/remove' : '/favorites';
             
-            // Dữ liệu gửi đi (Nếu là Remove thì chỉ cần token, nếu Add thì cần full info)
+
             const payload = {
-                property_token: propertyToken,
+                property_token: window.propertyToken,
                 name: "{{ hotel.name }}",
                 image: "{{ hotel.images[0].original_image if hotel.images else '' }}",
                 price: "{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Liên hệ' }}",
@@ -995,19 +662,18 @@
                 });
 
                 if (resp.ok) {
-                    // 2. Đảo ngược trạng thái
-                    isFav = !isFav; 
 
-                    // 3. Cập nhật giao diện ngay lập tức
-                    if (isFav) {
-                        // Đã thích: Nền đỏ, Tim đặc
+                    window.isFav = !window.isFav; 
+
+                    if (window.isFav) {
+
                         btn.classList.remove('btn-outline-danger');
                         btn.classList.add('btn-danger');
                         icon.classList.remove('far');
                         icon.classList.add('fas');
                         text.innerText = "Đã yêu thích";
                     } else {
-                        // Bỏ thích: Nền trắng, Tim rỗng
+
                         btn.classList.remove('btn-danger');
                         btn.classList.add('btn-outline-danger');
                         icon.classList.remove('fas');
@@ -1022,15 +688,15 @@
                 alert("Lỗi kết nối.");
             }
         }
+        window.toggleFavorite = toggleFavorite;
 
-        /* --- TRIP GENIE JS LOGIC (NEW) --- */
-        async function activateGenie() {
+        async function activateGenie(forceRefresh = false) {
             const intro = document.getElementById('genieIntro');
             const loading = document.getElementById('genieLoading');
             const result = document.getElementById('genieResult');
             const timeline = document.getElementById('timelineContent');
             
-            // UI Transition
+
             intro.style.display = 'none';
             loading.style.display = 'block';
             
@@ -1039,9 +705,10 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        property_token: "{{ hotel.property_token }}",
+                        property_token: window.propertyToken || "{{ hotel.property_token }}",
                         hotel_name: "{{ hotel.name }}",
-                        address: "{{ hotel.address }}"
+                        address: "{{ hotel.address }}",
+                        force_refresh: true
                     })
                 });
                 
@@ -1049,7 +716,7 @@
                 
                 if (data.error) throw new Error(data.error);
                 
-                // Build HTML Timeline
+
                 let html = '';
                 const periods = [
                     { key: 'morning', label: 'Buổi Sáng' },
@@ -1076,7 +743,7 @@
                 
                 timeline.innerHTML = html;
                 
-                // Show Result
+
                 loading.style.display = 'none';
                 result.style.display = 'block';
                 result.classList.add('animate__animated', 'animate__fadeIn');
@@ -1088,11 +755,6 @@
                 alert("Genie đang bận hoặc gặp lỗi kết nối. Thử lại sau nhé!");
             }
         }
-
-        function resetGenie() {
-            document.getElementById('genieResult').style.display = 'none';
-            document.getElementById('genieIntro').style.display = 'block';
-            document.getElementById('genieIntro').classList.add('animate__animated', 'animate__fadeIn');
-        }
+        window.activateGenie = activateGenie;
     </script>
 {% endblock %}

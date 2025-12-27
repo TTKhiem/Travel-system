@@ -9,7 +9,7 @@ from google import genai
 
 from .. import database
 from ..services.search_service import HotelSearchAPI
-from ..utils import clean_json_text, generate_ai_suggestion, get_user_recent_city
+from ..utils import clean_json_text, generate_ai_suggestion, get_user_recent_city, calculate_match_score
 
 api_bp = Blueprint("api", __name__)
 
@@ -41,7 +41,7 @@ def summarize_reviews():
                 if datetime.utcnow() - last_update < timedelta(hours=24):
                     print(f"Using cached summary for {property_token}")
                     return jsonify({"summary": cached["summary_content"]})
-            except Exception as exc:  # pragma: no cover - defensive logging
+            except Exception as exc: 
                 print(f"Date parse error: {exc}")
 
         reviews = db.execute(
@@ -68,7 +68,7 @@ def summarize_reviews():
 
         client = _get_gemini_client()
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt,
         )
         new_summary = response.text
@@ -80,7 +80,7 @@ def summarize_reviews():
 
         return jsonify({"summary": new_summary})
 
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:  
         print(f"Summary Error: {exc}")
         return jsonify({"error": str(exc)}), 500
 
@@ -151,13 +151,13 @@ def hotel_chat():
         prompt = f"{system_instruction}\n\nUser: {user_message}"
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=prompt
+            model="gemini-2.5-flash-lite", contents=prompt
         )
         reply_text = response.text if response.text else "Xin lỗi, AI đang bận."
 
         return jsonify({"reply": reply_text})
 
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:  
         return jsonify({"error": str(exc)}), 500
 
 
@@ -178,12 +178,12 @@ def compare_ai_analysis():
 
         client = _get_gemini_client()
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt_content + "\nTrả lời bằng tiếng Việt, ngắn gọn.",
         )
         return jsonify({"reply": response.text})
 
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc: 
         return jsonify({"error": str(exc)}), 500
 
 
@@ -469,7 +469,7 @@ def api_chat_search():
 
         return jsonify({"type": "chat", "reply_text": reply_text})
 
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc: 
         print(f"Chat Error: {exc}")
         return jsonify(
             {
@@ -497,7 +497,7 @@ def update_preferences():
 
         return jsonify({"message": "Success"}), 200
 
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:  
         print(f"Update Prefs Error: {exc}")
         return jsonify({"error": str(exc)}), 500
 
@@ -509,8 +509,6 @@ def get_match_reason_api():
 
     data = request.get_json()
     property_token = data.get("property_token")
-    hotel_name = data.get("hotel_name")
-    amenities = data.get("amenities", [])
 
     db = database.get_db()
 
@@ -525,36 +523,35 @@ def get_match_reason_api():
     user = db.execute(
         "SELECT preferences FROM users WHERE id=?", (session["user_id"],)
     ).fetchone()
-    if user and user["preferences"]:
-        prefs = json.loads(user["preferences"])
 
-        prompt = f"""
-        User Prefer: {json.dumps(prefs)}. 
-        Hotel: {hotel_name}, Amenities: {str(amenities[:10])}.
-        Task: 
-        1. Calculate match score (0-100%).
-        2. Write ONE short sentence explaining WHY in Vietnamese.
-        Format: "Score|Sentence"
-        """
-        try:
-            client = _get_gemini_client()
-            response = client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
-            )
-            match_reason = response.text.strip()
+    if not user or not user["preferences"]:
+        return jsonify({"match": None})
+    prefs = json.loads(user["preferences"])
 
-            db.execute(
-                "UPDATE recently_viewed SET match_reason = ? WHERE user_id=? AND property_token=?",
-                (match_reason, session["user_id"], property_token),
-            )
-            db.commit()
+    hotel_row = db.execute(
+        "SELECT data FROM hotel_cache WHERE token = ?", (property_token,)
+    ).fetchone()
+    
+    hotel_data = {}
+    if hotel_row:
+        hotel_data = json.loads(hotel_row["data"])
+    else:
+        hotel_data = {
+            "amenities": data.get("amenities", []),
+            "rate_per_night": {"lowest": "0"}, 
+            "overall_rating": 0
+        }
 
-            return jsonify({"match": match_reason})
-        except Exception as exc:  # pragma: no cover - defensive logging
-            print(f"Match API Error: {exc}")
-            return jsonify({"match": None})
+    result = calculate_match_score(prefs, hotel_data)
+    match_string = f"{result['score']}|{result['reason']}"
 
-    return jsonify({"match": None})
+    db.execute(
+        "UPDATE recently_viewed SET match_reason = ? WHERE user_id=? AND property_token=?",
+        (match_string, session["user_id"], property_token),
+    )
+    db.commit()
+    
+    return jsonify({"match": match_string})
 
 
 @api_bp.route("/api/get_home_suggestion", methods=["GET"])
@@ -564,7 +561,7 @@ def get_home_suggestion_api():
 
     db = database.get_db()
     user = db.execute(
-        "SELECT preferences FROM users WHERE id=?", (session["user_id"],)
+        "SELECT preferences FROM users WHERE id=?", (session["user_id"],),
     ).fetchone()
 
     suggestion = None
@@ -574,7 +571,7 @@ def get_home_suggestion_api():
             recent_city = get_user_recent_city(session["user_id"])
             suggestion = generate_ai_suggestion(prefs, history_city=recent_city)
 
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc:  
             print(f"Error generating suggestion: {exc}")
             suggestion = generate_ai_suggestion(prefs)
 
@@ -588,6 +585,7 @@ def generate_itinerary():
         token = data.get("property_token")
         hotel_name = data.get("hotel_name")
         address = data.get("address")
+        force_refresh = data.get("force_refresh", False)
 
         vibe = "adventure"
         if "user_id" in session:
@@ -599,15 +597,22 @@ def generate_itinerary():
                 prefs = json.loads(user["preferences"])
                 vibe = prefs.get("vibe", "adventure")
 
-        db = database.get_db()
-        cached = db.execute(
-            "SELECT itinerary_json FROM hotel_itineraries WHERE property_token=? AND vibe=?",
-            (token, vibe),
-        ).fetchone()
+        if not force_refresh:
+            db = database.get_db()
+            cached = db.execute(
+                """
+                SELECT itinerary_json 
+                FROM hotel_itineraries 
+                WHERE property_token=? 
+                  AND vibe=? 
+                  AND created_at > date('now', '-3 days')
+                """,
+                (token, vibe),
+            ).fetchone()
 
-        if cached:
-            print(f"🎯 Trip Genie: Hit Cache for {token} - {vibe}")
-            return jsonify(json.loads(cached["itinerary_json"]))
+            if cached:
+                print(f"🎯 Trip Genie: Hit Cache for {token} - {vibe}")
+                return jsonify(json.loads(cached["itinerary_json"]))
 
         hotel_cache_row = db.execute(
             "SELECT data FROM hotel_cache WHERE token = ?", (token,)
@@ -687,7 +692,7 @@ def generate_itinerary():
 
         return jsonify(result_json)
 
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:  
         print(f"Trip Genie Error: {exc}")
         return jsonify({"error": str(exc)}), 500
 
@@ -775,18 +780,8 @@ def mood_search():
         result = json.loads(json_str)
 
         valid_cities = [
-            "Hà Nội",
-            "TP. Hồ Chí Minh",
-            "Đà Nẵng",
-            "Nha Trang",
-            "Đà Lạt",
-            "Sa Pa",
-            "Huế",
-            "Phú Quốc",
-            "Vũng Tàu",
-            "Hội An",
-            "Cần Thơ",
-            "Quy Nhơn",
+            "Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Nha Trang", "Đà Lạt",
+            "Sa Pa", "Huế", "Phú Quốc", "Vũng Tàu"
         ]
         ai_city = result.get("city", "").strip()
 
@@ -801,7 +796,7 @@ def mood_search():
 
         return jsonify(result)
 
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:  
         print(f"Mood Search Error: {exc}")
         fallback_result = {
             "city": "Đà Lạt",

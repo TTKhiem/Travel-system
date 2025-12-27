@@ -3,10 +3,8 @@
 {% block title %}LigmaStay - Tìm nơi bình yên của bạn{% endblock %}
 
 {% block head %}
-<style>
-    /* HERO SECTION */
-    .hero-section {
-        position: relative;
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
         background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
         height: 700px;
         display: flex;
@@ -20,7 +18,7 @@
         background: rgba(0,0,0,0.3); 
     }
 
-    /* SEARCH WIDGET */
+    
     .search-widget {
         position: relative; z-index: 10;
         background: rgba(255, 255, 255, 0.85);
@@ -79,9 +77,9 @@
 
     .hero-dropdown-btn {
         width: 100%;
-        height: 55px; /* Đồng nhất chiều cao */
+        height: 55px; 
         background-color: #f8fafc;
-        border: 1px solid #cbd5e1; /* Đồng nhất màu viền */
+        border: 1px solid #cbd5e1; 
         border-radius: 12px;
         padding: 0 15px;
         color: #0f172a;
@@ -96,7 +94,7 @@
     
     .hero-dropdown-btn:hover { border-color: #94a3b8; }
     
-    /* Khi dropdown đang mở hoặc nút được focus */
+    
     .hero-dropdown-btn[aria-expanded="true"], 
     .hero-dropdown-btn:focus {
         border-color: #000;
@@ -113,12 +111,12 @@
     }
     .btn-search-hero:hover { background-color: #333; transform: translateY(-2px); }
 
-    /* Format cho form khảo sát*/
+    
     .survey-card:hover { background-color: #f8f9fa; transform: translateY(-3px); border-color: #000 !important; }
     .btn-check:checked + .survey-card { background-color: #000; color: white !important; border-color: #000; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
     .btn-check:checked + label.btn-outline-secondary { background-color: #000; color: white; border-color: #000; }
 
-    /* TRIVAGO SCROLL STYLE */
+    
     .scrolling-wrapper-container { position: relative; margin-top: 20px; }
     .scrolling-wrapper {
         display: flex; flex-wrap: nowrap; overflow-x: auto;
@@ -150,16 +148,16 @@
     .scroll-left { left: -20px; }
     .scroll-right { right: -20px; }
 
-    /* --- LIGMASTAY PREMIUM CHATBOT (MAX SIZE & CENTER FIX) --- */
     
-    /* Nút tròn mở chat */
+    
+    
     #chatToggleBtn {
         position: fixed; bottom: 30px; right: 30px; 
         width: 65px; height: 65px;
         border-radius: 50%; 
         background: linear-gradient(135deg, #000000 0%, #333333 100%);
         color: white; border: none;
-        z-index: 1040; /* Cao hơn navbar mặc định của BS5 */
+        z-index: 1040; 
         font-size: 26px; 
         box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -167,7 +165,7 @@
     }
     #chatToggleBtn:hover { transform: scale(1.1) rotate(15deg); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
 
-    /* Khung Chat Mặc Định */
+    
     #aiChatBox {
         display: none; 
         position: fixed; 
@@ -175,32 +173,32 @@
         width: 380px; height: 600px; 
         background: #fff; 
         border-radius: 24px;
-        z-index: 1050; /* Cực cao để đè mọi thứ */
+        z-index: 1050; 
         flex-direction: column; overflow: hidden;
         box-shadow: 0 20px 60px rgba(0,0,0,0.25);
         border: 1px solid rgba(0,0,0,0.05);
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* === TRẠNG THÁI MỞ RỘNG (MAX SIZE & CENTERED) === */
+    
     #aiChatBox.expanded {
-        /* Kích thước "Khổng lồ" */
-        width: 90vw;  /* 90% chiều ngang màn hình */
-        height: 85vh; /* 85% chiều cao màn hình */
         
-        /* Căn giữa màn hình tuyệt đối */
+        width: 90vw;  
+        height: 85vh; 
+        
+        
         bottom: 50% !important; 
         right: 50% !important;
         transform: translate(50%, 50%) !important;
         
         border-radius: 24px;
         
-        /* Hiệu ứng làm tối nền (Backdrop) bằng Box Shadow khổng lồ */
+        
         box-shadow: 0 10px 50px rgba(0,0,0,0.2), 0 0 0 100vmax rgba(0, 0, 0, 0.6);
-        z-index: 9999; /* Đè lên tất cả, kể cả modal hay navbar */
+        z-index: 9999; 
     }
 
-    /* Header Chat */
+    
     .chat-header {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
@@ -210,17 +208,17 @@
         position: absolute; top: 0; left: 0; width: 100%; z-index: 20;
     }
 
-    /* Nội dung tin nhắn */
+    
     #chatContent {
         flex: 1; 
-        padding: 90px 25px 100px 25px; /* Padding để nội dung không bị che bởi header/input */
+        padding: 90px 25px 100px 25px; 
         overflow-y: auto; 
         display: flex; flex-direction: column;
         background: #f8f9fc;
         scroll-behavior: smooth;
     }
 
-    /* Bong bóng Chat User */
+    
     .msg-user { 
         align-self: flex-end; 
         background: #000; color: white; 
@@ -232,7 +230,7 @@
         line-height: 1.5;
     }
 
-    /* Bong bóng Chat Bot */
+    
     .msg-bot { 
         align-self: flex-start; 
         background: #fff; color: #1e293b; 
@@ -245,13 +243,20 @@
         line-height: 1.6;
     }
 
-    /* Vùng nhập liệu (Floating) */
+    .msg-bot p { margin-bottom: 8px; }
+    .msg-bot p:last-child { margin-bottom: 0; }
+    .msg-bot strong { font-weight: 700; color: #000; }
+    .msg-bot ul, .msg-bot ol { margin: 5px 0 10px 0; padding-left: 20px; }
+    .msg-bot li { margin-bottom: 4px; }
+    .msg-bot h3, .msg-bot h4 { font-size: 1rem; font-weight: 800; margin: 10px 0 5px 0; color: #0f172a; }
+
+    
     .chat-input-area {
         position: absolute; bottom: 0; left: 0; width: 100%;
         padding: 25px;
         background: linear-gradient(to top, rgba(255,255,255,1) 85%, rgba(255,255,255,0));
         z-index: 20;
-        display: flex; justify-content: center; /* Căn giữa input khi mở rộng */
+        display: flex; justify-content: center; 
     }
     
     .input-wrapper {
@@ -261,7 +266,7 @@
         box-shadow: 0 5px 20px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
         transition: 0.3s;
-        width: 100%; max-width: 900px; /* Giới hạn chiều rộng input khi full screen cho đẹp */
+        width: 100%; max-width: 900px; 
     }
     .input-wrapper:focus-within { border-color: #000; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
     
@@ -272,18 +277,18 @@
     }
     #sendChatBtn:hover { transform: scale(1.1); background: #333; }
 
-    /* Thẻ khách sạn nhỏ */
+    
     .mini-hotel-card {
         display: flex; background: white; border-radius: 16px; overflow: hidden;
         border: 1px solid #f1f5f9; margin-top: 15px; transition: 0.2s; text-decoration: none; color: inherit;
         box-shadow: 0 4px 10px rgba(0,0,0,0.03);
     }
     .mini-hotel-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: #000; }
-    .mini-img { width: 120px; height: 120px; object-fit: cover; } /* Ảnh to hơn */
+    .mini-img { width: 120px; height: 120px; object-fit: cover; } 
     .mini-info { padding: 15px 20px; display: flex; flex-direction: column; justify-content: center; width: calc(100% - 120px); }
     .mini-name { font-size: 1rem; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
 
-    /* Animations */
+    
     @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
     .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: #adb5bd; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; margin: 0 2px; }
@@ -291,7 +296,7 @@
     .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
     @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    /* --- MOOD SEARCH STYLES (NEW) --- */
+    
     .btn-mood {
         background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
         color: #fff; border: none; font-weight: 700;
@@ -307,10 +312,6 @@
     .upload-area:hover { border-color: #ff9a9e; background: #fff5f5; }
     .upload-area.active { border-color: #ff9a9e; background: #fff; }
     .preview-img { max-height: 200px; width: 100%; object-fit: contain; border-radius: 12px; display: none; margin-top: 15px; }
-
-</style>
-{% endblock %}
-
 {% block content %}
     <section class="hero-section">
         <div class="hero-overlay"></div>
@@ -329,7 +330,6 @@
                                 <div class="d-flex align-items-center mb-1">
                                     <h6 class="fw-bold mb-0 text-dark me-2" id="aiTitle"></h6>
                                     
-                                    <!-- NÚT CHỈNH SỬA -->
                                     <button class="btn btn-sm btn-light border rounded-circle text-muted" 
                                             style="width: 24px; height: 24px; padding: 0;" 
                                             onclick="reopenSurvey()" 
@@ -340,7 +340,6 @@
                                 </div>
                                 <p class="mb-0 text-muted small fst-italic" id="aiGreeting"></p>
                             </div>
-                            <!-- Banner mời đăng nhập (nếu chưa login) -->
                             <div id="aiLoginPrompt" style="display: none;">
                                 <h6 class="fw-bold mb-0 text-dark">✨ Gợi ý cá nhân hóa từ AI</h6>
                                 <p class="mb-0 text-muted small">Đăng nhập để nhận gợi ý điểm đến phù hợp với sở thích của bạn</p>
@@ -351,6 +350,7 @@
                                 <input type="hidden" name="city" id="aiInputCity">
                                 <input type="hidden" name="price_range" id="aiInputPrice">
                                 <input type="hidden" name="rating" value="4-5">
+                                <input type="hidden" name="ai_autofill" value="on">
                                 <button type="submit" class="btn btn-dark rounded-pill btn-sm px-4 fw-bold">Xem ngay <i class="fas fa-arrow-right"></i></button>
                             </form>
                             <button id="aiLoginBtn" class="btn btn-dark rounded-pill btn-sm px-4 fw-bold" style="display: none;" onclick="openAuthModal('login')">
@@ -447,14 +447,22 @@
                                 </div>
                             </div>
                             
-                            <!-- CỤM NÚT SEARCH MỚI (BAO GỒM MOOD SEARCH) -->
                             <div class="col-lg-2 col-md-12 d-flex gap-2">
                                 <button type="submit" class="btn-search-hero flex-grow-1">Tìm</button>
                                 <button type="button" class="btn btn-search-hero btn-mood" style="width: 55px; padding: 0;" onclick="openMoodModal()" title="Tìm theo tâm trạng/ảnh">
                                     <i class="fas fa-camera"></i>
                                 </button>
                             </div>
-                            
+
+                            <div class="col-12 d-flex align-items-center mt-1">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="hero_ai_autofill" name="ai_autofill" value="on" checked>
+                                    <label class="form-check-label text-muted small" for="hero_ai_autofill">
+                                        Để AI tự điền bộ lọc còn trống dựa trên sở thích của bạn
+                                    </label>
+                                </div>
+                            </div>
+
                         </div>
                     </form>
                 </div>
@@ -463,7 +471,6 @@
     </section>
 
     {% if user %}
-    <!-- SURVEY MODAL -->
     <div class="modal fade" id="surveyModal" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -525,7 +532,6 @@
     </div>
     {% endif %}
 
-    <!-- TRENDING DESTINATIONS -->
     <section class="container py-5 mt-4">
         <h2 class="fw-bold display-6 mb-1 text-dark">Điểm đến xu hướng</h2>
         <p class="text-muted mb-4">Lựa chọn phổ biến nhất của du khách tại Việt Nam</p>
@@ -603,7 +609,6 @@
         </div>
     </section>
 
-    <!-- WHY CHOOSE US -->
     <section class="bg-light py-5 my-5">
         <div class="container py-4">
             <div class="row align-items-center">
@@ -651,18 +656,13 @@
         </div>
     </section>
 
-    <!-- ================== AI CHAT UI START ================== -->
-
     {% if user %}
-    <!-- Nút mở chat -->
     <button id="chatToggleBtn">
         <i class="fas fa-comment-dots"></i>
     </button>
     {% endif %}
 
-    <!-- Hộp Chat -->
     <div id="aiChatBox">
-        <!-- Header -->
         <div class="chat-header">
             <div class="d-flex align-items-center">
                 <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; font-size: 1.2rem;">
@@ -674,24 +674,19 @@
                 </div>
             </div>
             <div>
-                <!-- Nút Mở rộng -->
                 <button id="expandChatBtn" class="btn btn-sm btn-light rounded-circle me-1 text-muted" title="Mở rộng/Thu nhỏ" style="width: 32px; height: 32px;">
                     <i class="fas fa-expand-alt"></i>
                 </button>
-                <!-- Nút Xóa -->
                 <button id="clearChatBtn" class="btn btn-sm btn-light rounded-circle me-1 text-muted" title="Xóa lịch sử" style="width: 32px; height: 32px;">
                     <i class="fas fa-trash-alt"></i>
                 </button>
-                <!-- Nút Đóng -->
                 <button id="closeChatBtn" class="btn btn-sm btn-light rounded-circle text-muted" style="width: 32px; height: 32px;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Chat Content -->
         <div id="chatContent">
-            <!-- Tin nhắn mặc định -->
             <div class="msg-bot">
                 <div class="d-flex align-items-center mb-2">
                     <strong class="me-2">AI Concierge</strong> <span class="badge bg-dark text-white rounded-pill" style="font-size: 0.6rem;">Bot</span>
@@ -704,7 +699,6 @@
             </div>
         </div>
 
-        <!-- Input Area (Nổi) -->
         <div class="chat-input-area">
             <div class="input-wrapper">
                 <input type="text" id="chatInput" placeholder="Nhập yêu cầu của bạn..." autocomplete="off">
@@ -714,9 +708,7 @@
             </div>
         </div>
     </div>
-    <!-- ================== AI CHAT UI END ================== -->
 
-    <!-- MOOD SEARCH MODAL (MỚI) -->
     <div class="modal fade" id="moodModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
@@ -724,30 +716,39 @@
                     <h5 class="fw-bold"><i class="fas fa-magic text-warning me-2"></i>Mood Search</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
+                
                 <div class="modal-body p-4">
-                    <p class="text-muted small mb-3">Bạn đang cảm thấy thế nào? Hoặc tải lên một bức ảnh "vibe" bạn muốn, AI sẽ tìm nơi phù hợp.</p>
                     
-                    <form id="moodForm">
-                        <div class="mb-3">
-                            <textarea class="form-control bg-light border-0 rounded-3 p-3" id="moodText" name="mood_text" rows="2" placeholder="Ví dụ: Tôi muốn đi trốn, nơi nào đó yên tĩnh và có mưa..."></textarea>
-                        </div>
+                    <div id="moodInputSection">
+                        <p class="text-muted small mb-3">Bạn đang cảm thấy thế nào? Hoặc tải lên một bức ảnh "vibe" bạn muốn, AI sẽ tìm nơi phù hợp.</p>
                         
-                        <div class="upload-area" id="dropZone">
-                            <input type="file" name="mood_image" id="moodImage" accept="image/*" hidden>
-                            <div id="uploadPlaceholder">
-                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                                <div class="small fw-bold text-muted">Chạm để tải ảnh lên (Optional)</div>
+                        <form id="moodForm">
+                            <div class="mb-3">
+                                <textarea class="form-control bg-light border-0 rounded-3 p-3" id="moodText" name="mood_text" rows="2" placeholder="Ví dụ: Tôi muốn đi trốn, nơi nào đó yên tĩnh và có mưa..."></textarea>
                             </div>
-                            <img id="imagePreview" class="preview-img">
+                            
+                            <div class="upload-area" id="dropZone">
+                                <input type="file" name="mood_image" id="moodImage" accept="image/*" hidden>
+                                <div id="uploadPlaceholder">
+                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                    <div class="small fw-bold text-muted">Chạm để tải ảnh lên (Optional)</div>
+                                </div>
+                                <img id="imagePreview" class="preview-img">
+                            </div>
+
+                            <div id="moodLoading" class="text-center mt-3" style="display: none;">
+                                <div class="spinner-border text-warning" role="status"></div>
+                                <div class="small text-muted mt-2 fst-italic">AI đang cảm nhận "vibe" của bạn...</div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="moodResultSection" style="display: none;">
                         </div>
 
-                        <div id="moodLoading" class="text-center mt-3" style="display: none;">
-                            <div class="spinner-border text-warning" role="status"></div>
-                            <div class="small text-muted mt-2 fst-italic">AI đang cảm nhận "vibe" của bạn...</div>
-                        </div>
-                    </form>
                 </div>
-                <div class="modal-footer border-0 pt-0">
+
+                <div class="modal-footer border-0 pt-0" id="moodFooter">
                     <button type="button" class="btn btn-dark w-100 rounded-pill py-2 fw-bold" onclick="submitMoodSearch()">
                         Phân tích & Tìm phòng 🔮
                     </button>
@@ -756,7 +757,6 @@
         </div>
     </div>
 
-    <!-- FORM ẨN ĐỂ REDIRECT -->
     <form id="hiddenSearchForm" action="{{ url_for('hotel.api_filter') }}" method="POST" style="display: none;">
         <input type="hidden" name="city" id="h_city">
         <input type="hidden" name="price_range" id="h_price">
@@ -766,30 +766,9 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
 <script>
-    // JS Logic cho Slider (Giữ nguyên)
-    function scrollDest(direction) {
-        const wrapper = document.getElementById('destWrapper');
-        const scrollAmount = 300; 
-        
-        if (direction === 1) {
-            wrapper.scrollLeft += scrollAmount;
-        } else {
-            wrapper.scrollLeft -= scrollAmount;
-        }
-    }
-
-    // --- LOGIC: Mở lại Survey & Auto Open ---
-    function reopenSurvey() {
-        const modalEl = document.getElementById('surveyModal');
-        if(modalEl) {
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
-        } else {
-            alert("Vui lòng đăng nhập để sử dụng tính năng này!");
-        }
-    }
-
     {% if user and not user.preferences %}
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
@@ -798,396 +777,5 @@
         }, 1000);
     });
     {% endif %}
-
-    async function submitSurvey() {
-        const form = document.getElementById('surveyForm');
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        
-        const btn = document.querySelector('#surveyModal .btn-dark');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu hồ sơ...';
-
-        try {
-            const resp = await fetch('/api/update_preferences', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if(resp.ok) {
-                // Đóng modal trước
-                const modalEl = document.getElementById('surveyModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if(modal) modal.hide();
-                
-                // Đợi một chút để modal đóng xong rồi mới reload
-                setTimeout(() => {
-                    location.reload();
-                }, 300);
-            } else {
-                alert('Có lỗi xảy ra, vui lòng thử lại');
-                btn.innerHTML = 'Lưu thay đổi & Cập nhật gợi ý 🚀';
-            }
-        } catch(e) { 
-            console.error(e);
-            alert('Có lỗi xảy ra, vui lòng thử lại');
-            btn.innerHTML = 'Lưu thay đổi & Cập nhật gợi ý 🚀';
-        }
-    }
-
-    // --- JS CHO CHATBOT (PREMIUM VERSION) ---
-    const chatBtn = document.getElementById('chatToggleBtn');
-    const chatBox = document.getElementById('aiChatBox');
-    const closeChat = document.getElementById('closeChatBtn');
-    const clearChat = document.getElementById('clearChatBtn');
-    const expandChat = document.getElementById('expandChatBtn'); // Nút mới
-    const input = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendChatBtn');
-    const content = document.getElementById('chatContent');
-
-    let isExpanded = false; // Trạng thái mở rộng
-
-    // Hàm render tin nhắn (Giữ nguyên logic, chỉ đổi style HTML)
-    function renderMessage(msg) {
-        let html = '';
-        if (msg.type === 'search_result' && msg.hotels) {
-            html += `<div>${msg.content || msg.reply_text}</div>`;
-            // Render thẻ khách sạn
-            msg.hotels.slice(0, 4).forEach(h => {
-                let img = (h.images && h.images.length > 0) ? h.images[0].original_image : 'https://via.placeholder.com/90';
-                let price = (h.rate_per_night && h.rate_per_night.lowest) ? h.rate_per_night.lowest : 'Liên hệ';
-                let stars = h.overall_rating ? `<span class="text-warning ms-2 small"><i class="fas fa-star"></i> ${h.overall_rating}</span>` : '';
-                html += `
-                    <a href="/hotel/${h.property_token}" class="mini-hotel-card">
-                        <img src="${img}" class="mini-img" alt="Hotel">
-                        <div class="mini-info">
-                            <div class="mini-name">${h.name}</div>
-                            <div class="d-flex align-items-center mt-1">
-                                <div class="mini-price">${price}</div>
-                                ${stars}
-                            </div>
-                        </div>
-                    </a>
-                `;
-            });
-            html += `<div class="text-center mt-2"><small class="text-muted" style="font-size:0.7rem;">Nhấn vào thẻ để xem chi tiết</small></div>`;
-        } else {
-            html = msg.content || msg.reply_text;
-        }
-
-        const div = document.createElement('div');
-        div.className = msg.role === 'user' ? 'msg-user' : 'msg-bot';
-        div.innerHTML = html;
-        content.appendChild(div);
-        content.scrollTop = content.scrollHeight;
-    }
-
-    // Load lịch sử
-    document.addEventListener('DOMContentLoaded', async () => {
-        const heroCheckboxes = document.querySelectorAll('#amenityHeroBtn + .dropdown-menu input[type="checkbox"]');
-        const heroBtnText = document.getElementById('amenityHeroText');
-        
-        const box = document.getElementById('aiSuggestionBox');
-        
-        // Gọi API để kiểm tra trạng thái
-        try {
-            const resp = await fetch('/api/get_home_suggestion');
-            const data = await resp.json();
-            
-            // Case 1: Chưa đăng nhập -> Hiện banner mời đăng nhập
-            if (!data.is_logged_in) {
-                box.style.display = 'flex';
-                document.getElementById('aiLoading').style.display = 'none';
-                document.getElementById('aiContent').style.display = 'none';
-                document.getElementById('aiLoginPrompt').style.display = 'block';
-                document.getElementById('aiActionForm').style.display = 'none';
-                document.getElementById('aiLoginBtn').style.display = 'block';
-            }
-            // Case 2: Đã login và có preferences -> Hiện gợi ý
-            else if (data.suggestion) {
-                const s = data.suggestion;
-                
-                box.style.display = 'flex';
-                document.getElementById('aiIcon').innerText = s.vibe_icon;
-                document.getElementById('aiTitle').innerText = `Gợi ý riêng cho bạn: ${s.city}`;
-                document.getElementById('aiGreeting').innerText = `"${s.greeting}"`;
-                
-                document.getElementById('aiInputCity').value = s.city;
-                document.getElementById('aiInputPrice').value = s.price_range;
-                
-                document.getElementById('aiLoading').style.display = 'none';
-                document.getElementById('aiContent').style.display = 'block';
-                document.getElementById('aiLoginPrompt').style.display = 'none';
-                document.getElementById('aiActionForm').style.display = 'block';
-                document.getElementById('aiLoginBtn').style.display = 'none';
-            }
-            // Case 3: Đã login nhưng chưa có preferences -> Ẩn (sẽ hiện sau khi survey)
-            else {
-                box.style.display = 'none';
-            }
-        } catch (e) {
-            console.error("AI Suggestion Failed", e);
-            box.style.display = 'none';
-        }
-
-        function updateHeroLabel() {
-            const checked = Array.from(heroCheckboxes).filter(cb => cb.checked);
-            if (checked.length === 0) {
-                heroBtnText.textContent = "Tùy chọn";
-            } else if (checked.length === 1) {
-                // Lấy label của checkbox đang chọn
-                const label = document.querySelector(`label[for="${checked[0].id}"]`).textContent;
-                heroBtnText.textContent = label;
-            } else {
-                heroBtnText.textContent = `${checked.length} tiện nghi`;
-            }
-        }
-
-        // Gán sự kiện
-        heroCheckboxes.forEach(cb => {
-            cb.addEventListener('change', updateHeroLabel);
-        });
-
-        // Ngăn dropdown đóng khi click vào bên trong
-        const heroDropdownMenu = document.querySelector('#amenityHeroBtn + .dropdown-menu');
-        if (heroDropdownMenu) {
-            heroDropdownMenu.addEventListener('click', function (e) {
-                e.stopPropagation();
-            });
-        }
-        try {
-            const resp = await fetch('/api/get_chat_history');
-            const history = await resp.json();
-            if (history.length > 0) {
-                content.innerHTML = ''; 
-                history.forEach(msg => renderMessage(msg));
-            }
-        } catch (e) { console.error(e); }
-    });
-
-    // Mở Chat
-    chatBtn.onclick = () => { 
-        chatBox.style.display = 'flex'; 
-        // Delay nhỏ để animation hoạt động mượt
-        setTimeout(() => {
-            chatBox.style.opacity = '1';
-            chatBox.style.transform = 'scale(1)';
-        }, 10);
-        chatBtn.style.transform = 'scale(0) rotate(180deg)'; 
-        input.focus();
-    };
-    
-    // Đóng Chat
-    closeChat.onclick = () => { 
-        chatBox.style.display = 'none'; 
-        chatBtn.style.transform = 'scale(1) rotate(0deg)'; 
-        // Reset expand khi đóng để lần sau mở lên nó gọn
-        if(isExpanded) toggleExpand();
-    };
-
-    // Logic Mở Rộng / Thu Nhỏ (ĐÃ FIX CĂN GIỮA)
-    function toggleExpand() {
-        isExpanded = !isExpanded;
-        chatBox.classList.toggle('expanded');
-        
-        // Đổi icon
-        const icon = expandChat.querySelector('i');
-        if (isExpanded) {
-            icon.classList.remove('fa-expand-alt');
-            icon.classList.add('fa-compress-alt');
-        } else {
-            icon.classList.remove('fa-compress-alt');
-            icon.classList.add('fa-expand-alt');
-        }
-    }
-    expandChat.onclick = toggleExpand;
-
-    // Xóa Chat
-    clearChat.onclick = async () => {
-        if(confirm("Xóa lịch sử trò chuyện?")) {
-            await fetch('/api/clear_chat', { method: 'POST' });
-            content.innerHTML = `
-                <div class="msg-bot">
-                     <div class="d-flex align-items-center mb-2">
-                        <strong class="me-2">AI Concierge</strong> <span class="badge bg-dark text-white rounded-pill" style="font-size: 0.6rem;">Bot</span>
-                    </div>
-                    Đã xóa bộ nhớ! Chúng ta bắt đầu lại nhé. <br>
-                    Bạn muốn đi đâu?
-                </div>`;
-        }
-    }
-
-    function showTyping() {
-        const div = document.createElement('div');
-        div.id = 'typingLoader';
-        div.className = 'msg-bot';
-        div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-        content.appendChild(div);
-        content.scrollTop = content.scrollHeight;
-    }
-
-    function removeTyping() {
-        const loader = document.getElementById('typingLoader');
-        if(loader) loader.remove();
-    }
-
-    async function handleChat() {
-        const text = input.value.trim();
-        if(!text) return;
-
-        renderMessage({ role: 'user', content: text });
-        input.value = '';
-        showTyping();
-
-        try {
-            const resp = await fetch('/api/chat_search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
-            });
-            const data = await resp.json();
-            removeTyping();
-
-            const msgData = {
-                role: 'ai',
-                type: data.type,
-                content: data.reply_text,
-                hotels: data.hotels
-            };
-            renderMessage(msgData);
-
-        } catch (e) {
-            console.error(e);
-            removeTyping();
-            renderMessage({ role: 'ai', content: "Mạng lỗi rồi, thử lại sau nha!" });
-        }
-    }
-
-    sendBtn.onclick = handleChat;
-    input.onkeydown = (e) => { if(e.key === 'Enter') handleChat(); }
-
-    // --- MOOD SEARCH LOGIC (NEW) ---
-    function openMoodModal() {
-        new bootstrap.Modal(document.getElementById('moodModal')).show();
-    }
-
-    // Xử lý Upload ảnh preview
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('moodImage');
-    const preview = document.getElementById('imagePreview');
-    const placeholder = document.getElementById('uploadPlaceholder');
-
-    dropZone.onclick = () => fileInput.click();
-
-    fileInput.onchange = function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                placeholder.style.display = 'none';
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-
-    
-
-    async function submitMoodSearch() {
-        const text = document.getElementById('moodText').value;
-        const file = fileInput.files[0];
-        const modalBody = document.querySelector('#moodModal .modal-body');
-        const modalFooter = document.querySelector('#moodModal .modal-footer');
-
-        if (!text && !file) {
-            // Thay alert bằng hiệu ứng rung lắc input hoặc thông báo nhỏ (ở đây dùng alert tạm cho validation)
-            alert("Hãy nhập tâm trạng hoặc chọn một bức ảnh nhé!"); 
-            return;
-        }
-
-        // 1. UI Loading: Ẩn nút, hiện loading
-        document.getElementById('moodLoading').style.display = 'block';
-        if(modalFooter) modalFooter.style.display = 'none'; // Ẩn nút submit cũ đi
-        
-        const formData = new FormData();
-        formData.append('mood_text', text);
-        if (file) formData.append('mood_image', file);
-
-        try {
-            const resp = await fetch('/api/mood_search', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await resp.json();
-
-            if (data.error) {
-                alert(data.error);
-                document.getElementById('moodLoading').style.display = 'none';
-                if(modalFooter) modalFooter.style.display = 'block'; // Hiện lại nút nếu lỗi
-                return;
-            }
-
-            // --- 2. HIỂN THỊ KẾT QUẢ ĐẸP (Thay thế nội dung Modal) ---
-            // Lấy ảnh user up lên hoặc ảnh mặc định nếu chỉ dùng text
-            const displayImg = preview.src && preview.style.display !== 'none' 
-                ? preview.src 
-                : 'https://cdn-icons-png.flaticon.com/512/2953/2953363.png'; // Icon vali du lịch cute
-
-            modalBody.innerHTML = `
-                <div class="text-center py-3 animate__animated animate__fadeIn">
-                    <div class="mb-4 position-relative d-inline-block">
-                        <img src="${displayImg}" 
-                             style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 4px solid white;">
-                        <div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
-                             style="width: 35px; height: 35px; border: 3px solid white;">
-                            <i class="fas fa-check small"></i>
-                        </div>
-                    </div>
-                    
-                    <h5 class="text-muted small text-uppercase fw-bold ls-1 mb-2">AI Gợi ý điểm đến</h5>
-                    <h2 class="fw-bold text-dark mb-3">${data.city}</h2>
-                    
-                    <div class="bg-light p-3 rounded-4 mb-4 mx-2">
-                        <p class="mb-0 text-secondary fst-italic">
-                            <i class="fas fa-quote-left text-muted opacity-25 me-2"></i>
-                            ${data.explanation}
-                            <i class="fas fa-quote-right text-muted opacity-25 ms-2"></i>
-                        </p>
-                    </div>
-
-                    <button id="btnGoMoodResult" class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow-lg transform-scale">
-                        Khám phá ${data.city} ngay 🚀
-                    </button>
-                </div>
-            `;
-
-            // 3. Gắn sự kiện click cho nút mới để chuyển trang
-            document.getElementById('btnGoMoodResult').onclick = function() {
-                // Hiệu ứng loading trên nút
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang chuyển hướng...';
-                
-                const hiddenForm = document.getElementById('hiddenSearchForm');
-                document.getElementById('h_city').value = data.city;
-                if(data.price_range) document.getElementById('h_price').value = data.price_range;
-
-                if (data.amenities && Array.isArray(data.amenities)) {
-                    data.amenities.forEach(am => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'amenities';
-                        input.value = am;
-                        hiddenForm.appendChild(input);
-                    });
-                }
-                hiddenForm.submit();
-            };
-
-        } catch (e) {
-            console.error(e);
-            alert("Lỗi kết nối. Thử lại sau nhé.");
-            document.getElementById('moodLoading').style.display = 'none';
-            if(modalFooter) modalFooter.style.display = 'block';
-        }
-    }
 </script>
 {% endblock %}
