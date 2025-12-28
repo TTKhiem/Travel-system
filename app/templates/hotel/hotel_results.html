@@ -82,7 +82,8 @@
                 data-price="{{ hotel.rate_per_night.extracted_lowest if hotel.rate_per_night and hotel.rate_per_night.extracted_lowest else 99999999 }}" 
                 data-rating="{{ hotel.overall_rating if hotel.overall_rating else 0 }}"
                 data-reviews="{{ hotel.reviews if hotel.reviews else 0 }}"
-                data-match-score="{{ hotel.match_score if hotel.match_score else 0 }}"> 
+                data-match-score="{{ hotel.match_score if hotel.match_score else 0 }}"
+                data-is-best-match="{{ '1' if hotel.is_best_match else '0' }}"> 
                 
                 <div class="hotel-card">
                     <div class="hotel-image" style="background-image: url('{{ hotel.images[0].original_image if hotel.images else 'https://via.placeholder.com/400x300' }}')">
@@ -272,10 +273,12 @@
             const items = Array.from(grid.getElementsByClassName('hotel-item'));
             
             items.sort((a, b) => {
-
                 const getVal = (el, attr) => {
                     const val = parseFloat(el.getAttribute(attr));
                     return isNaN(val) ? 0 : val;
+                };
+                const getBool = (el, attr) => {
+                    return el.getAttribute(attr) === '1';
                 };
 
                 const priceA = getVal(a, 'data-price');
@@ -286,12 +289,14 @@
                 const reviewB = getVal(b, 'data-reviews');
                 const matchA = getVal(a, 'data-match-score');
                 const matchB = getVal(b, 'data-match-score');
+                const bestMatchA = getBool(a, 'data-is-best-match');
+                const bestMatchB = getBool(b, 'data-is-best-match');
 
                 switch(sortBy) {
                     case 'ai_match': 
-
+                        if (bestMatchA && !bestMatchB) return -1;
+                        if (!bestMatchA && bestMatchB) return 1;
                         if (matchB !== matchA) return matchB - matchA;
-
                         return ratingB - ratingA;
                         
                     case 'price_asc': return priceA - priceB;

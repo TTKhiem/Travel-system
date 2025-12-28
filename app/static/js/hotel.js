@@ -109,6 +109,9 @@ function sortHotels() {
             const val = parseFloat(el.getAttribute(attr));
             return isNaN(val) ? 0 : val;
         };
+        const getBool = (el, attr) => {
+            return el.getAttribute(attr) === '1';
+        };
 
         const priceA = getVal(a, 'data-price');
         const priceB = getVal(b, 'data-price');
@@ -118,9 +121,13 @@ function sortHotels() {
         const reviewB = getVal(b, 'data-reviews');
         const matchA = getVal(a, 'data-match-score');
         const matchB = getVal(b, 'data-match-score');
+        const bestMatchA = getBool(a, 'data-is-best-match');
+        const bestMatchB = getBool(b, 'data-is-best-match');
 
         switch(sortBy) {
             case 'ai_match': 
+                if (bestMatchA && !bestMatchB) return -1;
+                if (!bestMatchA && bestMatchB) return 1;
                 if (matchB !== matchA) return matchB - matchA;
                 return ratingB - ratingA;
             case 'price_asc': return priceA - priceB;
