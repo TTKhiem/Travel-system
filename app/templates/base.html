@@ -236,13 +236,15 @@
     <script>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
-                {% for message in messages %}
-                try {
-                    let msgContent = "{{ message }}";
-                    let msgType = msgContent.includes("❌") ? 'error' : 'success';
-                    if (window.showToast) window.showToast(msgContent, msgType);
-                } catch(e) {}
-                {% endfor %}
+                document.addEventListener('DOMContentLoaded', function() {
+                    {% for message in messages %}
+                    try {
+                        let msgContent = "{{ message }}";
+                        let msgType = msgContent.includes("❌") ? 'error' : 'success';
+                        if (window.showToast) window.showToast(msgContent, msgType);
+                    } catch(e) {}
+                    {% endfor %}
+                });
             {% endif %}
         {% endwith %}
     </script>

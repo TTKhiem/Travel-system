@@ -19,6 +19,37 @@ function switchAuthTab(tab) {
     }
 }
 
+window.showToast = function(message, type = 'info') {
+    const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.toast-container');
+            if (container) showToastNow(message, type, container);
+        });
+        return;
+    }
+    showToastNow(message, type, toastContainer);
+};
+
+function showToastNow(message, type, toastContainer) {
+    const id = 'toast-' + Date.now();
+    const icon = type === 'error' ? 'fa-exclamation-circle text-danger' : 'fa-check-circle text-success';
+    const title = type === 'error' ? 'Lỗi' : 'Thông báo';
+    const html = `
+        <div id="${id}" class="toast custom-toast animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas ${icon} me-2"></i><strong class="me-auto text-dark">${title}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body text-dark">${message}</div>
+        </div>`;
+    toastContainer.insertAdjacentHTML('beforeend', html);
+    const toastEl = document.getElementById(id);
+    const bsToast = new bootstrap.Toast(toastEl, { delay: 5000 });
+    bsToast.show();
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     restoreSearchState();
 
@@ -106,28 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (e) { console.error("Restore State Error:", e); }
     }
-
-    const toastContainer = document.querySelector('.toast-container');
-    if (toastContainer) {
-        window.showToast = function(message, type = 'info') {
-            const id = 'toast-' + Date.now();
-            const icon = type === 'error' ? 'fa-exclamation-circle text-danger' : 'fa-check-circle text-success';
-            const title = type === 'error' ? 'Lỗi' : 'Thông báo';
-            const html = `
-                <div id="${id}" class="toast custom-toast animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header">
-                        <i class="fas ${icon} me-2"></i><strong class="me-auto text-dark">${title}</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body text-dark">${message}</div>
-                </div>`;
-            toastContainer.insertAdjacentHTML('beforeend', html);
-            const toastEl = document.getElementById(id);
-            const bsToast = new bootstrap.Toast(toastEl, { delay: 5000 });
-            bsToast.show();
-            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-        };
-    }
     
 });
+
 
