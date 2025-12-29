@@ -150,7 +150,7 @@ APP_SECRET=your_secret_key_here
 
 ---
 
-## Cấu Trúc File
+## File structure
 
 ```
 Project/
