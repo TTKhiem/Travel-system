@@ -157,12 +157,12 @@ Project/
 │
 ├── .env                          # Environment variables (API keys)
 ├── .gitignore                    # Git ignore file
-├── README.md                     # File này
+├── README.md                     # This file
 ├── requirements.txt              # Python dependencies
 ├── run.py                        # Entry point của ứng dụng
-├── user_db.db                    # SQLite database (tự động tạo)
+├── user_db.db                    # SQLite database (automatically created)
 │
-└── app/                          # Thư mục chính của ứng dụng
+└── app/                          # Main folder
     │
     ├── __init__.py               # Flask app factory
     ├── database.py               # Database connection & utilities
